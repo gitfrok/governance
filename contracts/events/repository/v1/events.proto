@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+// Domain events published by the Repository context to Redpanda.
+// Consumers (CI/CD, Code Search, Audit) react independently — they have NO synchronous
+// dependency on Repository. This is the low-coupling choreography pattern (ADR-0022).
+
+package gitsaas.events.repository.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/repository/v1;repositoryeventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+message RefUpdated {
+  string event_id   = 1;   // ULID; idempotency key for consumers
+  string tenant_id  = 2;
+  string repo_id    = 3;
+  string ref        = 4;   // e.g. refs/heads/main
+  string old_sha    = 5;
+  string new_sha    = 6;
+  string actor_id   = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message RepositoryCreated {
+  string event_id   = 1;
+  string tenant_id  = 2;
+  string repo_id    = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
