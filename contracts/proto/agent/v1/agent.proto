@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+// Agent <-> Control-Plane wire protocol.
+// Realizes ADR-0011 (outbound-only agent) and ADR-0017 (gRPC bidi streaming over mTLS).
+//
+// Transport : a SINGLE long-lived gRPC bidirectional stream, dialed OUTBOUND by the agent.
+// AuthN     : mTLS. The trusted cluster identity is the SPIFFE ID from the verified client
+//             cert, so NO credentials are carried in-band.
+// Invariant : source code and secrets NEVER traverse this stream. Only control, telemetry,
+//             usage metering, and SIGNED release references.
+
+package gitsaas.agent.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/agent/v1;agentv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+service AgentGateway {
+  // Agent opens this stream outbound and keeps it alive (auto-reconnect + resume via seq).
+  rpc Connect(stream AgentMessage) returns (stream ControlPlaneMessage);
+}
+
+// ---------------------------------------------------------------------------
+// Envelopes
+// ---------------------------------------------------------------------------
+message AgentMessage {                       // agent -> control plane
+  string message_id = 1;                     // ULID; idempotency key
+  int64  seq        = 2;                      // monotonic per stream; used for acks/resume
+  google.protobuf.Timestamp sent_at = 3;
+
+  oneof payload {
+    Register          register          = 10;
+    Heartbeat         heartbeat         = 11;
+    ActualStateReport actual_state      = 12; // reconciliation loop
+    TelemetrySample   telemetry         = 13; // metrics only, no code
+    UsageSample       usage             = 14; // fair-use metering (ADR-0008)
+    DesiredStateAck   desired_state_ack = 15;
+    CommandResult     command_result    = 16;
+    Diagnostics       diagnostics       = 17;
+  }
+}
+
+message ControlPlaneMessage {                // control plane -> agent
+  string message_id = 1;
+  int64  seq        = 2;
+  google.protobuf.Timestamp sent_at = 3;
+  int64  ack_seq    = 4;                      // highest agent seq CP has durably processed
+
+  oneof payload {
+    RegisterAck  register_ack  = 10;
+    DesiredState desired_state = 11;          // SIGNED release refs only
+    Command      command       = 12;
+    ConfigUpdate config        = 13;
+    Ping         ping          = 14;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Registration
+// ---------------------------------------------------------------------------
+enum Cloud { CLOUD_UNSPECIFIED = 0; GKE = 1; EKS = 2; AKS = 3; OTHER = 9; }
+
+message Register {
+  string cluster_id       = 1;               // informational; identity comes from mTLS SPIFFE ID
+  Cloud  cloud            = 2;
+  string region           = 3;
+  string agent_version    = 4;
+  string k8s_version      = 5;
+  repeated string capabilities = 6;          // e.g. "gvisor","kata","cnpg"
+  int64  resume_from_seq  = 7;               // last CP seq the agent durably applied (0 = fresh)
+}
+
+message RegisterAck {
+  bool   accepted        = 1;
+  string reason          = 2;                // set when !accepted
+  int64  resume_from_seq = 3;                // where the agent should resume its outbound seq
+  google.protobuf.Duration heartbeat_interval = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Health / telemetry  (no source code, no secrets)
+// ---------------------------------------------------------------------------
+enum HealthState { HEALTH_UNSPECIFIED = 0; HEALTHY = 1; DEGRADED = 2; UNHEALTHY = 3; }
+
+message Heartbeat {
+  HealthState overall = 1;
+  repeated ComponentHealth components = 2;
+}
+
+message ComponentHealth {
+  string name    = 1;                        // "git-rpc","ci-controller","registry","scanner"
+  HealthState state = 2;
+  string version = 3;
+  string detail  = 4;
+}
+
+message TelemetrySample {
+  google.protobuf.Timestamp window_start = 1;
+  google.protobuf.Timestamp window_end   = 2;
+  map<string, double> gauges   = 3;          // e.g. active_runners, repo_count
+  map<string, double> counters = 4;          // e.g. builds_started
+}
+
+// Fair-use metering for flat-rate cost governance (ADR-0008).
+message UsageSample {
+  google.protobuf.Timestamp window_start = 1;
+  google.protobuf.Timestamp window_end   = 2;
+  double ci_minutes    = 3;
+  double storage_bytes = 4;
+  double egress_bytes  = 5;
+  int64  seat_count    = 6;
+}
+
+// ---------------------------------------------------------------------------
+// Declarative desired-state  (CP owns desired; agent reconciles idempotently)
+// ---------------------------------------------------------------------------
+message DesiredState {
+  int64 generation = 1;                      // monotonic; agent applies newest, ignores older
+  repeated Component components = 2;
+}
+
+message Component {
+  string name   = 1;
+  string action = 2;                         // "apply" | "remove"
+  SignedRelease release = 3;                 // signed reference ONLY (no inline code/secrets)
+  string config_ref = 4;                     // pointer the agent renders locally
+}
+
+message SignedRelease {
+  string oci_ref   = 1;                      // e.g. registry/gitsaas/git-rpc@sha256:...
+  string digest    = 2;                      // sha256 the agent MUST verify
+  string signature = 3;                      // cosign/DSSE sig; agent verifies vs pinned key
+}
+
+message DesiredStateAck {
+  int64  generation = 1;
+  bool   applied    = 2;
+  string error      = 3;
+}
+
+message ActualStateReport {                  // observed reality, drives convergence
+  int64 applied_generation = 1;
+  repeated ComponentHealth components = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Commands  (imperative, bounded set)
+// ---------------------------------------------------------------------------
+enum CommandType {
+  COMMAND_UNSPECIFIED = 0;
+  TRIGGER_RECONCILE   = 1;
+  ROTATE_CLIENT_CERT  = 2;
+  DRAIN_RUNNERS       = 3;
+  COLLECT_DIAGNOSTICS = 4;
+}
+
+message Command {
+  string command_id = 1;
+  CommandType type  = 2;
+  map<string, string> args = 3;
+}
+
+message CommandResult {
+  string command_id = 1;
+  bool   ok         = 2;
+  string detail     = 3;
+}
+
+message ConfigUpdate { map<string, string> values = 1; }
+message Diagnostics  { string bundle_ref = 1; string note = 2; } // reference/upload, not code
+message Ping         { google.protobuf.Timestamp at = 1; }
