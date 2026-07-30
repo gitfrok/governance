@@ -23,4 +23,4 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Todo |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
 | T-0018 | Repository import — refs, tags & LFS | 1 | Blocked (SPEC-0011) |
-| T-0019 | Review-history import + attested provenance | 1 | Blocked (ADR-0029) |
+| T-0019 | Review-history import + attested provenance | 1 | Blocked (SPEC-0011) |

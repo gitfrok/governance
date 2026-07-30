@@ -221,7 +221,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 
 | Item | Requirement | Needs |
 |---|---|---|
-| Repo + MR-history import from GitHub/GitLab | PR-12 | new spec + task(s); Phase-1 scope increase. Audit-integrity question addressed by **ADR-0029 (Proposed)** — imported history is `ATTESTED_IMPORT`, never enters the audit log, and imported approvals never satisfy a merge policy. Spec + tasks blocked on ADR-0029 acceptance. |
+| Repo + MR-history import from GitHub/GitLab | PR-12 | new spec + task(s); Phase-1 scope increase. Audit-integrity question settled by **ADR-0029 (Accepted)** — imported history is `ATTESTED_IMPORT`, never enters the audit log, and imported approvals never satisfy a merge policy. Spec + tasks now gated only on SPEC-0011 approval. |
 | Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |

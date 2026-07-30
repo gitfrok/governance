@@ -1,11 +1,11 @@
 # T-0019: Review-history import + attested provenance
 
-- **Status:** Blocked (ADR-0029 must be Accepted; SPEC-0011 must be Approved)
+- **Status:** Blocked (SPEC-0011 must be Approved; ADR-0029 is now Accepted)
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: `Provenance`, `HistoryImported`, `HistoryImportRevoked`) →
   backend (Code Review + Audit + Identity&Access) → webfrontend (provenance rendering)
 - **Spec:** docs/specs/SPEC-0011-repository-history-import.md
-- **ADRs:** **0029 (Proposed — governing)**, 0007, 0006, 0003, 0022, 0015
+- **ADRs:** **0029 (Accepted — governing)**, 0007, 0006, 0003, 0022, 0015
 - **Owner:** unassigned
 - **Depends on:** T-0018, T-0006 (audit log), T-0016 (MR + approval policy), T-0013 (identity)
 
@@ -79,8 +79,8 @@ Numbering follows SPEC-0011.
 See `../process/definition-of-done.md`.
 
 ## Notes / open questions
-- **Blocked on the human decision gate:** ADR-0029 is `Proposed`. Do not enter RED until it is
-  Accepted and SPEC-0011 is Approved (ADR-0028).
+- **Decision gate cleared:** ADR-0029 is `Accepted`. Do not enter RED until SPEC-0011 is also
+  `Approved` (ADR-0028).
 - **Three submodules, three PRs, in order** (ADR-0027, invariants 21–25): governance (contracts)
   → backend → webfrontend, each its own commit; super-repo bumps pins to merged commits only.
   **Never one commit across two.**

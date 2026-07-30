@@ -16,4 +16,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0008 | Web repo browsing UX | Approved | T-0015 |
 | SPEC-0009 | Merge requests & approval policy | Approved | T-0016 |
 | SPEC-0010 | CI v0 ephemeral isolation | Approved | T-0017 |
-| SPEC-0011 | Repository & review-history import | **Draft** (blocked on ADR-0029) | T-0018, T-0019 |
+| SPEC-0011 | Repository & review-history import | **Draft** (ADR-0029 Accepted; awaiting approval) | T-0018, T-0019 |

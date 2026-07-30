@@ -31,7 +31,7 @@ metrics, and NFR targets: `../product/PRD.md`.
 | CI isolation | one ephemeral sandbox/job; gVisor RuntimeClass default on BYO | 0005, 0012 |
 | Policy | OPA/Rego at PEP/PDP, deny-by-default, policy repo | 0006 |
 | Audit | append-only, hash-chained, no delete path | 0007 |
-| Imported history | two-class provenance: imported history is **attested**, never audit-class | 0029 (Proposed) |
+| Imported history | two-class provenance: imported history is **attested**, never audit-class | 0029 |
 | Search | Zoekt-style index, permission-filtered results | 0014 |
 | Packaging | Helm chart + Operator (CRDs), air-gap capable | 0013 |
 | Stack | Go, Astro SSR, Zitadel, Redpanda, PostgreSQL 18, Valkey, SeaweedFS | **0023** |

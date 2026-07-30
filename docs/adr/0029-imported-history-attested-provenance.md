@@ -1,8 +1,8 @@
 # ADR-0029: Imported history is attested, not audited — two-class provenance
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-31
-- **Deciders:** platform, security/compliance (pending)
+- **Deciders:** platform, security/compliance
 - **Governs:** G5 auditability, G6 compliance, G1 tenant isolation, G2 least privilege
 - **Relates to:** ADR-0007 (append-only audit log), ADR-0006 (PDP), ADR-0022 (HCLC), ADR-0003
   (tenancy/RLS) · **PRD:** PR-12, PR-17, PR-18 (`../product/PRD.md`)

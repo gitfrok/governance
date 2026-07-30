@@ -15,7 +15,7 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-6 Code UX**: T-0014 (repo read APIs + BFF), T-0015 (web browser/diff/palette).
 - **EP-7 Review & CI**: T-0016 (MR + protected branches + approval policy), T-0017 (CI v0 gVisor+KEDA).
 - **EP-8 Migration**: T-0018 (repo/refs/LFS import), T-0019 (review-history import + attested
-  provenance). Scoped in by PRD PR-12; both blocked on **ADR-0029** (Proposed) → SPEC-0011.
+  provenance). Scoped in by PRD PR-12; **ADR-0029 Accepted**, both now gated only on SPEC-0011.
 
 ## Phase 2 — Ultimate wedge  *(to be expanded)*
 Scanner integration; unified security dashboard; security/approval policies-as-code; audit
