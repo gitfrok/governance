@@ -1,9 +1,13 @@
 # Context — condensed architecture (agents start here)
 
 ## Product
-Multi-tenant Git SaaS: repos + MR review + issues + CI/CD + registry + DevSecOps
-scanners + audit/compliance. Differentiators: **unified security/governance UX**
+Multi-tenant Git SaaS: repos + MR review + CI/CD + container registry + DevSecOps
+scanners + audit/compliance + migration/import from GitHub/GitLab (PR-12, ADR-0029).
+Differentiators: **unified security/governance UX**
 (ADR-0015) and **flat-rate pricing** made safe by fair-use + BYO (ADR-0008/0009).
+**Non-goals** (`../product/PRD.md` §7): issue tracking / project management, packages beyond
+container images, air-gapped installs, non-managed Kubernetes. ICP, requirements PR-1…PR-23,
+metrics, and NFR targets: `../product/PRD.md`.
 
 ## Topology (ADR-0009/0010/0011)
 - **Control plane (we host, multi-tenant):** billing, org/user metadata, policy authoring,
@@ -27,6 +31,7 @@ scanners + audit/compliance. Differentiators: **unified security/governance UX**
 | CI isolation | one ephemeral sandbox/job; gVisor RuntimeClass default on BYO | 0005, 0012 |
 | Policy | OPA/Rego at PEP/PDP, deny-by-default, policy repo | 0006 |
 | Audit | append-only, hash-chained, no delete path | 0007 |
+| Imported history | two-class provenance: imported history is **attested**, never audit-class | 0029 (Proposed) |
 | Search | Zoekt-style index, permission-filtered results | 0014 |
 | Packaging | Helm chart + Operator (CRDs), air-gap capable | 0013 |
 | Stack | Go, Astro SSR, Zitadel, Redpanda, PostgreSQL 18, Valkey, SeaweedFS | **0023** |
@@ -59,16 +64,17 @@ Dependencies point inward only.
 bus; cross-process only via `contracts/` (gRPC + events); no cross-module DB access (each owns its
 schema — refines ADR-0003); prefer events over sync calls; thin BFF.
 
-**Suggested layout:**
+**Layout — per submodule (ADR-0027); paths are relative to each repo's root:**
 ```
-/modules/<ctx>/
-  api/                                       public in-process surface (types+interfaces) — ONLY entry
-  internal/{domain,app,adapters}/            Go-unimportable across modules (hexagonal, inward deps)
-/cmd/dataplane-app/  /cmd/controlplane-app/  one modular-monolith binary per plane (wire modules)
-/contracts/{proto,events}/<ctx>/v1/          cross-PROCESS surface (for the separate processes)
-/platform/{ids,bus,telemetry}/               shared kernel incl. the in-process event bus
-/bff/  /web/                                 Go BFF (aggregation only) + Astro/React SSR
-/agent/  /operator/  /deploy/  /docs/        separate processes by necessity + infra/docs
+governance/  contracts/{proto,events}/<ctx>/v1/   cross-PROCESS surface (+ docs/adr, docs/specs, policies/)
+backend/     modules/<ctx>/api/                   public in-process surface (types+interfaces) — ONLY entry
+             modules/<ctx>/internal/{domain,app,adapters}/  Go-unimportable across modules (inward deps)
+             cmd/{dataplane,controlplane}-app/    one modular-monolith binary per plane (wires modules)
+             platform/{ids,bus,telemetry}/        shared kernel incl. the in-process event bus
+             git-storaged/  agent/  operator/     the separate processes, by necessity
+bff/                                              Go BFF (aggregation only)
+webfrontend/                                      Astro + React SSR
+super-repo   deploy/  scripts/  Makefile          dev orchestration + pinned submodule commits only
 ```
 **Deployment (ADR-0025):** the app layer ships as **one modular-monolith binary per plane**
 (`cmd/dataplane-app`, `cmd/controlplane-app`); modules are packages that talk only via each other's
