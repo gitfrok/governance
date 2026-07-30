@@ -22,5 +22,8 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0015 | Web: repo browser + file/diff + palette | 1 | Todo |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Todo |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
-| T-0018 | Repository import — refs, tags & LFS | 1 | Blocked (SPEC-0011) |
-| T-0019 | Review-history import + attested provenance | 1 | Blocked (SPEC-0011) |
+| T-0018 | Repository & review-history import (GitHub/GitLab) | 1 | Todo |
+
+## Retired numbers (never reused)
+- **T-0019** — Review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review
+  (open question 3): git data and review history ship as one unit of work.

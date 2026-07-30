@@ -14,8 +14,9 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-5 Identity**: T-0013 (Zitadel + PATs, tenant scoping).
 - **EP-6 Code UX**: T-0014 (repo read APIs + BFF), T-0015 (web browser/diff/palette).
 - **EP-7 Review & CI**: T-0016 (MR + protected branches + approval policy), T-0017 (CI v0 gVisor+KEDA).
-- **EP-8 Migration**: T-0018 (repo/refs/LFS import), T-0019 (review-history import + attested
-  provenance). Scoped in by PRD PR-12; **ADR-0029 Accepted**, both now gated only on SPEC-0011.
+- **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
+  with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
+  **SPEC-0011 Approved** — ready to start. T-0019 was folded into T-0018 at spec review.
 
 ## Phase 2 — Ultimate wedge  *(to be expanded)*
 Scanner integration; unified security dashboard; security/approval policies-as-code; audit
