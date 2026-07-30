@@ -88,3 +88,4 @@ fitness-function trigger fires (scaling, isolation/compliance, SLO/cadence, buil
 — `governance` (ADRs, specs, `contracts/`, `policies/`, process, agent rules), `backend` (the Go
 modular monolith), `bff`, `webfrontend`. One-way direction: `webfrontend → bff → backend →
 governance(contracts)`; governance depends on nothing. Details: `../architecture/04-repository-topology.md`.
+
