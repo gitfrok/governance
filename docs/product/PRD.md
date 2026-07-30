@@ -1,0 +1,253 @@
+# PRD — Multi-tenant Git SaaS
+
+- **Status:** Draft
+- **Scope:** whole product, phased (Phases 0–3 per `../roadmap/README.md`)
+- **Constraining ADRs:** 0003, 0004, 0005, 0006, 0007, 0008, 0009, 0010, 0011, 0012, 0013, 0014,
+  0015, 0016, 0017, 0018, 0022, 0023, 0024, 0025, 0026
+- **Relation to SoT:** `../adr/` is the Source of Truth (ADR-0001). This PRD states **product
+  requirements only**. Where it appears to decide architecture, it is *restating* an Accepted ADR.
+  Any requirement here that cannot be satisfied without a new architectural decision is listed in
+  §12 as needing a **Proposed ADR** — not resolved in this document.
+
+---
+
+## 1. Problem
+
+Regulated engineering organizations run source hosting, code review, CI, and a scattered set of
+security scanners as separate products. Findings land in four consoles, none of them the one where
+code is reviewed. Producing audit evidence — who approved what, which scan gated which merge, which
+policy was in force on a date — is a manual, weeks-long exercise. Consumption-priced CI makes cost
+unpredictable, and data-residency obligations push these teams toward self-hosting, which they lack
+the staff to operate.
+
+## 2. Target customer (ICP)
+
+**Beachhead:** regulated mid-market engineering organizations, **50–500 developers** — fintech,
+healthtech, insurtech, gov-adjacent. Traits: a compliance program already exists (or is being
+stood up), an auditor asks for evidence at least annually, data-residency or region-pinning is
+contractual, and platform headcount is 1–5 people.
+
+Out of beachhead (serve later, do not design for): <10-dev startups, air-gapped enterprises
+(see §7 non-goals), non-managed-Kubernetes self-hosters.
+
+### Personas
+
+| Persona | Owns | Primary pain | Primary surface |
+|---|---|---|---|
+| **Platform engineer** (buyer/operator) | the install, upgrades, envelopes | operating hosting + CI + scanners with 1–5 people | admin, policy authoring, fleet/release (ADR-0013) |
+| **Security lead** (champion) | findings backlog, policy | findings scattered across consoles; no merge-time enforcement | unified security dashboard (ADR-0015), policy-as-code (ADR-0006) |
+| **Compliance / audit owner** (economic pain) | control evidence | assembling evidence by hand for each audit | audit UI + evidence export (ADR-0007) |
+| **Developer** (daily user) | code, MRs | context-switching to security tools; slow clones | repo browser, MR review, CI (ADR-0015) |
+| **Auditor** (external, read-only) | attestation | trusting a screenshot | scoped read-only evidence export |
+
+## 3. Value proposition & wedge
+
+Table stakes (Phase 1): host repos, review merge requests, run pipelines — GitHub-clean UX
+(ADR-0015), no learning tax.
+
+**Wedge (Phase 2):** every scanner's output normalized into one findings model, surfaced in the
+same place code is reviewed, enforced at merge by policy-as-code, and exportable as audit evidence
+from an append-only trail. One product answers "is this change safe to merge, and can you prove it."
+
+Supporting differentiators:
+- **Flat-rate pricing** made solvent by fair-use envelopes (ADR-0008) — predictable cost, no
+  per-minute CI meter.
+- **BYO data plane** (ADR-0009) — customer's own GKE/EKS/AKS for residency (G7), operated by us
+  through an outbound-only agent (ADR-0011), so the customer does not staff it.
+
+## 4. Deployment model (product view)
+
+Per ADR-0009 the control plane is multi-tenant and hosted by us; the data plane is single-tenant.
+
+- **Default sold posture:** we host the data plane. Customer onboards with no infrastructure work.
+- **BYO data plane:** available as an option from GA (Phase 3), in the customer's GKE/EKS/AKS only
+  (ADR-0010), packaged as Helm + Operator (ADR-0013), reached only by outbound gRPC/mTLS from the
+  customer's cluster (ADR-0011, ADR-0017). Signed releases only.
+- The customer-visible product surface is identical in both postures. Any capability that works in
+  one and not the other is a defect, not a tier.
+
+## 5. Requirements by phase
+
+Requirements are numbered `PR-#`. Each maps to existing roadmap phases, backlog epics, and specs.
+"New" in the Task column means no task exists yet (see §12).
+
+### Phase 0 — Foundations (internal; no customer-visible surface)
+
+| ID | Requirement | G | ADR | Spec / Task |
+|---|---|---|---|---|
+| PR-1 | Every persisted row and every query is tenant-scoped; cross-tenant access is impossible by construction, not by convention | G1 | 0003 | SPEC-0001 / T-0004 |
+| PR-2 | Every sensitive action is authorized by a deny-by-default decision point before it takes effect | G2, G4 | 0006 | SPEC-0002 / T-0005 |
+| PR-3 | Every sensitive action emits an audit event that cannot be altered or deleted | G5 | 0007 | SPEC-0003 / T-0006 |
+| PR-4 | Repo storage backing is chosen on measured evidence before Phase-1 storage work begins | — | 0016, 0023 | T-0007 |
+
+### Phase 1 — MVP (GitHub-lite)
+
+| ID | Requirement | G | ADR | Spec / Task |
+|---|---|---|---|---|
+| PR-5 | A developer can clone, fetch, and push over HTTPS and SSH with an org identity or a scoped token | G2 | 0004, 0023 | SPEC-0004, SPEC-0006 / T-0011, T-0013 |
+| PR-6 | An accepted push is durable: acknowledged only after the primary and one synchronous replica hold it | — | 0016 | SPEC-0005 / T-0012 |
+| PR-7 | On loss of the primary, service resumes automatically from an in-sync replica; on dual loss the repo goes read-only and only an audited operator override can force-promote | G5 | 0016, 0018 | SPEC-0005 / T-0012 |
+| PR-8 | A developer can browse repo tree, file contents, blame, history, and diffs in the web UI | — | 0015 | SPEC-0007, SPEC-0008 / T-0014, T-0015 |
+| PR-9 | A team can open, review, comment on, approve, and merge a merge request | G4 | 0015 | SPEC-0009 / T-0016 |
+| PR-10 | Branch protection and approval requirements are enforced server-side and expressed as policy, not UI toggles | G4 | 0006 | SPEC-0009 / T-0016 |
+| PR-11 | A pipeline runs on push and on MR, each job in a fresh isolated sandbox destroyed at job end | G1 | 0005, 0012 | SPEC-0010 / T-0017 |
+| PR-12 | A customer can import a repository from GitHub or GitLab — refs, tags, LFS objects, **and** pull/merge request history with review threads, approvals, and their authors and timestamps | — | 0004, 0007 | **New** (§12.1) |
+
+### Phase 2 — Unified security & governance (the wedge)
+
+| ID | Requirement | G | ADR | Spec / Task |
+|---|---|---|---|---|
+| PR-13 | Scanner output (SAST, dependency, secrets, container, DAST) is normalized into one findings model with stable identity across scans | G3 | 0015 | **New** |
+| PR-14 | One dashboard shows all findings for a repo/org, filterable by severity, class, age, and owning team, with triage state (accept, false-positive, fix, defer) that survives re-scan | G3 | 0015 | **New** |
+| PR-15 | Findings appear inline in the merge request that introduced them | G3, G4 | 0015 | **New** |
+| PR-16 | A security or approval policy can be authored, versioned, dry-run, and enforced at merge, with the deciding policy version recorded on the decision | G4, G6 | 0006, 0007 | **New** |
+| PR-17 | A compliance owner can export a date-ranged evidence pack — approvals, policy decisions, scan gates, access changes — sufficient for a **SOC 2 Type II** control walkthrough, without engineer involvement | G5, G6 | 0007 | **New** |
+| PR-18 | An auditor can be granted scoped, read-only, time-boxed access to evidence without repo read access | G2, G6 | 0006 | **New** |
+| PR-19 | Code search returns results filtered by the caller's permissions, never leaking existence of unauthorized content | G1, G2 | 0014 | **New** |
+
+### Phase 3 — BYO & commercial
+
+| ID | Requirement | G | ADR | Spec / Task |
+|---|---|---|---|---|
+| PR-20 | A customer installs the data plane into their own GKE/EKS/AKS and it self-registers to the control plane over an outbound-only connection | G7, G9 | 0009, 0010, 0011, 0013, 0017 | **New** |
+| PR-21 | We ship upgrades to a customer data plane as signed releases with reconcile-based rollout and rollback, without inbound access to their cluster | G9 | 0011, 0013, 0017 | **New** |
+| PR-22 | Tenant data and compute stay pinned to the tenant's declared region/cloud, and that pinning is demonstrable in the evidence pack | G7, G6 | 0009, 0010 | **New** |
+| PR-23 | Usage is metered per fair-use dimension and visible to the customer before an envelope is reached | G8 | 0008 | **New** |
+
+## 6. Pricing & fair use (product behavior only)
+
+ADR-0008 fixes **flat-rate + fair-use**. This PRD does **not** set prices or tier names — the
+unit-economics model is an open ADR-0008 follow-up. It fixes the *dimensions* and the *behavior*:
+
+**Envelope dimensions:** seats · repository count · total repository storage · CI job minutes ·
+CI concurrency · scan volume · code-search index size · egress.
+
+**Enforcement — throttle and notify; never block git:**
+
+| Condition | Behavior |
+|---|---|
+| Approaching an envelope (threshold crossed) | in-product notice + email to the platform engineer; usage view shows the dimension and the trend |
+| Envelope exceeded — CI dimensions | job concurrency reduced and queue depth capped; running jobs finish; queued jobs are delayed, never silently dropped |
+| Envelope exceeded — storage / index dimensions | growth warned and reported; new large-object writes may be throttled |
+| Envelope exceeded — any dimension | **git push, fetch, clone, and all reads remain fully available**; repos are never made read-only for commercial reasons |
+| Sustained overage | handled commercially (plan conversation), never by degrading correctness or availability |
+
+Read-only is reserved for the durability failure mode in PR-7 (ADR-0018) and must never be used as
+a billing lever. No automatic metered overage billing — that would contradict the flat-rate promise
+in ADR-0008 and requires a superseding ADR.
+
+## 7. Non-goals
+
+Explicit, and enforceable as scope boundaries:
+
+1. **Air-gapped installation** (Topology A) — parked in the roadmap; not built, not sold, not
+   designed for.
+2. **Package/artifact registry beyond container images** — no npm/Maven/PyPI/Go module registry;
+   registry hardening beyond containers is out.
+3. **Issue tracking / project management** — no issues, boards, sprints, or epics as product
+   features. Integration with the customer's existing tracker is the path.
+4. **Self-hosting on non-managed Kubernetes** — bare metal, OpenShift, k3s, Docker Compose, and VMs
+   are unsupported. ADR-0010 targets GKE/EKS/AKS only.
+5. Also out: wiki/pages, chat, self-service force-promote (ADR-0018 keeps it operator-only until
+   decided), consumption-metered billing, service extraction without an ADR-0026 trigger.
+
+## 8. Success metrics
+
+**North star:** **findings triaged-to-resolved per week, per active org.** Chosen because it
+measures the wedge (PR-13…PR-16), not git parity — a customer can host repos elsewhere and still
+buy this.
+
+| Tier | Metric | Why |
+|---|---|---|
+| North star | findings triaged→resolved / week / org | the wedge is being used, not just installed |
+| Activation | days from onboarding to first policy-gated merge | proves PR-10 + PR-16 landed in the customer's flow |
+| Retention/habit | weekly active repos with a merged MR | core adoption; guards against a dashboard nobody works in |
+| Wedge depth | share of merges where a policy decision was recorded | governance is enforced, not decorative |
+| Compliance value | time-to-audit-evidence (hours to produce a dated evidence pack) | the economic buyer's pain (PR-17) |
+| Cost governance | share of orgs inside all fair-use envelopes; cost per active repo | flat-rate stays solvent (G8) |
+| Trust | accepted-push data-loss events (target: zero) | PR-6/PR-7 are non-negotiable |
+
+## 9. Non-functional targets — mid-market envelope
+
+Per-tenant scale ceiling the product is designed and tested to. Exceeding a ceiling is a cells
+conversation (ADR-0003), not a silent degradation.
+
+| Dimension | Target |
+|---|---|
+| Seats per tenant | ≤ 500 |
+| Repositories per tenant | ≤ 5,000 |
+| Largest single repository | ≤ 20 GB |
+| API / web availability | 99.9% monthly |
+| Git clone — time to first byte | p95 < 2 s |
+| Accepted-push durability | **RPO = 0** (ADR-0016) |
+| Recovery from single git-node loss | RTO < 5 min, automatic |
+| Dual loss | fail-safe read-only + audited override (ADR-0018); no RTO promise |
+| CI job start latency | p95 < 30 s from trigger, inside envelope |
+| Findings freshness | scan results visible on the MR within one pipeline duration |
+| Audit trail | append-only, tamper-evident, no delete path (ADR-0007) |
+
+These numbers constrain T-0007 (storage benchmark): the 20 GB repo ceiling and the p95 < 2 s clone
+target are the bar the storage decision must clear.
+
+## 10. GA definition
+
+**GA = Phase 3 exit** (`../roadmap/README.md`) **plus** a **SOC 2 Type II** report covering the
+hosted control plane and hosted data plane.
+
+At GA all of the following hold: Phases 0–2 exits met; PR-1…PR-19 shipped; BYO (PR-20…PR-22)
+installable and operated for at least one production customer; fair-use metering visible (PR-23);
+SOC 2 Type II report in hand. Pre-GA customers are design partners on the hosted posture.
+
+Note the deliberate asymmetry: BYO must **exist and be proven** at GA, but the **default sold
+posture remains hosted** (§4). BYO is an option, not the onboarding path.
+
+## 11. Governance mapping (G1–G9)
+
+| Objective | Covered by |
+|---|---|
+| G1 Tenant isolation | PR-1, PR-11, PR-19 |
+| G2 Least privilege | PR-2, PR-5, PR-18, PR-19 |
+| G3 Supply-chain security | PR-13, PR-14, PR-15 |
+| G4 Change governance | PR-9, PR-10, PR-16 |
+| G5 Auditability | PR-3, PR-7, PR-17 |
+| G6 Compliance frameworks | PR-17 (SOC 2 Type II), PR-18, PR-22 |
+| G7 Data residency | PR-20, PR-22 |
+| G8 Cost governance | §6, PR-23 |
+| G9 Least-privilege footprint | PR-20, PR-21 |
+
+## 12. Open questions, new work, and drift
+
+### 12.1 New work this PRD implies (no task exists today)
+
+| Item | Requirement | Needs |
+|---|---|---|
+| Repo + MR-history import from GitHub/GitLab | PR-12 | new spec + task(s); Phase-1 scope increase. Audit-integrity question addressed by **ADR-0029 (Proposed)** — imported history is `ATTESTED_IMPORT`, never enters the audit log, and imported approvals never satisfy a merge policy. Spec + tasks blocked on ADR-0029 acceptance. |
+| Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
+| Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
+| Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
+| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` |
+
+### 12.2 Drift to reconcile in governance
+
+Resolved (2026-07-31): `../agents/context.md` product line no longer lists **issues** and now points
+here for non-goals; `../tasks/README.md` T-0001 status matches its task file; tasks T-0002…T-0009
+carry `Repo(s):` per super-repo `AGENTS.md` rule 2.
+
+Open:
+1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018,
+   T-0019) and all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
+
+### 12.3 Still-parked human decisions this PRD depends on
+
+- Unit-economics model per tier — ADR-0008 follow-up. §6 is unblocked without it; pricing is not.
+- Tenant self-service force-promote — ADR-0018/0016. §7 assumes operator-only until decided.
+- Cert issuance/rotation (SPIFFE/SPIRE) + proxy fallback — ADR-0017. Gates PR-20/PR-21.
+- Compliance frameworks beyond SOC 2 Type II (ISO 27001, others) — deliberately unnamed; adding one
+  changes PR-17's evidence model and belongs in a PRD revision.
+
+### 12.4 Assumptions
+
+- "Regulated" means an external audit obligation exists, not a specific framework certification.
+- Scanner selection for PR-13 is an implementation choice, not a PRD commitment.
+- SOC 2 scope at GA covers hosted planes only; a BYO customer's own cluster is their control
+  environment, evidenced via PR-22.

@@ -5,7 +5,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 
 | Task | Title | Phase | Status |
 |------|-------|-------|--------|
-| T-0001 | Scaffold super-repo + submodules (polyrepo + HCLC) | 0 | Todo |
+| T-0001 | Scaffold super-repo + submodules (polyrepo + HCLC) | 0 | In review |
 | T-0002 | Boundary/arch enforcement in CI | 0 | Todo |
 | T-0003 | Minikube dev environment | 0 | Todo |
 | T-0004 | Tenancy + RLS baseline | 0 | Todo |
@@ -22,3 +22,5 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0015 | Web: repo browser + file/diff + palette | 1 | Todo |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Todo |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
+| T-0018 | Repository import — refs, tags & LFS | 1 | Blocked (SPEC-0011) |
+| T-0019 | Review-history import + attested provenance | 1 | Blocked (ADR-0029) |
