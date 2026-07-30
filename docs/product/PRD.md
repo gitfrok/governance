@@ -221,7 +221,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 
 | Item | Requirement | Needs |
 |---|---|---|
-| Repo + MR-history import from GitHub/GitLab | PR-12 | new spec + task(s); Phase-1 scope increase. Audit-integrity question settled by **ADR-0029 (Accepted)** — imported history is `ATTESTED_IMPORT`, never enters the audit log, and imported approvals never satisfy a merge policy. Spec + tasks now gated only on SPEC-0011 approval. |
+| Repo + MR-history import from GitHub/GitLab | PR-12 | new spec + task(s); Phase-1 scope increase. Audit-integrity question settled by **ADR-0029 (Accepted)** — imported history is `ATTESTED_IMPORT`, never enters the audit log, and imported approvals never satisfy a merge policy. **SPEC-0011 Approved**; delivered by T-0018 (code and history in one unit). |
 | Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
@@ -234,8 +234,8 @@ here for non-goals; `../tasks/README.md` T-0001 status matches its task file; ta
 carry `Repo(s):` per super-repo `AGENTS.md` rule 2.
 
 Open:
-1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018,
-   T-0019) and all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
+1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and
+   all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
 
 ### 12.3 Still-parked human decisions this PRD depends on
 
@@ -244,6 +244,9 @@ Open:
 - Cert issuance/rotation (SPIFFE/SPIRE) + proxy fallback — ADR-0017. Gates PR-20/PR-21.
 - Compliance frameworks beyond SOC 2 Type II (ISO 27001, others) — deliberately unnamed; adding one
   changes PR-17's evidence model and belongs in a PRD revision.
+- Retention of attested imported records — ADR-0029 says repo retention, not audit retention, but the
+  audit retention policy itself is still an ADR-0007 follow-up. Does not block T-0018; must be settled
+  before Phase-2 evidence export (PR-17/PR-18) relies on it. Last open item from SPEC-0011.
 
 ### 12.4 Assumptions
 

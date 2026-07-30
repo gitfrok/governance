@@ -1,10 +1,10 @@
 # SPEC-0011: Repository & review-history import (GitHub/GitLab)
 
-- **Status:** Draft — governing ADR-0029 is **Accepted**; awaiting spec review/approval
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** Repository/Git + Code Review + Audit (+ Identity&Access for actor mapping)
 - **ADRs:** 0029 (Accepted — governing), 0007, 0006, 0004, 0016, 0003, 0022, 0015
-- **Task(s):** T-0018 (repo + ref import), T-0019 (review-history import + provenance)
+- **Task(s):** T-0018 (repository + review-history import — git data and history in one unit)
 - **PRD:** PR-12 (requirement), PR-17/PR-18 (evidence-export consequences)
 
 ## Problem / context
@@ -29,7 +29,8 @@ observable behavior of the import capability under that decision.
   blob storage.
 - **Review history:** MRs/PRs with title, description, state, source/target refs, review threads
   and comments (including position/anchoring where the diff still resolves), approvals/reviews,
-  labels, and their `declared_actor` + `declared_at`.
+  labels, and their `declared_actor` + `declared_at`. Where a comment's position no longer resolves,
+  anchoring **degrades** — file-level, then MR-level — and the comment is never dropped (AC19).
 - **Provenance:** every imported non-git record carries the ADR-0029 provenance block; every import
   emits first-party `HistoryImported`; revocation emits `HistoryImportRevoked`.
 - **Manifest:** a per-import manifest with a digest over the fetched payload set, and a verifier.
@@ -125,6 +126,11 @@ No cross-context table access (ADR-0022).
 - [ ] AC18: An MR view containing both imported and first-party threads distinguishes them, and an
       imported approval is never rendered in a way that reads as a platform approval.
 
+**Anchor degradation**
+- [ ] AC19: A comment whose diff position no longer resolves degrades to file-level anchoring, and to
+      MR-level attachment only when the file is also gone. No comment is dropped, and the API marks a
+      degraded anchor as approximate so the UI can render it as such.
+
 ## Governance mapping (G1–G9)
 
 | Objective | How this spec satisfies it |
@@ -148,16 +154,21 @@ No cross-context table access (ADR-0022).
 
 ## Open questions / assumptions
 
-1. ~~**Blocked on ADR-0029.**~~ **Resolved** — ADR-0029 is `Accepted`. The remaining gate is this
-   spec's own review/approval; nothing here waits on a decision record any more.
-2. **Comment anchoring** when the imported diff no longer resolves (force-pushed or missing source
-   commits): assume degrade to file-level or MR-level attachment rather than dropping the comment —
-   confirm during review.
-3. **Task split** T-0018 / T-0019 assumed (git data, then history+provenance) so refs-only import can
-   ship first; confirm against the Phase-1 sequence, since PR-12 was scoped into Phase 1 after the
-   plan was written and `../plans/` has no Phase-1 plan file yet.
+Questions 1–3 were **resolved at spec review** (2026-07-30) and are recorded here rather than
+deleted, so the approved shape stays traceable.
+
+1. ~~**Blocked on ADR-0029.**~~ **Resolved** — ADR-0029 is `Accepted`.
+2. ~~**Comment anchoring** when the imported diff no longer resolves.~~ **Resolved** — degrade
+   file-level, then MR-level; never drop the comment; mark the anchor approximate. Now normative as
+   AC19.
+3. ~~**Task split** T-0018 / T-0019.~~ **Resolved — rejected.** Git data and review history ship as
+   **one task (T-0018)**; the former T-0019 was folded into it. A repository whose code is present
+   but whose review history is not has no honest representation for the migrating customer, and
+   PR-12's value is the history. T-0019 is retired and its number is not reused.
 4. **Retention** of attested records follows repo retention, not audit retention (ADR-0029
-   follow-up); the audit retention policy itself is still an ADR-0007 follow-up.
+   follow-up); the audit retention policy itself is still an ADR-0007 follow-up. **Still open** — it
+   does not block implementation, since nothing here writes a retention policy, but the attested-record
+   retention rule must exist before Phase-2 evidence-export work relies on it.
 5. Assumes source credentials are a tenant-supplied PAT/OAuth token with read scope; credential
    storage reuses the platform secret path (no new secret store).
 6. Volume assumption: a single repo import fits the PRD §9 ceiling (≤20 GB, and MR history in the
