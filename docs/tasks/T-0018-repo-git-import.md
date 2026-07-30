@@ -1,10 +1,10 @@
 # T-0018: Repository import — refs, tags & LFS from GitHub/GitLab
 
-- **Status:** Blocked (SPEC-0011 must be Approved; SPEC-0011 is blocked on ADR-0029)
+- **Status:** Blocked (SPEC-0011 must be Approved; ADR-0029 is now Accepted)
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: import RPCs) → backend (import job + git write path)
 - **Spec:** docs/specs/SPEC-0011-repository-history-import.md
-- **ADRs:** 0004, 0016, 0006, 0003, 0022, 0029 (Proposed)
+- **ADRs:** 0004, 0016, 0006, 0003, 0022, 0029
 - **Owner:** unassigned
 - **Depends on:** T-0010 (Git-RPC), T-0013 (identity/tokens), T-0005 (PDP)
 - **Blocks:** T-0019
@@ -47,8 +47,8 @@ audited job. Code-only: no review history (that is T-0019).
 See `../process/definition-of-done.md`.
 
 ## Notes / open questions
-- **Blocked:** SPEC-0011 cannot be Approved while ADR-0029 is `Proposed`. Do not enter RED before
-  both are settled (AGDD, ADR-0028).
+- **Blocked:** ADR-0029 is `Accepted`, so the decision gate is clear; the remaining gate is
+  SPEC-0011 going `Approved`. Do not enter RED before that (AGDD, ADR-0028).
 - Cross-repo order per ADR-0027: governance PR (import RPCs) → backend implements and bumps the
   governance pointer → super-repo bumps pins to merged commits only.
 - Git objects are content-addressed, so provenance attaches to the **import**, not to blobs

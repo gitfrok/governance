@@ -1,9 +1,9 @@
 # SPEC-0011: Repository & review-history import (GitHub/GitLab)
 
-- **Status:** Draft — **blocked on ADR-0029 acceptance**
+- **Status:** Draft — governing ADR-0029 is **Accepted**; awaiting spec review/approval
 - **Owner:** platform
 - **Context(s):** Repository/Git + Code Review + Audit (+ Identity&Access for actor mapping)
-- **ADRs:** 0029 (Proposed — governing), 0007, 0006, 0004, 0016, 0003, 0022, 0015
+- **ADRs:** 0029 (Accepted — governing), 0007, 0006, 0004, 0016, 0003, 0022, 0015
 - **Task(s):** T-0018 (repo + ref import), T-0019 (review-history import + provenance)
 - **PRD:** PR-12 (requirement), PR-17/PR-18 (evidence-export consequences)
 
@@ -148,7 +148,8 @@ No cross-context table access (ADR-0022).
 
 ## Open questions / assumptions
 
-1. **Blocked on ADR-0029.** This spec cannot go `Approved` while the governing ADR is `Proposed`.
+1. ~~**Blocked on ADR-0029.**~~ **Resolved** — ADR-0029 is `Accepted`. The remaining gate is this
+   spec's own review/approval; nothing here waits on a decision record any more.
 2. **Comment anchoring** when the imported diff no longer resolves (force-pushed or missing source
    commits): assume degrade to file-level or MR-level attachment rather than dropping the comment —
    confirm during review.
