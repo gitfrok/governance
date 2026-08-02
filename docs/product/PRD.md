@@ -233,9 +233,17 @@ Resolved (2026-07-31): `../agents/context.md` product line no longer lists **iss
 here for non-goals; `../tasks/README.md` T-0001 status matches its task file; tasks T-0002…T-0009
 carry `Repo(s):` per super-repo `AGENTS.md` rule 2.
 
+Resolved (2026-08-03): `../backlog/README.md` EP-0 listed only T-0001 and T-0002, though T-0008 and
+T-0009 both carry `Phase / Epic: 0 / EP-0` in their task files; the epic now lists all four. The
+§7 non-goal "service extraction without an ADR-0026 trigger" became mechanically observable with
+T-0009's trigger report, whose budgets are Proposed as ADR-0030.
+
 Open:
 1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and
    all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
+2. Phase-0 requirements here are PR-1…PR-4, which map to T-0004…T-0007. The EP-0 enablement tasks
+   (T-0001, T-0002, T-0008, T-0009) intentionally have no `PR-#`: they are internal with no
+   customer-visible surface (§5). Noted so their absence reads as deliberate rather than as a gap.
 
 ### 12.3 Still-parked human decisions this PRD depends on
 

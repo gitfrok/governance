@@ -1,6 +1,6 @@
 # T-0001: Scaffold super-repo + submodules (polyrepo + HCLC)
 
-- **Status:** In Review (implementation complete; PRs per submodule pending)
+- **Status:** Done (2026-08-03)
 - **Phase / Epic:** 0 / EP-0
 - **Repo(s):** super-repo + governance + backend + bff + webfrontend
 - **Spec:** chore — acceptance criteria below
@@ -35,5 +35,24 @@ correct home and enforced boundaries from commit one.
 ## Definition of Done
 See `../process/definition-of-done.md`.
 
+## Implementation record
+
+The blocker recorded while this sat In review — "PRs per submodule pending" — is resolved: the
+scaffolding PR is merged on `main` in all four submodules.
+
+| Repo | Merged | What |
+|---|---|---|
+| governance | initial + `5b592a7` (#2) | `contracts/`, `policies/`, `docs/` |
+| backend | `ff530a0` (#1) | modular-monolith tree + codegen |
+| bff | `38d3956` (#1) | Go BFF baseline + codegen |
+| webfrontend | `4476d47` (#1) | Astro SSR baseline + TS codegen |
+
+The `.gitmodules` URLs are relative (`../<repo>.git`), which resolves under the `gitfrok` org from
+any clone protocol — AC1 as written, not a placeholder. The stale "replace these" comment was
+removed in the super-repo when this closed.
+
 ## Notes / open questions
-Real submodule URLs replace the `.gitmodules` placeholders. Follow the AGDD loop.
+- AC5's dependency-direction stub has since been extended twice: T-0002 fixed its import-spec
+  matching, and T-0009 replaced its word-split file handling and put it under `shellcheck`.
+- `platform/ids` shipped here as a sequence-number placeholder pointing at T-0008 for the real
+  ULID; T-0008 delivered it.
