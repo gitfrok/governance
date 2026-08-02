@@ -53,12 +53,15 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0027](0027-repo-topology-submodules.md) | Multi-repo source topology via git submodules | Accepted |
 | [ADR-0028](0028-agdd-framework.md) | AGDD — AI-Agent Governance-Driven Development framework | Accepted |
 | [ADR-0029](0029-imported-history-attested-provenance.md) | Imported history is attested, not audited — two-class provenance | Accepted |
+| [ADR-0030](0030-extraction-trigger-budgets.md) | Extraction-trigger budgets for the modular monolith | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - CI job asserting installed versions meet the floors — ADR-0023
 - `make dev-up` Minikube bootstrap + per-OS driver docs — ADR-0024
-- Boundary-enforcement linter + event catalog/naming — ADR-0022 (co-located vs separate app-contexts resolved by ADR-0025)
-- Track & act on service-extraction triggers (fitness functions) — ADR-0026
+- Event catalog/naming — ADR-0022. The boundary-enforcement linter shipped in T-0002/T-0009; event
+  names are the protobuf full names of `contracts/events` (T-0008), but no catalog documents them.
+- Track & act on service-extraction triggers (fitness functions) — ADR-0026. Measured by T-0009;
+  the budgets they are compared against await **ADR-0030** (Proposed).
 - Super-repo CI: fail on submodule pointers referencing unmerged commits — ADR-0027
 - Per-repo scaffolding + generated-type publishing (contracts → TS) — ADR-0027/0028
 - Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023
