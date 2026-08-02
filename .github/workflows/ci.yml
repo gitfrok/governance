@@ -1,0 +1,27 @@
+# Governance CI (T-0009). Until now this repo had no gate at all and relied on review, which is
+# the wrong way round: every other repo defers its decisions to this one (invariant 21), so a
+# broken link or an unindexed ADR here is a decision an agent will not find.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: docs gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The scripts are the gate; lint them before trusting them.
+      - name: shellcheck
+        run: shellcheck scripts/*.sh
+
+      # Relative links resolve, ADRs/specs/tasks/plans are all indexed, ADR numbers are unique.
+      - name: docs gates
+        run: ./scripts/check-docs.sh

@@ -4,7 +4,14 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 **Definition of Done** for every task: `../process/definition-of-done.md`.
 
 ## Phase 0 — Foundations
-- **EP-0 Scaffolding & process**: T-0001 (repo layout), T-0002 (boundary/arch CI).
+- **EP-0 Scaffolding & process**: T-0001 (repo layout, **Done**), T-0002 (boundary/arch CI),
+  T-0008 (in-process bus + module `api` convention), T-0009 (extraction-readiness fitness
+  functions). T-0008 and T-0009 carry `Phase / Epic: 0 / EP-0` in their task files and were
+  missing from this list.
+  **Epic status:** T-0001 Done; T-0002/T-0008/T-0009 In review. EP-0 cannot close until
+  **T-0002 AC5** (a second GitHub org member, so `enforce_admins=true` can be set without making
+  merges impossible) and **ADR-0030** (the extraction budgets T-0009 AC4 gates on) are settled —
+  both need a human, neither is code.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
@@ -27,4 +34,9 @@ Agent impl (`contracts/proto/agent/v1`); Operator + Helm + per-cloud drivers; me
 
 ## Parked — needs a human decision first
 - Force-promote tenant self-service? (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017)
-- Unit-economics model per tier (ADR-0008) · boundary linter + event catalog (ADR-0022)
+- Unit-economics model per tier (ADR-0008) · event catalog (ADR-0022; the boundary linter shipped
+  in T-0002/T-0009)
+- **Extraction-trigger budgets — ADR-0030 (Proposed).** Blocks T-0009 reaching Done.
+- **A second GitHub org member.** GitHub forbids self-approval, so a required review plus
+  `enforce_admins=true` makes merging impossible with one member — which is why T-0002 AC5 runs but
+  does not block. Blocks EP-0 closing.
