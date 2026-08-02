@@ -236,7 +236,7 @@ carry `Repo(s):` per super-repo `AGENTS.md` rule 2.
 Resolved (2026-08-03): `../backlog/README.md` EP-0 listed only T-0001 and T-0002, though T-0008 and
 T-0009 both carry `Phase / Epic: 0 / EP-0` in their task files; the epic now lists all four. The
 §7 non-goal "service extraction without an ADR-0026 trigger" became mechanically observable with
-T-0009's trigger report, whose budgets are Proposed as ADR-0030.
+T-0009's trigger report, whose budgets are set by ADR-0030 (Accepted).
 
 Open:
 1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and

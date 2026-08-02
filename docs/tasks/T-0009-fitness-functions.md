@@ -1,11 +1,11 @@
 # T-0009: Architecture fitness functions (extraction-readiness)
 
-- **Status:** In review (AC1–AC4 implemented and green locally; PRs pending; AC4's budgets await ADR-0030)
+- **Status:** Done (2026-08-03)
 - **Phase / Epic:** 0 / EP-0
 - **Repo(s):** backend (AC1–AC3 module checks); super-repo if the AC4 trigger report is wired as
   an aggregate CI gate
 - **Spec:** chore — acceptance criteria below
-- **ADRs:** 0026, 0025, 0022
+- **ADRs:** 0026, 0025, 0022, **0030** (the budgets AC4 gates on)
 - **Owner:** unassigned
 
 ## Goal
@@ -16,7 +16,7 @@ Continuously prove the monolith stays service-extractable, and track ADR-0026 tr
 - [x] AC2: The module dependency graph is acyclic; a cycle fails the build.
 - [x] AC3: No module `api/` surface references an infra type (extends T-0002 AC4 fleet-wide).
 - [x] AC4: A report emits the ADR-0026 trigger signals (per-module build/test time; fan-in/out)
-  so extraction decisions are data-driven. **Budgets are provisional pending ADR-0030.**
+  so extraction decisions are data-driven. Budgets agreed in **ADR-0030 (Accepted)**.
 
 ## Tests to write first
 - boundary/arch: isolation build, acyclicity check, api-purity check.
@@ -29,10 +29,11 @@ See `../process/definition-of-done.md`.
 
 | Repo | Commit | What |
 |---|---|---|
-| backend | `73f6052` (branch `feat/t-0009-fitness-functions`) | `internal/arch/graph.go` + `triggers.go`: AC1–AC4 |
-| bff | `5191f93` (branch `feat/t-0009-no-direct-db`) | `RuleDirectDataStore` — the rule T-0002 deferred here |
-| super-repo | `8e6b751` (branch `feat/t-0009-shellcheck-gate`) | `shellcheck` gated; `check-dep-direction.sh` word-splitting fixed |
-| governance | `958e649`, `502b87a` (branch `docs/t-0009-extraction-budgets`) | docs-integrity CI; ADR-0030 (Proposed) |
+| backend | `f38a3b3` (#4) | `internal/arch/graph.go` + `triggers.go`: AC1–AC4 |
+| bff | `c496258` (#3) | `RuleDirectDataStore` — the rule T-0002 deferred here |
+| super-repo | `2a6b60a` (#7) | `shellcheck` gated; `check-dep-direction.sh` word-splitting fixed |
+| governance | `87e4e91` (#8) | docs-integrity CI; ADR-0030 |
+| super-repo | `26078ac` (#9) | submodule pins bumped to the merged commits (invariant 24/25) |
 
 Where T-0002 asks whether one file breaks a boundary, these ask whether the tree is still
 separable into services — the property ADR-0026 depends on, and the one that erodes invisibly.
@@ -50,12 +51,11 @@ separable into services — the property ADR-0026 depends on, and the one that e
   an adapter importing pgx, a module using its own internals).
 
 ## Notes / open questions
-- **AC4's budgets are not agreed.** ADR-0026 trigger 4 says the build time crosses "an agreed
-  budget" and never states one. Setting it is a decision (invariant 12), so the mechanism shipped
-  with provisional values and **ADR-0030 is Proposed** — this task cannot be Done until a human
-  accepts or amends it. The numbers are deliberately loose: the tree is two modules and a
-  sub-second build, and a budget that fires on ordinary Phase-1 growth teaches people to raise it
-  reflexively.
+- **AC4's budgets are agreed: ADR-0030 is Accepted** (120s monolith build, 300s monolith test,
+  fan-out 5). ADR-0026 trigger 4 referred to "an agreed budget" that had never been set, so the one
+  trigger meant to fire mechanically could not; it now can. The numbers are deliberately loose —
+  the tree is two modules and a sub-second build, and a budget that fires on ordinary Phase-1
+  growth teaches people to raise it reflexively — and ADR-0030 schedules a revisit at Phase-1 exit.
 - **PRD alignment.** §7 lists "service extraction without an ADR-0026 trigger" as a non-goal;
   AC4 is the only mechanism that makes that non-goal observable rather than aspirational.
 - Deploy time is named in ADR-0026 trigger 4 and is **not** measured: nothing deploys yet.
