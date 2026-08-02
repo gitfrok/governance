@@ -1,6 +1,6 @@
 # T-0008: In-process event bus + module `api` convention
 
-- **Status:** In review (AC1–AC4 implemented and green locally; PR pending)
+- **Status:** Done (2026-08-03)
 - **Phase / Epic:** 0 / EP-0
 - **Repo(s):** backend (`platform/bus`, reference modules, `cmd/dataplane-app`); governance only
   if AC3 needs a new `contracts/events` shape (additive)
@@ -29,7 +29,7 @@ See `../process/definition-of-done.md`.
 
 | Repo | Commit | What |
 |---|---|---|
-| backend | `ea910c0` (branch `feat/t-0008-inprocess-bus`) | `platform/bus`, `platform/ids`, `modules/codesearch`, repository events + composition roots |
+| backend | `6acc1c8` (#3) | `platform/bus`, `platform/ids`, `modules/codesearch`, repository events + composition roots |
 
 - **AC1** — `bus.InProcess`: synchronous, ordered fan-out keyed by event name. Every handler runs
   even when one fails and the errors come back joined, so an independent consumer cannot be

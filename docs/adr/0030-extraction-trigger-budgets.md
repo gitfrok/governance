@@ -1,6 +1,6 @@
 # ADR-0030: Extraction-trigger budgets for the modular monolith
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-03
 - **Deciders:** platform
 - **Governs:** G8 cost governance
@@ -17,8 +17,8 @@ and today nothing notices it.
 
 T-0009 builds the report that measures the observable signals. It needs numbers to compare against,
 and picking them is a decision, not an implementation detail (invariant 12) — so the mechanism
-landed with provisional values in the backend's `internal/arch` (`DefaultBudgets`), pointing here,
-and this ADR is what settles them.
+landed with provisional values in the backend's `internal/arch` (`DefaultBudgets`), pointing here.
+This ADR settles them; those values are now the agreed budget ADR-0026 refers to, not a placeholder.
 
 Two things make the numbers hard to set well right now:
 
@@ -80,9 +80,9 @@ loose enough that this should mean a re-run, not a policy change.
   mechanically, and an unquantified trigger never fires. The other three already work by judgement.
 - **Set tight budgets now and relax them as needed** — rejected: a gate that fires on ordinary
   growth teaches people to raise the number reflexively, and then it is decoration.
-- **Report without gating** — rejected as the end state, though it is what T-0009 ships until this
-  ADR is Accepted. A report nobody is required to read is how the build got slow in the first
-  place. Gating is what forces the conversation to happen once.
+- **Report without gating** — rejected, and it is what T-0009 effectively did while this sat
+  Proposed. A report nobody is required to read is how the build got slow in the first place;
+  gating is what forces the conversation to happen once.
 - **Budget per-module build time instead of the monolith's** — rejected: ADR-0026 trigger 4 is
   about the binary, and a per-module budget would push toward extracting whichever module is
   merely largest rather than whichever one has a reason to leave.

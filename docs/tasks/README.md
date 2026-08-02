@@ -12,8 +12,8 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0005 | PDP skeleton (OPA) | 0 | Todo |
 | T-0006 | Append-only audit log | 0 | Todo |
 | T-0007 | Storage benchmark (SeaweedFS-FUSE vs block) | 0 | Todo |
-| T-0008 | In-process bus + module `api` convention | 0 | In review |
-| T-0009 | Architecture fitness functions (extraction-readiness) | 0 | In review |
+| T-0008 | In-process bus + module `api` convention | 0 | Done |
+| T-0009 | Architecture fitness functions (extraction-readiness) | 0 | Done |
 | T-0010 | Git-RPC storage service | 1 | Todo |
 | T-0011 | Smart-HTTP + SSH front doors | 1 | Todo |
 | T-0012 | Sync-replica write path + failover | 1 | Todo |
