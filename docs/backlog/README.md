@@ -15,10 +15,10 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   branch protection deleted. Verified empirically: a direct admin push to `main` is
   `[remote rejected]`, and `gh pr merge --admin` is refused on a red required check. Every criterion
   in this epic is met and machine-enforced.
-  Carried out of the epic as ADR-0031 follow-ups, none of them blocking: no four-eyes review on
-  `main` until a second org member exists; `webfrontend` has no workflow to require yet; the two
-  rulesets are five per-repo copies (org-level rulesets need GitHub Team) kept honest by
-  `make rulesets-check`.
+  Carried out of the epic as ADR-0031 follow-ups, none of them blocking: `webfrontend` has no
+  workflow to require yet; the two rulesets are five per-repo copies (org-level rulesets need GitHub
+  Team) kept honest by `make rulesets-check`. The third — four-eyes review — **closed 2026-08-05**:
+  a second org member joined and `main-review`'s bypass is now empty everywhere.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
@@ -43,9 +43,7 @@ Agent impl (`contracts/proto/agent/v1`); Operator + Helm + per-cloud drivers; me
 - Force-promote tenant self-service? (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017)
 - Unit-economics model per tier (ADR-0008) · event catalog (ADR-0022; the boundary linter shipped
   in T-0002/T-0009)
-- **A second GitHub org member.** GitHub forbids self-approval, so a required review plus
-  `enforce_admins=true` makes merging impossible with one member. **Did not block EP-0 in the end**
-  (ADR-0031 Accepted and applied 2026-08-04): the check gate binds admins with no bypass, and the
-  review gate is admin-bypassable until a member exists. Still wanted — a second member is what makes
-  four-eyes review real, and dropping that bypass is an ADR-0031 follow-up. *(Extraction-trigger budgets left
-  this list on 2026-08-03: ADR-0030 Accepted.)*
+*(Two items left this list recently: extraction-trigger budgets on 2026-08-03, ADR-0030 Accepted; and
+"a second GitHub org member" on 2026-08-05 — `webenable-asia` joined, so `main-review`'s admin bypass
+was removed and four-eyes review on `main` is now binding on owners too. It never blocked EP-0 in the
+end: ADR-0031 bound the check gate without it.)*
