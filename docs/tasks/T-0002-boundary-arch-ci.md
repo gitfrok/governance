@@ -68,10 +68,21 @@ dismissal, conversation resolution, no force-push, no deletion) with required st
 even though GitHub prints "Changes must be made through a pull request", and `gh pr merge --admin`
 bypasses the review gate. Verified empirically.
 
-Closing AC5 needs `enforce_admins=true`. That cannot be set while the org has a single member —
-GitHub forbids self-approval, so a required review plus bound admins makes merging impossible.
-**Decision taken:** add a second org member who can approve, keep the review requirement, then bind
-admins. Until then AC5 stays open and this task stays In review.
+`enforce_admins=true` cannot be set while the org has a single member — GitHub forbids
+self-approval, so a required review plus bound admins makes merging impossible. The earlier decision
+here was "add a second org member first", which parked AC5 behind an org action.
 
-`governance` and `webfrontend` have no CI, so they gate on review only. `governance` is the Source
-of Truth; a docs/link check there is the obvious next gate for parity.
+**Superseded by ADR-0031 (Accepted).** Legacy branch protection has one admin-binding switch for
+every rule, which is what coupled the check gate to the review gate; rulesets carry a bypass list per
+ruleset. AC5 asks for *checks* to block, not for review. So `main` moves to two rulesets per repo —
+`main-integrity` (PR required, required status checks, no force-push, no deletion, conversation
+resolution) with **no bypass actors**, and `main-review` (1 approving review, dismiss stale) with
+Repository admin bypassing until a second member exists. Legacy protection is removed rather than
+layered, since overlapping rules union and the loosest bypass wins.
+
+AC5 closes when those rulesets are applied to all five repos and a direct push plus
+`gh pr merge --admin` are both re-verified as rejected. Until then this task stays In review.
+
+`webfrontend` has no CI workflow at all, and `governance`'s docs gate (T-0009) runs but is not a
+required check — so neither blocks on checks today. Both still get `main-integrity` for the CI-free
+rules; wiring governance's gate into its required checks is an ADR-0031 follow-up.

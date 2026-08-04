@@ -9,9 +9,11 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   functions). T-0008 and T-0009 carry `Phase / Epic: 0 / EP-0` in their task files and were
   missing from this list.
   **Epic status:** T-0001, T-0008 and T-0009 **Done**. T-0002 remains In review, and it is the
-  only thing left holding EP-0 open: **AC5** needs a second GitHub org member so
-  `enforce_admins=true` can be set without making merges impossible. That is an org action, not
-  code — every other criterion in this epic is met and gated in CI.
+  only thing left holding EP-0 open: **AC5** (gates *block* merge, not just run). It no longer waits
+  on a second GitHub org member — **ADR-0031 Accepted** splits enforcement into two rulesets, so the
+  check gate binds admins with no bypass while the review gate stays admin-bypassable until a second
+  member exists. Remaining: apply the rulesets to all five repos and re-verify that a direct push and
+  `gh pr merge --admin` are both rejected. Every other criterion in this epic is met and gated in CI.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
@@ -37,6 +39,8 @@ Agent impl (`contracts/proto/agent/v1`); Operator + Helm + per-cloud drivers; me
 - Unit-economics model per tier (ADR-0008) · event catalog (ADR-0022; the boundary linter shipped
   in T-0002/T-0009)
 - **A second GitHub org member.** GitHub forbids self-approval, so a required review plus
-  `enforce_admins=true` makes merging impossible with one member — which is why T-0002 AC5 runs but
-  does not block. Blocks EP-0 closing. *(Extraction-trigger budgets left this list on 2026-08-03:
-  ADR-0030 Accepted.)*
+  `enforce_admins=true` makes merging impossible with one member. **No longer blocks EP-0**
+  (ADR-0031 Accepted, 2026-08-04): the check gate binds admins with no bypass, and the review gate is
+  admin-bypassable until a member exists. Still wanted — a second member is what makes four-eyes
+  review real, and dropping that bypass is an ADR-0031 follow-up. *(Extraction-trigger budgets left
+  this list on 2026-08-03: ADR-0030 Accepted.)*
