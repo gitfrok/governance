@@ -4,16 +4,21 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 **Definition of Done** for every task: `../process/definition-of-done.md`.
 
 ## Phase 0 — Foundations
-- **EP-0 Scaffolding & process**: T-0001 (repo layout, **Done**), T-0002 (boundary/arch CI),
-  T-0008 (in-process bus + module `api` convention), T-0009 (extraction-readiness fitness
-  functions). T-0008 and T-0009 carry `Phase / Epic: 0 / EP-0` in their task files and were
-  missing from this list.
-  **Epic status:** T-0001, T-0008 and T-0009 **Done**. T-0002 remains In review, and it is the
-  only thing left holding EP-0 open: **AC5** (gates *block* merge, not just run). It no longer waits
-  on a second GitHub org member — **ADR-0031 Accepted** splits enforcement into two rulesets, so the
-  check gate binds admins with no bypass while the review gate stays admin-bypassable until a second
-  member exists. Remaining: apply the rulesets to all five repos and re-verify that a direct push and
-  `gh pr merge --admin` are both rejected. Every other criterion in this epic is met and gated in CI.
+- **EP-0 Scaffolding & process** *(closed)*: T-0001 (repo layout, **Done**), T-0002 (boundary/arch
+  CI, **Done**), T-0008 (in-process bus + module `api` convention, **Done**), T-0009
+  (extraction-readiness fitness functions, **Done**). T-0008 and T-0009 carry
+  `Phase / Epic: 0 / EP-0` in their task files and were missing from this list.
+  **Epic status: CLOSED 2026-08-04.** All four tasks **Done**. T-0002 AC5 was the last item — the
+  gates now *block* rather than only run: **ADR-0031** split `main` enforcement into two rulesets
+  (`main-integrity` with no bypass actors, `main-review` admin-bypassable until the org has a second
+  member), applied to all five repos by the super-repo's `scripts/apply-rulesets.sh`, with legacy
+  branch protection deleted. Verified empirically: a direct admin push to `main` is
+  `[remote rejected]`, and `gh pr merge --admin` is refused on a red required check. Every criterion
+  in this epic is met and machine-enforced.
+  Carried out of the epic as ADR-0031 follow-ups, none of them blocking: no four-eyes review on
+  `main` until a second org member exists; `webfrontend` has no workflow to require yet; the two
+  rulesets are five per-repo copies (org-level rulesets need GitHub Team) kept honest by
+  `make rulesets-check`.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
@@ -39,8 +44,8 @@ Agent impl (`contracts/proto/agent/v1`); Operator + Helm + per-cloud drivers; me
 - Unit-economics model per tier (ADR-0008) · event catalog (ADR-0022; the boundary linter shipped
   in T-0002/T-0009)
 - **A second GitHub org member.** GitHub forbids self-approval, so a required review plus
-  `enforce_admins=true` makes merging impossible with one member. **No longer blocks EP-0**
-  (ADR-0031 Accepted, 2026-08-04): the check gate binds admins with no bypass, and the review gate is
-  admin-bypassable until a member exists. Still wanted — a second member is what makes four-eyes
-  review real, and dropping that bypass is an ADR-0031 follow-up. *(Extraction-trigger budgets left
+  `enforce_admins=true` makes merging impossible with one member. **Did not block EP-0 in the end**
+  (ADR-0031 Accepted and applied 2026-08-04): the check gate binds admins with no bypass, and the
+  review gate is admin-bypassable until a member exists. Still wanted — a second member is what makes
+  four-eyes review real, and dropping that bypass is an ADR-0031 follow-up. *(Extraction-trigger budgets left
   this list on 2026-08-03: ADR-0030 Accepted.)*
