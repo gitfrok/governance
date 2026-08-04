@@ -96,11 +96,17 @@ because one entry there re-opens this criterion.
 Required checks now enforced: `super-repo fitness gates` (super-repo), `build + vet + arch gates`
 (backend, bff), `docs gates` (governance — running since T-0009 but never required until now).
 
+**The review gap is closed too (2026-08-05).** AC5 never depended on it — AC5 is about *checks* — but
+the one-member org meant `main-review` had to stay admin-bypassable, so a solo admin could self-merge
+a green PR. `webenable-asia` joined the org on 2026-08-04, and `main-review`'s `bypass_actors` is now
+`[]` in all five repos (`scripts/apply-rulesets.sh` `review_body()`, super-repo `8f5390d`).
+GitHub forbids self-approval at every role, so nobody merges their own work now, owners included.
+`check` mode asserts it: `main-review` must be active, carry zero bypass actors, and require exactly
+one approval — the same shape of assertion that guards `main-integrity`.
+
 **What is deliberately still open**, tracked in ADR-0031, not here:
 - `webfrontend` has no workflow, so it gets `main-integrity` without a required check — the CI-free
   rules (PR-only, no force-push, no deletion) still apply. `ci-gates.md` wants lint/unit/E2E/arch there.
-- No four-eyes review on `main` while the org has one member: `main-review` is admin-bypassable, so a
-  solo admin can self-merge a green PR. Adding a second member and dropping that bypass is the
-  follow-up. This is a review gap, not a *checks* gap — AC5 is about the latter.
 - Org-level rulesets need GitHub Team, so the two rulesets are five per-repo copies;
-  `make rulesets-check` is what keeps them from drifting.
+  `make rulesets-check` is what keeps them from drifting. It is not in CI: it needs an admin token,
+  and the super-repo workflow runs with `contents: read`.

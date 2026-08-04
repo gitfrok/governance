@@ -69,3 +69,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 - Replica selection + fencing; force-promote runbook/authz + tenant self-service? — ADR-0018/0016
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
 - Unit-economics model per pricing tier — ADR-0008
+- Merge enforcement — ADR-0031. The second-org-member follow-up is **closed** (2026-08-05:
+  `main-review` bypass emptied, four-eyes review binding on owners). Still open: `webfrontend` has no
+  workflow to require, and the two rulesets are five per-repo copies because org-level rulesets need
+  GitHub Team — `make rulesets-check` in the super-repo is what catches drift.
