@@ -1,11 +1,11 @@
 # T-0002: Boundary/arch enforcement in CI
 
-- **Status:** In review (AC1–AC4 done and CI-green; AC5 partially — see below)
+- **Status:** Done (AC1–AC5; AC5 enforcement verified empirically — see "AC5 as closed")
 - **Phase / Epic:** 0 / EP-0
 - **Repo(s):** backend + bff (each repo's own arch tests + CI; AC3 is a bff rule) + super-repo
   (composition gates: the `check-dep-direction.sh` fix and the super-repo CI workflow)
 - **Spec:** chore — acceptance criteria below
-- **ADRs:** 0022, 0025, 0026, 0027
+- **ADRs:** 0022, 0025, 0026, 0027, 0031 (AC5 enforcement)
 - **Owner:** unassigned
 
 ## Goal
@@ -16,8 +16,8 @@ Machine-enforce invariants 14–18 so coupling cannot regress.
 - [x] AC2: A module importing another module's `internal/*` fails the build (cross-module only via `api/` or the bus).
 - [x] AC3: The BFF importing any module's `internal/*` fails the build (aggregation only).
 - [x] AC4: A module's `api/` package exposing an infra type (pg/http/redpanda/…) fails the build.
-- [ ] AC5: CI runs these on every PR and blocks merge on violation.
-      **Runs** — yes, on all three repos. **Blocks** — not yet; see "Remaining for AC5".
+- [x] AC5: CI runs these on every PR and blocks merge on violation.
+      **Runs** — yes, on all three repos. **Blocks** — yes, since ADR-0031; see "AC5 as closed".
 
 ## Tests to write first
 - boundary/arch tests (go-arch-lint or import-linter equivalent) with fixtures that
@@ -33,6 +33,8 @@ See `../process/definition-of-done.md`.
 | backend | `ff8ab47` (#2) | `RuleDomainImportsInfra` (AC1), `RuleCrossModuleInternal` (AC2), `RuleAPIExposesInfra` (AC4, new); per-rule fixtures; `.github/workflows/ci.yml` |
 | bff | `87df91f` (#2) | `RuleBackendInternalImport` (AC3) + `RuleBackendImport`; fixtures; `.github/workflows/ci.yml` |
 | super-repo | `8385472` (#4), `1f0b066` (#5) | `check-dep-direction.sh` import-spec fix; super-repo CI running `make verify` + `make bootstrap` |
+| governance | `ffdb7ab` (#10) | ADR-0031 Accepted — the AC5 enforcement decision |
+| super-repo | `07f9250` (#11) | `scripts/apply-rulesets.sh` (`plan`/`apply`/`check`) + `make rulesets*`; applied to all five repos, legacy protection deleted |
 
 Each checker has three test layers so a gate cannot pass vacuously: a scan over real source,
 per-rule fixtures proving every forbidden edge is caught, and positive fixtures proving legitimate
@@ -55,34 +57,50 @@ fixtures.
   occurrence of a forbidden module path, and bff's own checker must name
   `"github.com/gitfrok/backend"` in a string constant to enforce against it. Now matches import
   specs only; re-verified that aliased, single-line and named-alias imports all still fail.
-- **`shellcheck` over `scripts/*.sh` is not gated.** Those scripts rely on intentional word
-  splitting (`grep ... $files` → SC2086) and need targeted disables first. Candidate for T-0009.
+- **`shellcheck` over `scripts/*.sh` was not gated** when this task landed: the scripts relied on
+  intentional word splitting (`grep ... $files` → SC2086). T-0009 replaced that with NUL-delimited
+  arrays and `make lint-shell` now gates it, with no suppressions to maintain — which is also what
+  made the AC5 red-check probe above possible.
 - **`no direct DB access`** (bff `AGENTS.md`) is the same mechanism as these rules but outside this
   task's criteria — fold into T-0009 rather than widening T-0002.
 
-## Remaining for AC5
-Branch protection exists on all five repos (`main`: 1 required approving review, stale-review
-dismissal, conversation resolution, no force-push, no deletion) with required status checks
-`build + vet + arch gates` (backend, bff) and `super-repo fitness gates` (super-repo). It does
-**not** yet block, because `enforce_admins=false`: a repo admin's `git push origin main` succeeds
-even though GitHub prints "Changes must be made through a pull request", and `gh pr merge --admin`
-bypasses the review gate. Verified empirically.
+## AC5 as closed
 
-`enforce_admins=true` cannot be set while the org has a single member — GitHub forbids
-self-approval, so a required review plus bound admins makes merging impossible. The earlier decision
-here was "add a second org member first", which parked AC5 behind an org action.
+**How it was blocked.** Legacy branch protection existed on all five repos but had
+`enforce_admins=false`, and legacy protection has a *single* admin-binding switch covering every one
+of its rules. Turning it on would have bound the required review too, and GitHub forbids
+self-approval — so with one org member `main` would have become unmergeable. The earlier decision
+recorded here was "add a second org member first", which parked a code-quality gate behind an org
+action.
 
-**Superseded by ADR-0031 (Accepted).** Legacy branch protection has one admin-binding switch for
-every rule, which is what coupled the check gate to the review gate; rulesets carry a bypass list per
-ruleset. AC5 asks for *checks* to block, not for review. So `main` moves to two rulesets per repo —
-`main-integrity` (PR required, required status checks, no force-push, no deletion, conversation
-resolution) with **no bypass actors**, and `main-review` (1 approving review, dismiss stale) with
-Repository admin bypassing until a second member exists. Legacy protection is removed rather than
-layered, since overlapping rules union and the loosest bypass wins.
+**How it was closed — ADR-0031 (Accepted).** Rulesets carry a bypass list *per ruleset*, and AC5 asks
+for *checks* to block, not for review. `main` now carries two rulesets in every repo:
 
-AC5 closes when those rulesets are applied to all five repos and a direct push plus
-`gh pr merge --admin` are both re-verified as rejected. Until then this task stays In review.
+| Ruleset | Rules | Bypass actors |
+|---|---|---|
+| `main-integrity` | PR required (0 approvals), required status checks, no force-push, no deletion, threads resolved | **none** |
+| `main-review` | 1 approving review, dismiss stale | admins, until the org has a second member |
 
-`webfrontend` has no CI workflow at all, and `governance`'s docs gate (T-0009) runs but is not a
-required check — so neither blocks on checks today. Both still get `main-integrity` for the CI-free
-rules; wiring governance's gate into its required checks is an ADR-0031 follow-up.
+Legacy protection was deleted rather than left alongside: overlapping rules union and the loosest
+bypass wins. Applied by `scripts/apply-rulesets.sh` in the super-repo (`plan`/`apply`/`check`), whose
+`check` mode fails on drift — its first assertion is that `main-integrity` has zero bypass actors,
+because one entry there re-opens this criterion.
+
+**Verified empirically on 2026-08-04**, both against the super-repo:
+
+| Probe | Result |
+|---|---|
+| `git push origin main` (admin, direct) | `! [remote rejected] main -> main (push declined due to repository rule violations)` — "Changes must be made through a pull request" / `Required status check "super-repo fitness gates" is expected`. The same push **succeeded** under legacy protection. |
+| `gh pr merge --admin --squash` on a red required check (PR #12, a deliberate SC2086 failing `make lint-shell`) | `GraphQL: Repository rule violations found — Required status check "super-repo fitness gates" is failing`. Closed unmerged. |
+
+Required checks now enforced: `super-repo fitness gates` (super-repo), `build + vet + arch gates`
+(backend, bff), `docs gates` (governance — running since T-0009 but never required until now).
+
+**What is deliberately still open**, tracked in ADR-0031, not here:
+- `webfrontend` has no workflow, so it gets `main-integrity` without a required check — the CI-free
+  rules (PR-only, no force-push, no deletion) still apply. `ci-gates.md` wants lint/unit/E2E/arch there.
+- No four-eyes review on `main` while the org has one member: `main-review` is admin-bypassable, so a
+  solo admin can self-merge a green PR. Adding a second member and dropping that bypass is the
+  follow-up. This is a review gap, not a *checks* gap — AC5 is about the latter.
+- Org-level rulesets need GitHub Team, so the two rulesets are five per-repo copies;
+  `make rulesets-check` is what keeps them from drifting.
