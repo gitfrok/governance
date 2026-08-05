@@ -57,11 +57,11 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0031](0031-merge-enforcement-split-rulesets.md) | Split merge enforcement — bind admins to checks, keep review bypassable | Accepted |
 | [ADR-0032](0032-contract-schema-gates.md) | Gate the contract schema — lint + breaking checks on `contracts/` | Accepted |
 | [ADR-0033](0033-git-storage-backing-block-volumes.md) | Live bare repos stay on block volumes — SeaweedFS-FUSE fails git's rename contract | Accepted |
-| [ADR-0034](0034-image-pins-are-resolvable-patch-tags.md) | Image pins are fully-qualified, resolvable, patch-level tags | Proposed |
+| [ADR-0034](0034-image-pins-are-resolvable-patch-tags.md) | Image pins are fully-qualified, resolvable, patch-level tags | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
-  The *image* half is now **ADR-0034 (Proposed)**: `redpandadata/redpanda:v26.1` was never a published
+  The *image* half is now **ADR-0034 (Accepted 2026-08-06)**: `redpandadata/redpanda:v26.1` was never a published
   tag, because a floor written as a bare minor is not a pullable pin. Still open here: the *toolchain*
   half — asserting installed `go`/`node`/`tsc` meet their floors in CI.
 - `make dev-up` Minikube bootstrap + per-OS driver docs — ADR-0024
