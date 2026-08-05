@@ -23,6 +23,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Todo |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
 | T-0018 | Repository & review-history import (GitHub/GitLab) | 1 | Todo |
+| T-0020 | Contract schema gate (`buf lint` + `buf breaking` + codegen freshness) | 0 | Todo |
 
 ## Retired numbers (never reused)
 - **T-0019** — Review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review
