@@ -1,7 +1,7 @@
 # ADR-0032: Gate the contract schema — lint and breaking-change checks on `contracts/`
 
-- **Status:** Proposed
-- **Date:** 2026-08-06
+- **Status:** Accepted
+- **Date:** 2026-08-06 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G7 process integrity (the shared surface cannot regress unnoticed)
 - **Relates to:** ADR-0022 (contracts are the only shared surface), ADR-0027 (cross-repo order),
@@ -91,8 +91,8 @@ deliberately not gated.
   gate everything else — the conservative option, and the right one if the deciders read invariant
   10 as protecting names as well as numbers. Rejected as the default because the exemption is
   permanent for a surface that has no users today, and every future reader of `agent.proto` inherits
-  a naming style the linter says is wrong. **This is the fallback if the rename is judged too
-  aggressive** — it changes only step 2 above; steps 1 and 3–5 stand either way.
+  a naming style the linter says is wrong. It was carried as the fallback through review and
+  **not taken**; it would have changed only step 2, leaving steps 1 and 3–5 intact.
 - **Blanket-except `ENUM_VALUE_PREFIX`** alongside the existing five — rejected: it silently exempts
   every contract we have not written yet, which is the opposite of what a gate is for.
 - **Rename and keep a deprecated alias** — not expressible: proto3 `allow_alias` shares a *number*
