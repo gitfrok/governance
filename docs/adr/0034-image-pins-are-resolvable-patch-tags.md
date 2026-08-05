@@ -1,7 +1,7 @@
 # ADR-0034: Image pins are fully-qualified, resolvable, patch-level tags
 
-- **Status:** Proposed
-- **Date:** 2026-08-06
+- **Status:** Accepted
+- **Date:** 2026-08-06 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G7 process integrity (a pin that cannot be pulled is not a pin)
 - **Relates to:** ADR-0023 (stack + version floors — **refined, not superseded**), ADR-0024 (dev env) ·
