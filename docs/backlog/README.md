@@ -39,7 +39,12 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   that was never published and a Zitadel config poisoned by Kubernetes service-link env vars. AC1's
   cluster-create path and AC3's `*.gitsaas.test` path need a rootful driver or KVM; macOS needs a
   macOS. Not more code — a different host.
-- **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
+- **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS, **Done 2026-08-06**), T-0005 (PDP),
+  T-0006 (audit log). T-0004 landed all four SPEC-0001 criteria against a real Postgres with RLS
+  enforced, including the guard that makes the suite refuse a SUPERUSER/BYPASSRLS role — without it
+  every isolation test would pass against a database enforcing nothing. **T-0006 inherits a decision**:
+  the audit event T-0004 emits uses a provisional routing key with no `contracts/events` counterpart,
+  so T-0006 must adopt or rename it while nothing yet subscribes.
 - **EP-3 Storage decision** *(closed)*: T-0007 (SeaweedFS-FUSE vs block-volume benchmark, **Done**).
   **Epic status: CLOSED 2026-08-06.** Benchmarked and decided: **ADR-0033 Accepted** — live bare repos
   stay on block volumes because SeaweedFS-FUSE's `rename()` is not atomic and git renames a `.lock`

@@ -25,11 +25,11 @@ None (internal). Cross-context data is never read directly (ADR-0022).
 Each context owns its schema; RLS applies within each. No cross-context table access.
 
 ## Acceptance criteria (each becomes a test)
-- [ ] AC1: A query under tenant A cannot read or write any row owned by tenant B (RLS denies).
-- [ ] AC2: The app layer sets the tenant context on every request; a missing tenant context
+- [x] AC1: A query under tenant A cannot read or write any row owned by tenant B (RLS denies).
+- [x] AC2: The app layer sets the tenant context on every request; a missing tenant context
       results in **deny** (no rows), not a full-table read.
-- [ ] AC3: Attempting a cross-tenant write is rejected and emits an audit event (ADR-0007).
-- [ ] AC4: A migration lint fails if a new tenant-owned table lacks `tenant_id` + an RLS policy.
+- [x] AC3: Attempting a cross-tenant write is rejected and emits an audit event (ADR-0007).
+- [x] AC4: A migration lint fails if a new tenant-owned table lacks `tenant_id` + an RLS policy.
 
 ## Governance mapping (G1–G9)
 | Objective | How |
