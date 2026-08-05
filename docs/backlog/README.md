@@ -26,8 +26,9 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   with its criteria verified, and this gate was never one of them — `../process/ci-gates.md` marks
   "contract schema" required in four repos but attributes no task to it, and `buf` runs in no CI
   anywhere. Phase 0 all the same: its exit criteria require CI green on *contract* tests.
-  **Blocked on ADR-0032 (Proposed)**, which decides whether the 13 `ENUM_VALUE_PREFIX` violations in
-  `proto/agent/v1/agent.proto` are renamed before the breaking baseline is set or grandfathered.
+  **ADR-0032 Accepted 2026-08-06 — ready to start.** It settles the 13 `ENUM_VALUE_PREFIX`
+  violations in `proto/agent/v1/agent.proto` as a **rename before the breaking baseline is set**
+  (invariant 10 permits it: a rename keeps the number and type), not a path-scoped exemption.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).

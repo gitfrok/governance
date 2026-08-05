@@ -1,6 +1,6 @@
 # T-0020: Contract schema gate — `buf lint` + `buf breaking` + codegen freshness
 
-- **Status:** Todo — **blocked until ADR-0032 is Accepted** (it decides AC2)
+- **Status:** Todo — **ready to start** (ADR-0032 Accepted 2026-08-06; AC2 is settled as the rename)
 - **Phase / Epic:** 0 / EP-9
 - **Repo(s):** governance (`contracts/`, CI) → backend (`gen/`, CI) → bff (`gen/`, CI) →
   webfrontend (`src/gen`, CI) → super-repo (pin bump). ADR-0027 order, **one commit per repo**.
@@ -17,14 +17,14 @@ declares a policy it neither meets nor enforces.
 ## Acceptance criteria (test-first)
 - [ ] AC1: `buf lint` runs on `contracts/` in governance CI, is a **required** check on `main`
       (ADR-0031 `main-integrity`), and passes. A PR introducing a lint violation fails.
-- [ ] AC2: The 13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto` are resolved the
-      way ADR-0032 decides — **rename** (`Cloud` → `CLOUD_*`, `HealthState` → `HEALTH_STATE_*`,
-      `CommandType` → `COMMAND_TYPE_*`) if Accepted as drafted, or a path-scoped
-      `lint.ignore_only` if the fallback is chosen. `contracts/buf.yaml` gains no blanket except.
+- [ ] AC2: The 13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto` are **renamed** —
+      `Cloud` → `CLOUD_*`, `HealthState` → `HEALTH_STATE_*`, `CommandType` → `COMMAND_TYPE_*` —
+      per ADR-0032 as Accepted. Numbers and types are untouched (invariant 10), and
+      `contracts/buf.yaml` gains no new except or `ignore_only`: the fallback was not taken.
 - [ ] AC3: `buf breaking --against` the merge base with `main` runs in governance CI and is
       required. A PR that renumbers a field, changes a type, or renames an enum value **fails**;
       an additive field **passes**. Category is `FILE`.
-- [ ] AC4: If AC2 renames, the three consumer references are updated in the same wave —
+- [ ] AC4: The three consumer references are updated in the same wave —
       `backend/cmd/controlplane-app/main.go` (`Cloud_GKE`),
       `backend/cmd/dataplane-app/main.go` and `bff/cmd/bff/main.go` (`HealthState_HEALTHY`) —
       each in its own repo's commit, and every repo's CI stays green.
@@ -49,10 +49,11 @@ declares a policy it neither meets nor enforces.
 See `../process/definition-of-done.md`.
 
 ## Notes / open questions
-- **This task does not decide AC2.** ADR-0032 does; it is `Proposed`. Renaming a `v1` enum value
-  keeps its number and type, so invariant 10 does not forbid it, but it does change the JSON/text
-  encoding — which is precisely what AC3's gate will reject once the baseline is set. If ADR-0032 is
-  rejected or amended toward the fallback, only AC2 and AC4 change; AC1, AC3, AC5 and AC6 stand.
+- **AC2 was decided by ADR-0032, Accepted 2026-08-06** — the rename, not the path-scoped fallback.
+  Renaming a `v1` enum value keeps its number and type, so invariant 10 does not forbid it, but it
+  does change the JSON/text encoding — precisely what AC3's gate rejects once the baseline is set.
+  That is why the rename lands first and the baseline is taken from the renamed tree; the same
+  change made after T-0020 would need a superseding ADR.
 - **Order matters.** AC2 must land *before* AC3's baseline exists, or the rename becomes permanently
   ungateable. Sequence: governance (rename + lint + breaking) → backend, bff (references + freshness)
   → webfrontend (freshness) → super-repo (pin bump + ruleset contexts).
