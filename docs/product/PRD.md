@@ -225,7 +225,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
-| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` |
+| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md`, which itself predates T-0020 (§12.2 item 4) |
 
 ### 12.2 Drift to reconcile in governance
 
@@ -241,9 +241,17 @@ T-0009's trigger report, whose budgets are set by ADR-0030 (Accepted).
 Open:
 1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and
    all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
-2. Phase-0 requirements here are PR-1…PR-4, which map to T-0004…T-0007. The EP-0 enablement tasks
-   (T-0001, T-0002, T-0008, T-0009) intentionally have no `PR-#`: they are internal with no
-   customer-visible surface (§5). Noted so their absence reads as deliberate rather than as a gap.
+2. Phase-0 requirements here are PR-1…PR-4, which map to T-0004…T-0007. The enablement tasks — the
+   four EP-0 ones (T-0001, T-0002, T-0008, T-0009) and **T-0020** (EP-9, contract schema gate) —
+   intentionally have no `PR-#`: they are internal with no customer-visible surface (§5). Noted so
+   their absence reads as deliberate rather than as a gap.
+3. `../process/ci-gates.md` marks "contract schema (additive / breaking-check)" as a **required**
+   check in four repos, and no such check exists — `buf` runs in no CI in any repo, and `buf lint`
+   on `contracts/` is red (13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto`).
+   **ADR-0032 (Accepted 2026-08-06)** settles the shape — rename before the `buf breaking` baseline
+   is taken — and **T-0020** builds the gate; the drift closes when that task lands, not before.
+4. `../plans/phase-0-foundations.md` lists nine workstreams and predates T-0020, so one Phase-0 task
+   is sequenced only by its own file. Smaller than item 1, and fixed by the same plan-file work.
 
 ### 12.3 Still-parked human decisions this PRD depends on
 
