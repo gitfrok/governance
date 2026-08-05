@@ -26,9 +26,13 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   with its criteria verified, and this gate was never one of them — `../process/ci-gates.md` marks
   "contract schema" required in four repos but attributes no task to it, and `buf` runs in no CI
   anywhere. Phase 0 all the same: its exit criteria require CI green on *contract* tests.
-  **ADR-0032 Accepted 2026-08-06 — ready to start.** It settles the 13 `ENUM_VALUE_PREFIX`
-  violations in `proto/agent/v1/agent.proto` as a **rename before the breaking baseline is set**
-  (invariant 10 permits it: a rename keeps the number and type), not a path-scoped exemption.
+  **Epic status: CLOSED 2026-08-06.** T-0020 **Done** across all five repos: the 13
+  `ENUM_VALUE_PREFIX` violations renamed per ADR-0032 (invariant 10 permits it — a rename keeps the
+  number and type), `buf lint` + `buf breaking` required in governance, and generated-code freshness
+  required in the super-repo. AC5 was **amended** during implementation: per-consumer codegen gating
+  is impossible while each `buf.gen.yaml` reads `../governance/contracts`, so it is gated at the
+  composition boundary instead — the per-repo variant stays blocked on the ADR-0027/0028
+  generated-type publishing follow-up.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).

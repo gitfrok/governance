@@ -66,10 +66,11 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   by T-0009, budgeted by ADR-0030 (Accepted), gated on every backend CI run.
 - Super-repo CI: fail on submodule pointers referencing unmerged commits — ADR-0027
 - Per-repo scaffolding + generated-type publishing (contracts → TS) — ADR-0027/0028
-- Contract schema gate — **ADR-0032 Accepted 2026-08-06**, implemented by T-0020 (open). `buf` still
-  runs in no CI, and `buf lint` on `contracts/` is still red (13 `ENUM_VALUE_PREFIX` violations in
-  `proto/agent/v1/agent.proto`); the decision is settled — **rename before the baseline** — but the
-  gate does not exist until T-0020 lands.
+- Contract schema gate — **ADR-0032 Accepted**, **T-0020 Done 2026-08-06**. `buf lint` and
+  `buf breaking` (baseline: tip of `main`, category `FILE`) are required in governance CI, and the
+  super-repo requires generated code to match its pinned contracts. Still open, and now the only
+  part: **per-consumer** codegen gating, which needs the generated-type publishing follow-up above —
+  a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition.
 - Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023
 - Replica selection + fencing; force-promote runbook/authz + tenant self-service? — ADR-0018/0016
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017

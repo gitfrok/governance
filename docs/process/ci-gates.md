@@ -7,7 +7,8 @@ Each repo's CI must pass these before merge; the super-repo gate protects the co
 |---|:--:|:--:|:--:|:--:|:--:|
 | lint / format | ✓ | ✓ | ✓ | ✓ | ✓ |
 | ADR/spec present (AGDD) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| contract schema (additive / breaking-check) | ✓ | ✓ | ✓ | ✓ (TS gen) | – |
+| contract schema — lint + breaking (ADR-0032) | ✓ | – | – | – | – |
+| generated code matches the pinned contracts | – | – | – | – | ✓ |
 | unit (domain) | – | ✓ | ✓ | ✓ | – |
 | integration | – | ✓ | ✓ | ✓ (E2E) | – |
 | boundary / arch (invariants 14–20) | – | ✓ | ✓ | ✓ | – |
@@ -17,4 +18,15 @@ Each repo's CI must pass these before merge; the super-repo gate protects the co
 | submodule pins reference **merged** commits (invariant 25) | – | – | – | – | ✓ |
 
 Wired by tasks T-0002 (boundary/arch), T-0009 (fitness), T-0004/T-0005 (policy/isolation),
-T-0001 (version floors + super-repo dep-direction). See `definition-of-done.md`.
+T-0001 (version floors + super-repo dep-direction), T-0020 (contract schema + generated code).
+See `definition-of-done.md`.
+
+**The contract rows moved in T-0020, and the previous shape was wrong.** They used to read
+`✓ | ✓ | ✓ | ✓ (TS gen) | –` — a check required in four repos that existed in none, for a reason no
+amount of effort inside those repos could fix: each consumer's `buf.gen.yaml` reads
+`../governance/contracts`, a sibling checkout that exists only in the super-repo composition, so a
+standalone consumer CI run has nothing to generate from. `buf lint`/`buf breaking` therefore belong
+where the contracts live (governance), and *generated code matches its pin* belongs where the repos
+are composed (super-repo). Per-consumer generation would need the generated-type publishing
+follow-up in ADR-0027/0028; until that is decided, the rows above are what is actually enforceable,
+and every ✓ in this table now corresponds to a check that runs.
