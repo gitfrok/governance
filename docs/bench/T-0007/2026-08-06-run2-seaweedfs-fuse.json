@@ -1,0 +1,26 @@
+{
+  "label": "seaweedfs-fuse",
+  "target": "/mnt/seaweed/bench",
+  "git_version": "2.54.0",
+  "params": { "repeats": 3, "concurrency": 4, "size_mb": 8 },
+  "fixture": { "files": 24, "per_file_kb": 341, "commits": 8, "git_dir_bytes": 27684864, "packed_bare_bytes": 24386560 },
+  "latency_ms": {
+    "push": [4441.8,4518.5,4386.0],
+    "clone": [89.9,90.7,90.6],
+    "gc": [285.6,324.7,379.1],
+    "status": [53.4,58.5,50.7]
+  },
+  "throughput": {
+    "push_mib_s": 8.90,
+    "concurrent_push_ops_s": 91.12,
+    "concurrent_push_ok": 4,
+    "concurrent_push_total": 4
+  },
+  "correctness": {
+    "o_excl_single_winner": { "winners": 1, "expected": 1, "pass": true },
+    "rename_atomic": { "reads": 200, "torn_reads": 0, "failed_reads": 11, "anomalies": 11, "expected": 0, "pass": false },
+    "fsync_write_readback": { "pass": true, "marker": "/mnt/seaweed/bench/probe-fsync.marker", "payload": "t-0007-durability-20260806" },
+    "contended_push_single_winner": { "accepted": 1, "rejected": 3, "expected_accepted": 1, "pass": true },
+    "fsck_after_contention": { "exit": 0, "pass": true }
+  }
+}
