@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+// The audit trail (ADR-0007, SPEC-0003).
+//
+// One generic AuditEvent rather than a message per action, because SPEC-0003 asks for "an AuditEvent
+// shape" and because the alternative scales badly: every new sensitive action would be a contracts
+// change, and an evidence export (PR-17/PR-18) would have to know every message type that ever
+// existed. A typed `action` keeps the surface stable while the vocabulary grows.
+//
+// WHAT IS NOT HERE, deliberately: no sequence number and no hashes. Entries are hash-chained by the
+// audit store (ADR-0007), and the chain is a property of the log, not of the message — an emitter
+// cannot know its position in a chain it has not been appended to yet, and a producer that could
+// state its own hash could also lie about it.
+//
+// No payloads either. An audit record of an attempted leak must not itself become the vehicle that
+// copies one tenant's data somewhere less protected (G1). Fields carry identifiers and outcomes,
+// never row contents, request bodies, or credentials.
+
+package gitsaas.events.audit.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/audit/v1;auditeventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuditEvent records one sensitive action for compliance and investigation.
+//
+// Emitted by whichever context performed (or refused) the action; consumed by the Audit context,
+// which is the only writer of the trail.
+message AuditEvent {
+  string event_id  = 1;   // ULID; idempotency key, so a redelivery does not append twice
+  string tenant_id = 2;   // owning tenant; every event is tenant-scoped (invariant 1)
+
+  // What happened, as a stable dotted vocabulary — e.g. "tenant.isolation.violation".
+  // A string rather than an enum: an enum would make every new auditable action a breaking-adjacent
+  // contracts change and a coordinated deploy, and ADR-0034's gate would (correctly) reject
+  // renaming one later. New actions are additive by construction this way.
+  string action = 3;
+
+  // Who acted. Empty when the actor is the platform itself rather than a principal.
+  string actor_id = 4;
+
+  // What was acted on, as an opaque identifier — "repo/01H…", "tenant/acme". Not a URL, and never
+  // the resource's contents.
+  string resource = 5;
+
+  Outcome outcome = 6;
+
+  // Machine-readable context: SQL states, policy names, decision IDs. Small, non-sensitive, and
+  // never row data — see the file comment. A map so a new detail is not a schema change.
+  map<string, string> detail = 7;
+
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// Outcome distinguishes a completed action from a refused one. Refusals are the more interesting
+// half: a rejected cross-tenant write is exactly the signal an investigation looks for.
+enum Outcome {
+  OUTCOME_UNSPECIFIED = 0;
+  OUTCOME_ALLOWED     = 1;  // the action was performed
+  OUTCOME_DENIED      = 2;  // refused by policy, RLS, or another guard
+}
