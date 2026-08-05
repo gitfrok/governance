@@ -23,10 +23,10 @@ An `AuditEvent` shape in `governance/contracts/events` (additive).
 Audit owns its store; **no update/delete path** exists (invariant 5).
 
 ## Acceptance criteria (each becomes a test)
-- [ ] AC1: Writes are append-only; there is no update/delete API surface.
-- [ ] AC2: Entries are hash-chained; a verifier detects any tampering (a mutated entry fails).
-- [ ] AC3: A sample sensitive action emits an audit event.
-- [ ] AC4: Audit is a separate store from observability/telemetry.
+- [x] AC1: Writes are append-only; there is no update/delete API surface.
+- [x] AC2: Entries are hash-chained; a verifier detects any tampering (a mutated entry fails).
+- [x] AC3: A sample sensitive action emits an audit event.
+- [x] AC4: Audit is a separate store from observability/telemetry.
 
 ## Governance mapping (G1–G9)
 | Objective | How |

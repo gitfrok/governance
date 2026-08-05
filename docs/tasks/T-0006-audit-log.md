@@ -1,6 +1,6 @@
 # T-0006: Append-only audit log
 
-- **Status:** In progress — contract landed; writer/verifier next
+- **Status:** Done (2026-08-06) — AC1–AC4; one limit recorded below
 - **Phase / Epic:** 0 / EP-2
 - **Repo(s):** governance (`contracts/events` — `AuditEvent`, additive) → backend
 - **Spec:** docs/specs/SPEC-0003-audit-log.md
@@ -11,10 +11,10 @@
 Tamper-evident, append-only audit sink with no delete path.
 
 ## Acceptance criteria (test-first)
-- [ ] AC1: Writes are append-only; there is no update/delete API.
-- [ ] AC2: Entries are hash-chained; a verifier detects tampering.
-- [ ] AC3: A sample sensitive action emits an audit event.
-- [ ] AC4: Audit is a separate store from observability/telemetry.
+- [x] AC1: Writes are append-only; there is no update/delete API.
+- [x] AC2: Entries are hash-chained; a verifier detects tampering.
+- [x] AC3: A sample sensitive action emits an audit event.
+- [x] AC4: Audit is a separate store from observability/telemetry.
       **This AC is in SPEC-0003 and was missing from this list** — the spec is authoritative
       (ADR-0001), so it is added rather than quietly dropped.
 
@@ -55,3 +55,60 @@ because no contract existed. It is now `gitsaas.events.audit.v1.AuditEvent` with
 `action = "tenant.isolation.violation"` and `outcome = OUTCOME_DENIED`. Renaming was free precisely
 because nothing subscribed yet — the reason T-0004 recorded it as a decision to make early rather
 than a detail to discover late.
+
+## Implementation record
+
+| Repo | Merged | What |
+|---|---|---|
+| governance | `fdc5814` (#28) | `contracts/events/audit/v1` — one generic `AuditEvent` with a typed `action` |
+| backend | `be0d108` (#8) | hash chain, append-only Postgres store, `modules/audit`, T-0004 event renamed onto the contract |
+
+### How each AC is proven
+
+- **AC1** — enforced by the *database*, not by Go. The application role holds `INSERT` and `SELECT`
+  and nothing else; triggers reject mutation even for the table owner. So "there is no update path"
+  is true for a `psql` session holding the application's credentials, not only for callers who go
+  through the module. Asserted by attempting UPDATE, DELETE and TRUNCATE as that role.
+- **AC2** — SHA-256 over a canonical, **length-prefixed** encoding, each hash binding its
+  predecessor's. Four tamper modes are caught and reported *distinctly* — content altered, re-hashed
+  in isolation, record removed, records reordered — because a mutation and a deletion are different
+  incidents and an investigator should not have to infer which happened.
+- **AC3** — a write refused by RLS emits `AuditEvent` with `action="tenant.isolation.violation"`.
+- **AC4** — a dedicated `audit` schema, asserted against the catalog rather than the migration text,
+  so moving the table without moving the guarantee fails.
+
+### Two encoding details that look fussy and are not
+
+**Length prefixes**, because a delimiter-joined form lets an attacker who controls two adjacent
+fields swap their contents undetected. **Sorted map keys**, because Go randomises map iteration and an
+unstable hash would fail verification at random — an alarm that cries wolf is how verifiers get
+switched off.
+
+### The limit: head truncation is not detectable
+
+Deleting the *newest* records leaves a chain that is internally perfect. Detecting it needs an anchor
+outside the database — an external witness, periodic notarisation, or WORM storage. ADR-0007 does not
+decide that and this task does not add it. There is a passing test that names the gap rather than a
+comment that hopes someone reads it.
+
+### Three bugs found by running, not reading
+
+1. **`SELECT ... FOR UPDATE` requires the UPDATE privilege**, which append-only revokes — an
+   append-only table cannot lock its own rows. Replaced with a per-tenant advisory lock, which is
+   also stronger: locking the head row would not stop two transactions that both read it before
+   either inserted.
+2. **The sequence was global while chains are per tenant.** Reads are RLS-scoped, so a verifier saw
+   7, 19, 24 and reported a deletion that never happened — *invisible while one tenant writes alone*,
+   which is exactly how it reaches production. Now a per-tenant `tenant_seq`.
+3. **Tamper tests disabled triggers with `defer`**, so a killed run left the guard off and the next
+   run's AC1 assertion silently stopped holding.
+
+### Follow-ups (not blocking)
+
+- **CI does not run AC1/AC2/AC4** — like T-0004's, they skip without `TEST_DATABASE_URL`. Two tasks
+  now rest on integration tests that only run locally; a Postgres service container in backend CI is
+  worth more than the next feature.
+- **Nothing applies the migrations.** `0001_audit_log.sql` was applied by hand to the dev cluster.
+  T-0004 recorded the same gap; it now affects two schemas.
+- **`AuditEvent` has no parity test** yet — `modules/repository/api` has one binding its events to
+  `contracts/events`, and the audit event should get the same treatment.
