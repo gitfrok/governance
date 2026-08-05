@@ -8,7 +8,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0001 | Scaffold super-repo + submodules (polyrepo + HCLC) | 0 | Done |
 | T-0002 | Boundary/arch enforcement in CI | 0 | Done |
 | T-0003 | Minikube dev environment | 0 | Todo |
-| T-0004 | Tenancy + RLS baseline | 0 | Todo |
+| T-0004 | Tenancy + RLS baseline | 0 | Done |
 | T-0005 | PDP skeleton (OPA) | 0 | Todo |
 | T-0006 | Append-only audit log | 0 | Todo |
 | T-0007 | Storage benchmark (SeaweedFS-FUSE vs block) | 0 | Done |
