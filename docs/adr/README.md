@@ -56,6 +56,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0030](0030-extraction-trigger-budgets.md) | Extraction-trigger budgets for the modular monolith | Accepted |
 | [ADR-0031](0031-merge-enforcement-split-rulesets.md) | Split merge enforcement — bind admins to checks, keep review bypassable | Accepted |
 | [ADR-0032](0032-contract-schema-gates.md) | Gate the contract schema — lint + breaking checks on `contracts/` | Accepted |
+| [ADR-0033](0033-git-storage-backing-block-volumes.md) | Live bare repos stay on block volumes — SeaweedFS-FUSE fails git's rename contract | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - CI job asserting installed versions meet the floors — ADR-0023
@@ -71,7 +72,11 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   super-repo requires generated code to match its pinned contracts. Still open, and now the only
   part: **per-consumer** codegen gating, which needs the generated-type publishing follow-up above —
   a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition.
-- Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023
+- ~~Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023~~
+  **Benchmarked (T-0007, 2026-08-06) → ADR-0033 (Proposed)**: block volumes confirmed; ADR-0016 needs
+  no amendment. SeaweedFS-FUSE fails `rename()` atomicity, which git requires for every ref update —
+  36 of 428 concurrent ref reads missed a ref that always existed, with zero rename errors. Evidence:
+  `../bench/T-0007/README.md`.
 - Replica selection + fencing; force-promote runbook/authz + tenant self-service? — ADR-0018/0016
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
 - Unit-economics model per pricing tier — ADR-0008

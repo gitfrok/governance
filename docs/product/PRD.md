@@ -78,7 +78,7 @@ Requirements are numbered `PR-#`. Each maps to existing roadmap phases, backlog 
 | PR-1 | Every persisted row and every query is tenant-scoped; cross-tenant access is impossible by construction, not by convention | G1 | 0003 | SPEC-0001 / T-0004 |
 | PR-2 | Every sensitive action is authorized by a deny-by-default decision point before it takes effect | G2, G4 | 0006 | SPEC-0002 / T-0005 |
 | PR-3 | Every sensitive action emits an audit event that cannot be altered or deleted | G5 | 0007 | SPEC-0003 / T-0006 |
-| PR-4 | Repo storage backing is chosen on measured evidence before Phase-1 storage work begins | — | 0016, 0023 | T-0007 |
+| PR-4 | Repo storage backing is chosen on measured evidence before Phase-1 storage work begins | — | 0016, 0023, **0033 (Proposed)** | T-0007 (measured 2026-08-06; evidence `../bench/T-0007/`) |
 
 ### Phase 1 — MVP (GitHub-lite)
 

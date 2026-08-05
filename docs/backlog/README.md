@@ -35,7 +35,10 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   generated-type publishing follow-up.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
-- **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
+- **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark) — **In review
+  2026-08-06**. Benchmarked; **ADR-0033 Proposed**: block volumes confirmed for live bare repos,
+  ADR-0016 needs no amendment. SeaweedFS-FUSE fails `rename()` atomicity, which git requires for every
+  ref update. Epic closes when ADR-0033 is Accepted.
 
 ## Phase 1 — MVP
 - **EP-4 Git plane**: T-0010 (Git-RPC), T-0011 (smart-HTTP+SSH), T-0012 (sync-replica+failover).

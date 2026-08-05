@@ -1,0 +1,7 @@
+{
+  "arm": "seaweedfs-fuse",
+  "remounted": true,
+  "expected_payload": "t-0007-durability-20260806",
+  "observed_payload": "t-0007-durability-20260806",
+  "durable_across_remount": true
+}
