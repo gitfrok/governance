@@ -1,6 +1,6 @@
 # T-0007: Storage benchmark: SeaweedFS-FUSE vs block volumes
 
-- **Status:** In review — AC1–AC3 delivered; ADR-0033 is **Proposed** and needs a decision
+- **Status:** Done (2026-08-06) — AC1–AC3; ADR-0033 **Accepted**
 - **Phase / Epic:** 0 / EP-3
 - **Repo(s):** super-repo (`scripts/`, `deploy/dev/` — bench harness) → governance (result doc +
   Proposed ADR, AC3)
@@ -39,8 +39,10 @@ atomic. Block: 0 of 229. Reproduced three times across two probe designs.
 Performance was not the deciding factor and is recorded for completeness: FUSE costs ~12% on push and
 clone, ~2× on `gc` and `status`, 2.6× on concurrent push throughput.
 
-**This task stays in review rather than Done**: AC3 delivers a *Proposed* ADR, and ADR-0001 makes the
-PR review the decision gate. It is Done when ADR-0033 is Accepted.
+**Done on 2026-08-06**, when ADR-0033 was Accepted — AC3's deliverable is a decision, and ADR-0001
+makes the PR review that decision's gate. Invariant 7's escape clause ("unless the benchmark follow-up
+in ADR-0020 concludes otherwise") is discharged with it: the benchmark concluded the same way the rule
+already read, so the rule stands and the conditional is gone.
 
 **Known limit, deliberately not papered over.** The run is one workstation with a single-node filer,
 so the *latency ratios* deserve a re-run on the cluster once T-0003 is verified. The correctness
