@@ -225,7 +225,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
-| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md`, which itself predates T-0020 (§12.2 item 4) |
+| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
 
 ### 12.2 Drift to reconcile in governance
 
@@ -251,8 +251,10 @@ Open:
    the old four-repo shape was unbuildable, since each consumer's `buf.gen.yaml` reads
    `../governance/contracts`. Per-consumer gating remains open under the ADR-0027/0028
    generated-type publishing follow-up.
-4. `../plans/phase-0-foundations.md` lists nine workstreams and predates T-0020, so one Phase-0 task
-   is sequenced only by its own file. Smaller than item 1, and fixed by the same plan-file work.
+4. ~~`../plans/phase-0-foundations.md` lists nine workstreams and predates T-0020.~~ **Resolved
+   2026-08-06:** the plan carries T-0020 as workstream 10, notes why it sits out of dependency order,
+   and its exit criteria now say which workstream satisfies which half of the CI line. Item 1 (no
+   Phase-1/2/3 plan files) is unaffected and still open.
 
 ### 12.3 Still-parked human decisions this PRD depends on
 
