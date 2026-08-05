@@ -21,6 +21,13 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   `build + typecheck + test + arch gates` is now a required check in its `main-integrity`).
   **Still open:** the two rulesets are five per-repo copies, because org-level rulesets need GitHub
   Team — kept honest by `make rulesets-check`.
+- **EP-9 Contract gates**: T-0020 (`buf lint` + `buf breaking` on `contracts/`, codegen-freshness
+  checks in the three consumers). New epic rather than a reopened EP-0: that epic closed 2026-08-04
+  with its criteria verified, and this gate was never one of them — `../process/ci-gates.md` marks
+  "contract schema" required in four repos but attributes no task to it, and `buf` runs in no CI
+  anywhere. Phase 0 all the same: its exit criteria require CI green on *contract* tests.
+  **Blocked on ADR-0032 (Proposed)**, which decides whether the 13 `ENUM_VALUE_PREFIX` violations in
+  `proto/agent/v1/agent.proto` are renamed before the breaking baseline is set or grandfathered.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).

@@ -55,6 +55,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0029](0029-imported-history-attested-provenance.md) | Imported history is attested, not audited — two-class provenance | Accepted |
 | [ADR-0030](0030-extraction-trigger-budgets.md) | Extraction-trigger budgets for the modular monolith | Accepted |
 | [ADR-0031](0031-merge-enforcement-split-rulesets.md) | Split merge enforcement — bind admins to checks, keep review bypassable | Accepted |
+| [ADR-0032](0032-contract-schema-gates.md) | Gate the contract schema — lint + breaking checks on `contracts/` | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - CI job asserting installed versions meet the floors — ADR-0023
@@ -65,6 +66,10 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   by T-0009, budgeted by ADR-0030 (Accepted), gated on every backend CI run.
 - Super-repo CI: fail on submodule pointers referencing unmerged commits — ADR-0027
 - Per-repo scaffolding + generated-type publishing (contracts → TS) — ADR-0027/0028
+- Contract schema gate — **ADR-0032 (Proposed)**, T-0020. `ci-gates.md` has marked this check
+  required in four repos all along; `buf` runs in none of them, and `buf lint` on `contracts/` is
+  red (13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto`). The ADR decides whether
+  those names are renamed before the breaking baseline is set or grandfathered by path.
 - Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023
 - Replica selection + fencing; force-promote runbook/authz + tenant self-service? — ADR-0018/0016
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
