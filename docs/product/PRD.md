@@ -245,11 +245,12 @@ Open:
    four EP-0 ones (T-0001, T-0002, T-0008, T-0009) and **T-0020** (EP-9, contract schema gate) —
    intentionally have no `PR-#`: they are internal with no customer-visible surface (§5). Noted so
    their absence reads as deliberate rather than as a gap.
-3. `../process/ci-gates.md` marks "contract schema (additive / breaking-check)" as a **required**
-   check in four repos, and no such check exists — `buf` runs in no CI in any repo, and `buf lint`
-   on `contracts/` is red (13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto`).
-   **ADR-0032 (Accepted 2026-08-06)** settles the shape — rename before the `buf breaking` baseline
-   is taken — and **T-0020** builds the gate; the drift closes when that task lands, not before.
+3. ~~`../process/ci-gates.md` marks a contract-schema check required in four repos that exists in
+   none.~~ **Resolved 2026-08-06** by ADR-0032 + T-0020: `buf lint`/`buf breaking` are required in
+   governance and generated-code freshness in the super-repo, and that table's rows were corrected —
+   the old four-repo shape was unbuildable, since each consumer's `buf.gen.yaml` reads
+   `../governance/contracts`. Per-consumer gating remains open under the ADR-0027/0028
+   generated-type publishing follow-up.
 4. `../plans/phase-0-foundations.md` lists nine workstreams and predates T-0020, so one Phase-0 task
    is sequenced only by its own file. Smaller than item 1, and fixed by the same plan-file work.
 

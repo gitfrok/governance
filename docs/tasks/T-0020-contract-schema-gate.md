@@ -1,6 +1,6 @@
 # T-0020: Contract schema gate — `buf lint` + `buf breaking` + codegen freshness
 
-- **Status:** In progress — AC1–AC3 done in governance; AC4/AC5 next in the consumers, then AC6
+- **Status:** Done (2026-08-06) — AC1–AC4 and AC6 as written; **AC5 amended** (see the record)
 - **Phase / Epic:** 0 / EP-9
 - **Repo(s):** governance (`contracts/`, CI) → backend (`gen/`, CI) → bff (`gen/`, CI) →
   webfrontend (`src/gen`, CI) → super-repo (pin bump). ADR-0027 order, **one commit per repo**.
@@ -25,17 +25,19 @@ declares a policy it neither meets nor enforces.
 - [x] AC3: `buf breaking` runs in governance CI against **the tip of `main`** (not the merge base —
       see the record) and is required. A PR that renumbers a field, changes a type, or renames an
       enum value **fails**; an additive field **passes**. Category is `FILE`.
-- [ ] AC4: The three consumer references are updated in the same wave —
+- [x] AC4: The three consumer references are updated in the same wave —
       `backend/cmd/controlplane-app/main.go` (`Cloud_GKE`),
       `backend/cmd/dataplane-app/main.go` and `bff/cmd/bff/main.go` (`HealthState_HEALTHY`) —
       each in its own repo's commit, and every repo's CI stays green.
-- [ ] AC5: `backend`, `bff` and `webfrontend` each gate **codegen freshness**: regenerate from the
-      pinned `contracts/` and fail on a non-empty `git diff` over `gen/` (`src/gen` for
-      webfrontend). Verified reproducible on 2026-08-05 — all three regenerate byte-identically
-      today, so this must pass on arrival, and a hand-edited `gen/` must fail it.
-- [ ] AC6: The new checks are added to each repo's required-check context in
-      `scripts/apply-rulesets.sh` (super-repo) and `apply-rulesets.sh check` stays green, so the
-      gate blocks rather than merely runs (ADR-0031, T-0002 AC5).
+- [x] AC5 **(amended — original wording was not implementable; see the record)**: codegen freshness
+      is gated in the **super-repo**, where the four repos are composed: `make codegen-check`
+      regenerates all three consumers from the pinned `contracts/` and fails on any difference under
+      `gen/` (`src/gen` for webfrontend). A hand-edited generated file fails it. Per-consumer
+      gating stays blocked on the ADR-0027/0028 generated-type publishing follow-up.
+- [x] AC6: The new checks block rather than merely run (ADR-0031, T-0002 AC5) — achieved with **no**
+      `scripts/apply-rulesets.sh` change, because each gate rides inside an already-required
+      context: the contract gates inside governance's `docs gates`, codegen freshness inside
+      `super-repo fitness gates`. `apply-rulesets.sh check` → `rulesets: OK` on all five repos.
 
 ## Tests to write first
 - **contract (governance):** a fixture proto that trips `ENUM_VALUE_PREFIX` must fail `buf lint`;
@@ -74,7 +76,12 @@ See `../process/definition-of-done.md`.
 | Repo | Merged | What |
 |---|---|---|
 | governance | `29a04af` (#18) | AC2 rename; `scripts/check-contracts.sh` + `scripts/testdata/lint-enum-prefix/` fixture; `buf lint` wired into the `docs gates` job (AC1) |
-| governance | *(this PR)* | AC3 `buf breaking` against `origin/main` + four fixtures (additive passes; renumber, retype, enum-rename each fail on their own rule); `fetch-depth: 0` |
+| governance | `64c4d6b` (#19) | AC3 `buf breaking` against `origin/main` + four fixtures (additive passes; renumber, retype, enum-rename each fail on their own rule); `fetch-depth: 0` |
+| backend | `6e8cfe7` (#6) | AC4: regenerated `gen/proto/agent/v1`; `Cloud_GKE` → `Cloud_CLOUD_GKE`, `HealthState_HEALTHY` → `HealthState_HEALTH_STATE_HEALTHY` |
+| bff | `9abf194` (#4) | AC4: regenerated `gen/`; `HealthState_HEALTHY` → `HealthState_HEALTH_STATE_HEALTHY` |
+| webfrontend | `244f16a` (#3) | AC4: regenerated `src/gen` (no hand-written references to move) |
+| super-repo | `78255d8` (#25) | AC5 (amended) `scripts/check-codegen-fresh.sh` + `make codegen-check` in CI; AC6 verification; all four pins bumped |
+| governance | *(this PR)* | T-0020 Done; AC5 amended; `ci-gates.md` contract rows corrected |
 
 **AC1 blocks immediately, and AC6 needs no ruleset change for it.** The contract gate is a *step*
 inside the existing `docs gates` job rather than a new job, so it rides the required-status-check
@@ -122,3 +129,28 @@ ADR rather than a branch.
 **Verified against the real contracts**, not only the fixtures: renumbering `event_id` in
 `events/repository/v1/events.proto` fails the gate, adding `trace_id = 99` passes, and reverting
 AC2's `CLOUD_GKE` → `GKE` fails on both `buf lint` and `buf breaking`.
+
+### AC5 — why the original wording could not be built
+
+AC5 asked for a codegen-freshness check **in each consumer's CI**. That is impossible today, and
+`webfrontend`'s own workflow had already recorded the reason in a comment before this task started:
+every consumer's `buf.gen.yaml` takes `../governance/contracts` as its input — a sibling checkout
+that exists **only in the super-repo composition**. A standalone CI run in `backend`, `bff` or
+`webfrontend` has no contracts to generate from, so a per-repo check could only ever be skipped or
+faked.
+
+Two ways out. Give every consumer its own pinned copy of the contracts, which is the
+**generated-type publishing follow-up in ADR-0027/0028** — an open decision, and not one a task may
+take. Or gate at the boundary where the composition actually exists. This task took the second:
+`make codegen-check` in the super-repo regenerates all three consumers against the pinned
+`contracts/` and fails on any difference.
+
+What is lost by that choice, stated plainly: feedback arrives at the pin bump rather than in the
+consumer's own PR, so a hand-edited `gen/` can merge into a consumer and is only caught when the
+super-repo next composes it. Nothing reaches a released composition either way. The per-consumer
+variant remains desirable and remains blocked on the ADR-0027/0028 decision.
+
+`docs/process/ci-gates.md` carried this row as required in four repos for its whole life while no
+such check existed anywhere. Its rows are now split to match what is enforceable — lint/breaking in
+governance, generated-code freshness in the super-repo — so every ✓ in that table corresponds to a
+check that runs.
