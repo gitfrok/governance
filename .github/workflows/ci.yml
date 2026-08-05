@@ -21,7 +21,12 @@ jobs:
     name: docs gates
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 so `buf breaking` has a baseline. With the default depth of 1 there is no
+      # origin/main to compare against, and the check would have to be skipped — a skipped gate on
+      # the shared surface is how the contract-schema row in ci-gates.md went years without one.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # The scripts are the gate; lint them before trusting them.
       - name: shellcheck
@@ -39,5 +44,9 @@ jobs:
           version: 1.72.0
           github_token: ${{ github.token }}
 
+      # The baseline is passed explicitly rather than left to the script's local-use fallback, so CI
+      # can never end up comparing the branch against itself.
       - name: contract schema gates
         run: ./scripts/check-contracts.sh
+        env:
+          CONTRACTS_BASELINE: .git#branch=origin/main,subdir=contracts

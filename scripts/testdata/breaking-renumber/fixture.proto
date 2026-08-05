@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// NOT a contract. The `--against` baseline for the breaking-change fixtures in
+// scripts/check-contracts.sh. Every sibling carries this same file path and package so buf can pair
+// the files; each differs from this by exactly one mutation, so the rule that fires is unambiguous.
+package gitsaas.fixture.breaking.v1;
+
+message Widget {
+  string id   = 1;
+  string name = 5; // was 2 — wire-incompatible renumber
+}
+
+enum WidgetState {
+  WIDGET_STATE_UNSPECIFIED = 0;
+  WIDGET_STATE_READY       = 1;
+}
