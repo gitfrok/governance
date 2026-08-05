@@ -1,0 +1,9 @@
+version: v2
+# Fixture module for scripts/check-contracts.sh — see the .proto for what it proves.
+# `breaking.use: FILE` mirrors contracts/buf.yaml: the strictest category, matching the
+# additive-only rule in contracts/README.md and invariant 10.
+modules:
+  - path: .
+breaking:
+  use:
+    - FILE
