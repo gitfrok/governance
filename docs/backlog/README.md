@@ -35,10 +35,16 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   generated-type publishing follow-up.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
-- **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark) — **In review
-  2026-08-06**. Benchmarked; **ADR-0033 Proposed**: block volumes confirmed for live bare repos,
-  ADR-0016 needs no amendment. SeaweedFS-FUSE fails `rename()` atomicity, which git requires for every
-  ref update. Epic closes when ADR-0033 is Accepted.
+- **EP-3 Storage decision** *(closed)*: T-0007 (SeaweedFS-FUSE vs block-volume benchmark, **Done**).
+  **Epic status: CLOSED 2026-08-06.** Benchmarked and decided: **ADR-0033 Accepted** — live bare repos
+  stay on block volumes because SeaweedFS-FUSE's `rename()` is not atomic and git renames a `.lock`
+  over the ref on every update (36 of 428 concurrent ref reads missed a ref that always existed, 0 of
+  229 on block, zero rename errors — so rename works and simply is not atomic; reproduced three times).
+  ADR-0016 needed **no** amendment and invariant 7's escape clause is discharged. Performance was not
+  the deciding factor (~12% on push/clone, ~2× on gc/status, 2.6× on concurrent push). Evidence:
+  `../bench/T-0007/`; harness `make bench-storage` in the super-repo. Carried out of the epic, not
+  blocking: the latency *ratios* deserve a re-run on a real cluster once T-0003 is verified — the
+  correctness verdict does not, being a property of the FUSE client rather than the hardware.
 
 ## Phase 1 — MVP
 - **EP-4 Git plane**: T-0010 (Git-RPC), T-0011 (smart-HTTP+SSH), T-0012 (sync-replica+failover).

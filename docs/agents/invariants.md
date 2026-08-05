@@ -15,8 +15,11 @@
 6. **A push is acked only after primary + 1 sync replica are durable.** Only the in-sync
    replica may auto-promote; dual loss → read-only + audited operator override, never
    auto-promote stale (ADR-0016/0018).
-7. **Live bare repos live on fast block volumes, not FUSE/SeaweedFS**, unless the
-   benchmark follow-up in ADR-0020 concludes otherwise and ADR-0016 is amended.
+7. **Live bare repos live on fast block volumes, not FUSE/SeaweedFS.** The ADR-0020 benchmark
+   follow-up this once depended on is **discharged**: T-0007 measured it and **ADR-0033 (Accepted)**
+   confirms block volumes — SeaweedFS-FUSE's `rename()` is not atomic and git needs it for every ref
+   update — so ADR-0016 was **not** amended. Reopening this requires demonstrating atomic `rename()`
+   over an existing path under concurrent readers, not a faster FUSE client.
    SeaweedFS-S3 is for LFS/artifacts/registry blobs.
 
 ## Agent & wire protocol

@@ -1,7 +1,7 @@
 # ADR-0033: Live bare repos stay on block volumes — SeaweedFS-FUSE fails git's rename contract
 
-- **Status:** Proposed
-- **Date:** 2026-08-06
+- **Status:** Accepted
+- **Date:** 2026-08-06 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G3 durability/correctness of the git plane
 - **Relates to:** ADR-0020 (closes its open knob), ADR-0016 (confirms its assumption, no amendment),
