@@ -15,10 +15,12 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   branch protection deleted. Verified empirically: a direct admin push to `main` is
   `[remote rejected]`, and `gh pr merge --admin` is refused on a red required check. Every criterion
   in this epic is met and machine-enforced.
-  Carried out of the epic as ADR-0031 follow-ups, none of them blocking: `webfrontend` has no
-  workflow to require yet; the two rulesets are five per-repo copies (org-level rulesets need GitHub
-  Team) kept honest by `make rulesets-check`. The third — four-eyes review — **closed 2026-08-05**:
-  a second org member joined and `main-review`'s bypass is now empty everywhere.
+  Carried out of the epic as three ADR-0031 follow-ups, none of them blocking; two have since
+  **closed 2026-08-05**: four-eyes review (a second org member joined, so `main-review`'s bypass is
+  empty everywhere) and the `webfrontend` gate (it gained a CI workflow, and
+  `build + typecheck + test + arch gates` is now a required check in its `main-integrity`).
+  **Still open:** the two rulesets are five per-repo copies, because org-level rulesets need GitHub
+  Team — kept honest by `make rulesets-check`.
 - **EP-1 Platform up**: T-0003 (Minikube dev env).
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision**: T-0007 (SeaweedFS-FUSE vs block-volume benchmark).
