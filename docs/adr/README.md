@@ -59,7 +59,11 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0033](0033-git-storage-backing-block-volumes.md) | Live bare repos stay on block volumes — SeaweedFS-FUSE fails git's rename contract | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
-- CI job asserting installed versions meet the floors — ADR-0023
+- CI job asserting installed versions meet the floors — ADR-0023. Sharpened by T-0003's first cluster
+  run: `redpandadata/redpanda:v26.1` was never a published tag (Redpanda tags patch releases only), so
+  a floor recorded as a bare minor cannot be pulled. `deploy/dev/versions.env` now pins
+  `docker.redpanda.com/redpandadata/redpanda:v26.2.1`, which still satisfies the 26.1 floor. A tag
+  *resolvability* check would have caught this without a cluster.
 - `make dev-up` Minikube bootstrap + per-OS driver docs — ADR-0024
 - Event catalog/naming — ADR-0022. The boundary-enforcement linter shipped in T-0002/T-0009; event
   names are the protobuf full names of `contracts/events` (T-0008), but no catalog documents them.

@@ -33,7 +33,12 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   is impossible while each `buf.gen.yaml` reads `../governance/contracts`, so it is gated at the
   composition boundary instead — the per-repo variant stays blocked on the ADR-0027/0028
   generated-type publishing follow-up.
-- **EP-1 Platform up**: T-0003 (Minikube dev env).
+- **EP-1 Platform up**: T-0003 (Minikube dev env) — **In progress**. First real cluster run
+  2026-08-06 (rootless podman): **AC2 and AC4 verified**, AC1 and AC3 partially. It cost **seven
+  manifest fixes** — as written, three of the five services could not start, including a Redpanda tag
+  that was never published and a Zitadel config poisoned by Kubernetes service-link env vars. AC1's
+  cluster-create path and AC3's `*.gitsaas.test` path need a rootful driver or KVM; macOS needs a
+  macOS. Not more code — a different host.
 - **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS), T-0005 (PDP), T-0006 (audit log).
 - **EP-3 Storage decision** *(closed)*: T-0007 (SeaweedFS-FUSE vs block-volume benchmark, **Done**).
   **Epic status: CLOSED 2026-08-06.** Benchmarked and decided: **ADR-0033 Accepted** — live bare repos
