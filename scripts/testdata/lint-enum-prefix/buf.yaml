@@ -1,0 +1,16 @@
+version: v2
+# Fixture module for scripts/check-contracts.sh. It carries the SAME lint policy as
+# contracts/buf.yaml — same STANDARD selection, same five excepts — so the only reason it fails is
+# the violation it is built to contain. If the real policy ever excepts ENUM_VALUE_PREFIX, this
+# fixture stops failing and the script reports the gate as vacuous, which is the point.
+modules:
+  - path: .
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_DIRECTORY_MATCH
+    - SERVICE_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    - RPC_REQUEST_RESPONSE_UNIQUE

@@ -1,6 +1,7 @@
 # T-0020: Contract schema gate — `buf lint` + `buf breaking` + codegen freshness
 
-- **Status:** Todo — **ready to start** (ADR-0032 Accepted 2026-08-06; AC2 is settled as the rename)
+- **Status:** In progress — AC1, AC2 done in governance; AC3 next (its baseline needs the rename on
+  `main` first), then AC4/AC5 in the consumers, then AC6
 - **Phase / Epic:** 0 / EP-9
 - **Repo(s):** governance (`contracts/`, CI) → backend (`gen/`, CI) → bff (`gen/`, CI) →
   webfrontend (`src/gen`, CI) → super-repo (pin bump). ADR-0027 order, **one commit per repo**.
@@ -15,9 +16,10 @@ breaking-check)" — actually exist, and leave it green. Today `buf` runs in no 
 declares a policy it neither meets nor enforces.
 
 ## Acceptance criteria (test-first)
-- [ ] AC1: `buf lint` runs on `contracts/` in governance CI, is a **required** check on `main`
+- [x] AC1: `buf lint` runs on `contracts/` in governance CI, is a **required** check on `main`
       (ADR-0031 `main-integrity`), and passes. A PR introducing a lint violation fails.
-- [ ] AC2: The 13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto` are **renamed** —
+      Verified by reintroducing `GKE = 1` and watching `check-contracts.sh` exit 1.
+- [x] AC2: The 13 `ENUM_VALUE_PREFIX` violations in `proto/agent/v1/agent.proto` are **renamed** —
       `Cloud` → `CLOUD_*`, `HealthState` → `HEALTH_STATE_*`, `CommandType` → `COMMAND_TYPE_*` —
       per ADR-0032 as Accepted. Numbers and types are untouched (invariant 10), and
       `contracts/buf.yaml` gains no new except or `ignore_only`: the fallback was not taken.
@@ -67,3 +69,27 @@ See `../process/definition-of-done.md`.
   the contract-schema row unattributed. Hence a new epic, EP-9.
 - **Scope boundary.** `buf format` is not gated, and the five existing `buf.yaml` excepts are not
   re-examined (ADR-0032 follow-ups).
+
+## Implementation record
+
+| Repo | Merged | What |
+|---|---|---|
+| governance | *(this PR)* | AC2 rename; `scripts/check-contracts.sh` + `scripts/testdata/lint-enum-prefix/` fixture; `buf lint` wired into the `docs gates` job (AC1) |
+
+**AC1 blocks immediately, and AC6 needs no ruleset change for it.** The contract gate is a *step*
+inside the existing `docs gates` job rather than a new job, so it rides the required-status-check
+context already registered in `main-integrity`. A new job would have meant a new context, which does
+not block until the super-repo adds it — and `apply-rulesets.sh` maps one context per repo, so a
+second would have been a data-structure change. Same reasoning applies to the consumer freshness
+checks in AC5: put them inside `build + vet + arch gates` / `build + typecheck + test + arch gates`
+and AC6 reduces to confirming `apply-rulesets.sh check` still passes.
+
+**Why AC3 is not in this PR.** `buf breaking` compares against `main`, and `main` still carries the
+pre-rename enums, so wiring it here would fail on the very commit that makes the tree correct —
+ADR-0032's "the baseline starts after the rename". It lands in the next governance PR, once these
+names are on `main`.
+
+**The fixture is checked three ways**, so the gate cannot pass vacuously: it must fail, it must fail
+*on `ENUM_VALUE_PREFIX`* (asserted against the JSON `type`, since buf's prose never names the rule),
+and if the fixture is ever neutered the script reports the gate as vacuous rather than going green.
+All three were exercised locally against buf 1.72.0.
