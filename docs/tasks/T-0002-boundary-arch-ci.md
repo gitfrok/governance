@@ -94,7 +94,9 @@ because one entry there re-opens this criterion.
 | `gh pr merge --admin --squash` on a red required check (PR #12, a deliberate SC2086 failing `make lint-shell`) | `GraphQL: Repository rule violations found — Required status check "super-repo fitness gates" is failing`. Closed unmerged. |
 
 Required checks now enforced: `super-repo fitness gates` (super-repo), `build + vet + arch gates`
-(backend, bff), `docs gates` (governance — running since T-0009 but never required until now).
+(backend, bff), `docs gates` (governance — running since T-0009 but never required until now), and
+since 2026-08-05 `build + typecheck + test + arch gates` (webfrontend). All five repos have a check
+to fail on.
 
 **The review gap is closed too (2026-08-05).** AC5 never depended on it — AC5 is about *checks* — but
 the one-member org meant `main-review` had to stay admin-bypassable, so a solo admin could self-merge
@@ -104,9 +106,14 @@ GitHub forbids self-approval at every role, so nobody merges their own work now,
 `check` mode asserts it: `main-review` must be active, carry zero bypass actors, and require exactly
 one approval — the same shape of assertion that guards `main-integrity`.
 
+**The `webfrontend` gate landed as well (2026-08-05).** It was the one repo getting `main-integrity`
+without a required check — the CI-free rules (PR-only, no force-push, no deletion) applied, but
+nothing could fail. It now has a workflow (build, typecheck, tests, boundaries) and
+`build + typecheck + test + arch gates` is required in its `main-integrity`, so the `ci-gates.md`
+expectation holds fleet-wide. `check` mode compares each repo's required-check list against the
+expected context exactly, and `webfrontend`'s expected context is no longer the empty one.
+
 **What is deliberately still open**, tracked in ADR-0031, not here:
-- `webfrontend` has no workflow, so it gets `main-integrity` without a required check — the CI-free
-  rules (PR-only, no force-push, no deletion) still apply. `ci-gates.md` wants lint/unit/E2E/arch there.
 - Org-level rulesets need GitHub Team, so the two rulesets are five per-repo copies;
   `make rulesets-check` is what keeps them from drifting. It is not in CI: it needs an admin token,
   and the super-repo workflow runs with `contents: read`.
