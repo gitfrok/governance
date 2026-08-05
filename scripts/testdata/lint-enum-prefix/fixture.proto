@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+// NOT a contract. This file exists to be rejected: `scripts/check-contracts.sh` asserts that
+// `buf lint` fails here, which is what proves the gate on contracts/ is doing work rather than
+// passing because nothing is checked. It is deliberately outside contracts/ so no consumer
+// generates from it.
+package gitsaas.fixture.lint.v1;
+
+// Every value below violates ENUM_VALUE_PREFIX: buf wants them prefixed with "FIXTURE_STATE_".
+// This mirrors the shape agent.proto had before T-0020 renamed it (ADR-0032).
+enum FixtureState {
+  FIXTURE_UNSPECIFIED = 0;
+  RUNNING             = 1;
+  STOPPED             = 2;
+}

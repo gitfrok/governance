@@ -13,6 +13,11 @@ permissions:
 
 jobs:
   verify:
+    # The job name is the required-status-check context registered in this repo's `main-integrity`
+    # ruleset (super-repo `scripts/apply-rulesets.sh`), so it stays `docs gates` even though the job
+    # now also gates contracts/. Renaming it would silently un-require the whole job until the
+    # super-repo caught up — the drift ADR-0031 exists to prevent. The contract gate is required
+    # from the moment this merges precisely because it rides inside an already-required context.
     name: docs gates
     runs-on: ubuntu-latest
     steps:
@@ -25,3 +30,14 @@ jobs:
       # Relative links resolve, ADRs/specs/tasks/plans are all indexed, ADR numbers are unique.
       - name: docs gates
         run: ./scripts/check-docs.sh
+
+      # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
+      # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
+      # whose verdict depends on the day.
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: 1.72.0
+          github_token: ${{ github.token }}
+
+      - name: contract schema gates
+        run: ./scripts/check-contracts.sh
