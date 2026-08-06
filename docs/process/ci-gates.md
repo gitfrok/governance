@@ -30,3 +30,11 @@ where the contracts live (governance), and *generated code matches its pin* belo
 are composed (super-repo). Per-consumer generation would need the generated-type publishing
 follow-up in ADR-0027/0028; until that is decided, the rows above are what is actually enforceable,
 and every ✓ in this table now corresponds to a check that runs.
+
+**The governance Rego cell became real in T-0005.** `✓ (Rego)` had been in this table since it was
+written, against an empty `policies/` directory — the same shape of problem as the contract rows
+above, a required check with nothing behind it. `scripts/check-policies.sh` now builds the bundle,
+compiles under `--strict`, runs `opa test`, and asserts deny-by-default by *evaluation* rather than
+by grep. The backend and bff cells in that row are still aspirational: they are satisfied by
+T-0005's remaining halves (the PDP adapter and the PEP call, plus the AC4 fitness function that
+fails a build containing an inline permission check).
