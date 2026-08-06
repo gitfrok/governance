@@ -39,19 +39,27 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   that was never published and a Zitadel config poisoned by Kubernetes service-link env vars. AC1's
   cluster-create path and AC3's `*.gitsaas.test` path need a rootful driver or KVM; macOS needs a
   macOS. Not more code — a different host.
-- **EP-2 Tenancy & governance base**: T-0004 (tenancy+RLS, **Done 2026-08-06**), T-0005 (PDP,
-  **In progress 2026-08-06** — governance half landed: the `policies/` OPA bundle with a
-  deny-by-default authorization policy, `contracts/proto/policy/v1` for the decision call, and
-  `scripts/check-policies.sh` required in CI, which makes the Rego row in `../process/ci-gates.md`
-  real for the first time. The backend PDP adapter and the BFF's PEP call — AC3, and the fitness
-  function for AC4 — are the remaining halves, in that order per invariant 24),
-  T-0006 (audit log, **Done 2026-08-06**). T-0004 landed all four SPEC-0001 criteria against a real Postgres with RLS
+- **EP-2 Tenancy & governance base** *(closed)*: T-0004 (tenancy+RLS, **Done 2026-08-06**),
+  T-0005 (PDP, **Done 2026-08-06**), T-0006 (audit log, **Done 2026-08-06**).
+  **Epic status: CLOSED 2026-08-06.** T-0005 landed across all four repos in dependency order
+  (invariant 24): the `policies/` OPA bundle and `contracts/proto/policy/v1` in governance, the
+  embedded PDP module in backend, the PEP with a revision-invalidated decision cache in bff, and the
+  pins plus a composition gate in the super-repo. All three task ACs and SPEC-0002's fourth are met.
+  This makes the Rego row in `../process/ci-gates.md` real for the first time — it had been marked
+  required against an empty `policies/` directory since the table was written.
+  Two things are worth carrying forward rather than burying. **SPEC-0002's open question is
+  answered:** cache invalidation is by *bundle revision*, not by clock, so a policy change
+  invalidates every cached decision by construction. And **AC4's fitness function is a tripwire, not
+  a proof** — authorization logic has no import signature the way every other boundary rule does, so
+  it catches the obvious shapes and is documented as catching only those. Carried out of the epic,
+  not blocking: no mTLS between BFF and PDP yet (T-0013), and `deploy/dev` does not mount the policy
+  bundle the plane now requires (one more item for T-0003). T-0004 landed all four SPEC-0001 criteria against a real Postgres with RLS
   enforced, including the guard that makes the suite refuse a SUPERUSER/BYPASSRLS role — without it
   every isolation test would pass against a database enforcing nothing. **T-0006 inherits a decision**:
   the audit event T-0004 emits used a provisional routing key — **resolved by T-0006**, which renamed
-  it onto `contracts/events/audit/v1.AuditEvent`. Only **T-0005 (PDP)** remains in this epic, and it
-  is the last open task in Phase 0 besides T-0003, whose remaining criteria need a different host
-  rather than more code.
+  it onto `contracts/events/audit/v1.AuditEvent`. T-0005 then consumed that vocabulary without a
+  contracts change — `policy.decision.denied` is a new `action` string, which is the property the
+  generic `AuditEvent` was chosen for.
 - **EP-3 Storage decision** *(closed)*: T-0007 (SeaweedFS-FUSE vs block-volume benchmark, **Done**).
   **Epic status: CLOSED 2026-08-06.** Benchmarked and decided: **ADR-0033 Accepted** — live bare repos
   stay on block volumes because SeaweedFS-FUSE's `rename()` is not atomic and git renames a `.lock`

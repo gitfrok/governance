@@ -35,6 +35,14 @@ and every ✓ in this table now corresponds to a check that runs.
 written, against an empty `policies/` directory — the same shape of problem as the contract rows
 above, a required check with nothing behind it. `scripts/check-policies.sh` now builds the bundle,
 compiles under `--strict`, runs `opa test`, and asserts deny-by-default by *evaluation* rather than
-by grep. The backend and bff cells in that row are still aspirational: they are satisfied by
-T-0005's remaining halves (the PDP adapter and the PEP call, plus the AC4 fitness function that
-fails a build containing an inline permission check).
+by grep. The backend and bff cells in that row became real in the same task: each runs an
+`inline-permission-check` fitness function (SPEC-0002 AC4) alongside its PDP adapter and PEP tests.
+Every ✓ in the policy row now corresponds to a check that runs.
+
+**One gate exists that this table has no row for**, because it belongs to no single repo:
+`scripts/check-policy-composition.sh` in the super-repo runs the real authorization path — bff PEP →
+gRPC → backend PDP → `governance/policies` — and asserts each verdict, that both verdicts occur,
+that the bundle revision survives every hop, and that no denied request reached the data. It is the
+policy analogue of the generated-code row: each repo is green in isolation while none of them can
+see the other two, and each generates its own copy of `contracts/proto/policy/v1`. The composition
+is the only place that can be checked honestly rather than skipped.

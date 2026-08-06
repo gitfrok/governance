@@ -39,5 +39,19 @@ fitness-function tests green; `make dev-up` brings the stack up on `*.gitsaas.te
 Which workstream satisfies which half of that CI line, since "runs green" is easy to assume and was
 not true of one of them for a long time: boundary + fitness → T-0002/T-0009 (done); **contract** →
 T-0020 (done — `buf lint` + `buf breaking` in governance, generated-code freshness in the super-repo);
-unit + policy/isolation → T-0004/T-0005/T-0006 (open); `make dev-up` → T-0003 (open, and never yet
-run on a cluster).
+unit + policy/isolation → T-0004/T-0005/T-0006 (**done 2026-08-06** — T-0005 closed the policy half
+with `opa test` + a deny-by-default assertion in governance, the PDP adapter and AC4 fitness
+function in backend, the PEP in bff, and a composition gate in the super-repo); `make dev-up` →
+T-0003 (**open**, and the only thing standing between Phase 0 and its exit).
+
+**Where Phase 0 actually stands.** Nine of ten tasks are Done. T-0003 is the exception, and what
+remains of it is not code: AC1's cluster-create path and AC3's `*.gitsaas.test` routing need a host
+with a rootful container driver or KVM, and AC4's macOS half needs a macOS. Its AC2 and AC4-on-Linux
+are verified. The plan's own recorded risk — *"version availability … verify at setup"* — is what
+that task spent itself on.
+
+One item was added to T-0003 by T-0005 and is worth naming here so it is not lost: the data plane
+now requires `GITFROK_POLICY_BUNDLE_DIR` and exits without it, and nothing in `deploy/dev` mounts
+the bundle yet. A bring-up on the manifests as they stand would start a plane that immediately
+exits. That is a manifest change, not a host problem, and it is the one part of T-0003 that can be
+finished anywhere.
