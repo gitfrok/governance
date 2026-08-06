@@ -21,6 +21,14 @@ Wired by tasks T-0002 (boundary/arch), T-0009 (fitness), T-0004/T-0005 (policy/i
 T-0001 (version floors + super-repo dep-direction), T-0020 (contract schema + generated code).
 See `definition-of-done.md`.
 
+**Gate toolchains are pinned to an exact version.** `buf` 1.72.0, OPA 1.19.0, `shellcheck` v0.11.0,
+and the codegen plugins. A linter that changes its mind between runs is a gate whose verdict depends
+on the day, and the failure is worse than noisy: it is a gate a developer cannot reproduce locally,
+which is a gate they learn to push and see rather than run. This is not hypothetical — `shellcheck`
+was the one gate left unpinned, and during T-0005 it went red in the super-repo on a finding the
+runner's older copy reports and a newer local one does not. Pin first, then decide whether the
+finding is worth acting on; the two questions are separate and only one of them is urgent.
+
 **The contract rows moved in T-0020, and the previous shape was wrong.** They used to read
 `✓ | ✓ | ✓ | ✓ (TS gen) | –` — a check required in four repos that existed in none, for a reason no
 amount of effort inside those repos could fix: each consumer's `buf.gen.yaml` reads
