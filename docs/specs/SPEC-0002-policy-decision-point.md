@@ -24,14 +24,20 @@ A `Decision` request/response (subject, action, resource, context) in `governanc
 Policy bundles are owned by governance; the PDP holds no domain data.
 
 ## Acceptance criteria (each becomes a test)
-- [ ] AC1: A request with no matching allow rule is **denied** (deny-by-default). *Policy half done
-      (T-0005, governance): `policies/gitsaas/authz` defaults to deny and the gate asserts it
-      evaluates to `false` — not undefined — for an empty input. The PDP service half is open.*
+- [x] AC1: A request with no matching allow rule is **denied** (deny-by-default). *`policies/gitsaas/authz`
+      defaults to deny; the gate asserts it evaluates to `false` — not undefined — for an empty
+      input; and the backend adapter returns the zero `Decision` on every failure path, so a caller
+      that ignores the error still denies.*
 - [x] AC2: Policies load as versioned OPA bundles from `governance/policies`. *`policies/` is the
       bundle root; `opa build -b` validates the manifest revision and that its roots cover every
       package, gated by `scripts/check-policies.sh`.*
-- [ ] AC3: A sample protected action is allowed/denied purely by policy; decisions are cached.
-- [ ] AC4: No service performs an inline permission check that bypasses the PDP.
+- [x] AC3: A sample protected action is allowed/denied purely by policy; decisions are cached.
+      *`repo.read`, guarded in `bff/internal/aggregate` before the read rather than after. The PEP
+      caches by request and invalidates by bundle revision.*
+- [x] AC4: No service performs an inline permission check that bypasses the PDP. *An
+      `inline-permission-check` fitness function in backend and bff. A **tripwire, not a proof** —
+      authorization logic has no import signature the way every other boundary rule does. The limit
+      is documented in both implementations and in T-0005.*
 
 ## Governance mapping (G1–G9)
 | Objective | How |

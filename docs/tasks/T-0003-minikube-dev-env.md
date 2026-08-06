@@ -70,6 +70,21 @@ services could not have started:
    until the new is Ready. Redpanda's *first* rollout squeaked through, which hides the bug rather
    than exposing it.
 
-**What is left, and it is not more code.** AC1's cluster-create path and AC3's `*.gitsaas.test` path
-both need a host with a rootful container driver or KVM; macOS needs a macOS. The environment used
-here — rootless podman, no `/dev/kvm`, no passwordless sudo — can verify everything else, and now has.
+**What is left, and it is mostly not more code.** AC1's cluster-create path and AC3's
+`*.gitsaas.test` path both need a host with a rootful container driver or KVM; macOS needs a macOS.
+The environment used here — rootless podman, no `/dev/kvm`, no passwordless sudo — can verify
+everything else, and now has.
+
+### Added by T-0005 (2026-08-06): the manifests do not mount the policy bundle
+
+One part *is* code, and it arrived after the run above. The data plane now requires
+`GITFROK_POLICY_BUNDLE_DIR` and **exits** without a loadable OPA bundle (ADR-0006, invariant 2) —
+deliberately, because a plane that came up without one would deny every request in the system and
+reach an operator as an unexplained total outage. Nothing in `deploy/dev/` mounts
+`governance/policies` or sets that variable yet, so a bring-up on the manifests as they stand would
+start a data plane that immediately exits.
+
+This one can be finished on any host — it is a manifest change, not a driver problem — and it is
+worth doing before the next cluster run, since otherwise that run will spend its first cycle
+rediscovering it. Note the bundle must be *mounted*, not baked into an image: the backend does not
+embed it precisely so that governance stays its only author (invariants 13 and 21).
