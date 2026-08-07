@@ -45,13 +45,32 @@ function in backend, the PEP in bff, and a composition gate in the super-repo); 
 T-0003 (**open**, and the only thing standing between Phase 0 and its exit).
 
 **Where Phase 0 actually stands.** Nine of ten tasks are Done. T-0003 is the exception, and what
-remains of it is not code: AC1's cluster-create path and AC3's `*.gitsaas.test` routing need a host
-with a rootful container driver or KVM, and AC4's macOS half needs a macOS. Its AC2 and AC4-on-Linux
-are verified. The plan's own recorded risk — *"version availability … verify at setup"* — is what
-that task spent itself on.
+remains of it is not code:
 
-One item was added to T-0003 by T-0005 and is worth naming here so it is not lost: the data plane
-now requires `GITFROK_POLICY_BUNDLE_DIR` and exits without it, and nothing in `deploy/dev` mounts
-the bundle yet. A bring-up on the manifests as they stand would start a plane that immediately
-exits. That is a manifest change, not a host problem, and it is the one part of T-0003 that can be
-finished anywhere.
+| AC | Blocked on | Anyone can unblock it by |
+|---|---|---|
+| AC1 — cluster create | `fs.inotify.max_user_instances=128` on the dev host | one `sysctl` (needs root), then re-running `dev-up` |
+| AC3 — `*.gitsaas.test` from the host | the node IP is unroutable under **rootless** podman | a rootful container driver, or KVM |
+| AC4 — macOS half | no macOS | running the scripts on a Mac |
+
+AC2 and AC4-on-Linux are verified. The plan's recorded risk — *"version availability … verify at
+setup"* — is what the 2026-08-06 run spent itself on; the 2026-08-08 create-path attempt fired a risk
+this plan never recorded, **host configuration**, which is worth adding to the register for Phase 1:
+a limit low enough on a mainstream distro to stop the one-command bring-up, invisible to every static
+check, and findable only by running the path on a machine nobody had run it on.
+
+The item T-0005 added to T-0003 — the missing policy bundle — is **done as of 2026-08-08**, though
+not as described. Its premise was wrong: it said a bring-up would "start a plane that immediately
+exits" for want of `GITFROK_POLICY_BUNDLE_DIR`, but `deploy/dev` has no dataplane manifest and
+`backend/` has no Dockerfile, so there was no pod to exit. The bundle genuinely was missing, so the
+conclusion held for the wrong reason. `dev-up` now generates it as a ConfigMap from
+`governance/policies` — read from the submodule rather than committed, so governance stays its only
+author (invariants 13, 21) — verified by mounting it and evaluating the real policy to `allow: true`.
+Nothing consumes it yet, and cannot until a dataplane image exists.
+
+**That last point is the one Phase-0 gap nobody has filed.** Neither plane has a container image or a
+Dockerfile, so "a tenant-scoped, policy-checked, audited request runs end-to-end in Minikube" is not
+reachable by any amount of work on T-0003 — the exit criterion needs a deployable backend, and no
+Phase-0 task owns building one. Whether that belongs in Phase 0 or is properly Phase 1's is a
+decision for whoever owns this plan; it is recorded here rather than silently absorbed into T-0003,
+whose acceptance criteria are about infrastructure and TLS.
