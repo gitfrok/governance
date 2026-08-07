@@ -68,9 +68,21 @@ One-command local cluster matching prod topology, with real TLS.
   node IP alone, so its `rc=28` looked like confirmation of a limit that was not there.
 
   Binding 80/443 as a non-root user also needs `net.ipv4.ip_unprivileged_port_start=0`; the create path
-  now checks that sysctl and prints the fix. *"The node IP is unroutable"* was an observation;
-  *"so this needs a different host"* was an inference, and it entered the record with the same
-  confidence as the measurement.
+  now checks that sysctl and aborts with the fix — a hard stop, unlike the host-DNS instructions above,
+  which it only prints. *"The node IP is unroutable"* was an observation; *"so this needs a different
+  host"* was an inference, and it entered the record with the same confidence as the measurement.
+
+  **Publishing the ports was necessary but not sufficient.** A second, unrelated defect stood between
+  the published ports and a reliable 200, and the record would otherwise credit the whole result to
+  port publishing. `ingress-nginx` left nginx's `worker_processes` at the host CPU count (12 here)
+  while the controller pod's cgroup capped `pids.max` at 307, so workers died with
+  `pthread_create() failed (11: Resource temporarily unavailable)` and nginx logged "worker process
+  exited with fatal code 2 and cannot be respawned". The survivors still completed the TCP handshake
+  and then never answered, so requests hung until the client gave up: 4 of 6 probes returned `curl`
+  exit 28 while the other 2 answered normally. What separated it from a routing fault was that a
+  `/dev/tcp` connect to the controller pod succeeded on both 80 and 443 at the same moment `curl` to
+  those ports timed out. Pinning `worker-processes=2` in the `ingress-nginx-controller` ConfigMap fixed
+  it, and `dev-up.sh` now does that on every run.
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
   prohibition.
@@ -147,10 +159,10 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
 |---|---|---|
 | super-repo | `b605b26` (#18) | manifests, `dev-up.sh`, `smoke-dev.sh` — written, never executed |
 | super-repo | `41e2f45` (#32) | first real cluster run: seven manifest defects fixed, `mkcert -install` no longer aborts the bring-up, `smoke-dev.sh` distinguishes a missing context from a dead cluster |
-| super-repo | `0eaffee` (#42) | first real cluster-**create** attempt: stale-volume convergence + inotify preflight, and the policy bundle published as a generated ConfigMap |
+| super-repo | `a6c3fb2` (#42) | first real cluster-**create** attempt: stale-volume convergence + inotify preflight, and the policy bundle published as a generated ConfigMap |
 | super-repo | `b7d1663` (#45) | macOS portability audit: `sort -z` dropped, `bench-storage.sh`'s silently-inert RAM-disk guard fixed |
 | governance | `9667a36` (#39) | `check-docs.sh` no longer uses GNU `find -printf`, which aborted this repo's docs gate on macOS |
-| super-repo | *pending* | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver |
+| super-repo | `a126acd` (#47) | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver, and `worker-processes=2` pinned on the ingress-nginx ConfigMap so requests stop hanging |
 
 ### What the first run found (2026-08-06)
 
