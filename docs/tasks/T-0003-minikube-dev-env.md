@@ -49,12 +49,28 @@ One-command local cluster matching prod topology, with real TLS.
      `find -printf`, `date -d`, `stat -c`, `base64 -w`, `xargs -d`, `tac`, `sha256sum`, `sed -i`
      without an argument, `sort -z`.
 
-  **Found and fixed: `check-docs.sh` used `find -printf`, a GNU extension BSD find does not have.**
-  This repo's entire docs gate would have aborted on macOS with `find: -printf: unknown primary or
-  operator`. Replaced with a portable `sed 's|.*/||'`. Verified both directions in the container: the
-  fixed gate reports `docs: OK (98 files checked)` under bash 3.2 with a non-GNU `find`, and the old
-  line still fails there. The duplicate-ADR-number detection it implements was re-confirmed by a
-  negative control (a deliberately duplicated ADR number is still reported).
+  **That audit found two defects, not one.** The first version of this record said one, and was wrong —
+  it named `stat -c` among the flags it had searched while a live `stat -c` sat in the super-repo:
+
+  1. **`check-docs.sh` used `find -printf`**, a GNU extension BSD find does not have, so this repo's
+     entire docs gate would have aborted on macOS with `find: -printf: unknown primary or operator`.
+     Replaced with a portable `sed 's|.*/||'`. Verified both directions in the container: the fixed
+     gate reports `docs: OK (98 files checked)` with a non-GNU `find`, and the old line still fails
+     there. The duplicate-ADR-number detection was re-confirmed by a negative control (a deliberately
+     duplicated ADR number is still reported) — a portability fix that silently disabled the assertion
+     would be worse than the bug.
+  2. **`bench-storage.sh` used `stat -f -c %T` with the failure swallowed** by
+     `2>/dev/null || echo unknown`, so on macOS its RAM-disk guard was **silently inert** — the one
+     check between T-0007's benchmark and a flattering tmpfs number, on the platform nobody had run it
+     on. Fixed in the super-repo with a portable detector that refuses to run rather than guess.
+     (T-0007's verdict fed ADR-0033, so this was not a cosmetic risk.)
+
+  **What the bash 3.2 container does and does not prove.** It is Alpine + busybox — an independent
+  minimal reimplementation with no lineage to Darwin's tools. That busybox *also* rejects
+  `find -printf` corroborates the finding but is not evidence about BSD; the `-printf` conclusion rests
+  on it being a documented GNU extension that no BSD-family `find(1)` implements. What the container
+  legitimately proves is that the replacements work without GNU extensions. Useful, and a different
+  claim from "verified on macOS".
 
   **`sort -z` in the super-repo's `dev-up.sh` is flagged but not confirmed as a defect** — it is a GNU
   extension, yet FreeBSD-derived `sort` (and busybox) accept it, so whether macOS's does cannot be
@@ -63,7 +79,17 @@ One-command local cluster matching prod topology, with real TLS.
 
   **Still untested: the scripts running on an actual Mac.** What changed is that the two things
   reachable without one — bash-version and userland-portability — are now tested rather than asserted,
-  and the audit turned up one genuine macOS-fatal defect that grep could never have found.
+  and the audit turned up two genuine macOS-fatal defects that grep could never have found.
+
+  One surviving limit, named rather than buried: `bench-git-workload.sh` requires GNU `date`'s `%N` and
+  exits with a clear message without it. It is macOS-*parseable*, not macOS-*runnable* — so "all 15
+  scripts parse under bash 3.2" must not be read as "all 15 run on macOS".
+
+  A note on how this record was produced, since it bears on how much to trust it: the "audit found one
+  defect" version above was caught by review, not by me. The lesson is the specific one — an audit that
+  lists the flags it searched for is only as good as the search, and mine claimed `stat -c` while
+  missing a live `stat -c`. Treat the table in `deploy/dev/README.md`
+  ("What is verified about macOS, and what is not") as the authoritative split.
 
 ## Tests to write first
 - integration: a smoke test hits an ingress host over TLS and gets 200 from a hello service.
