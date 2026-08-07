@@ -1,6 +1,6 @@
 # ADR-0036: When a vendor registry cannot be verified, prefer the one that can
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-08
 - **Deciders:** platform
 - **Governs:** G7 process integrity — a pin whose existence cannot be checked is the defect ADR-0034
