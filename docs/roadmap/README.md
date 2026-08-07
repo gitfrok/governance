@@ -11,8 +11,17 @@ runs end-to-end in Minikube; boundary/arch tests enforced in CI; benchmark decid
 
 ## Phase 1 — MVP (GitHub-lite)
 Git push/pull (RPC + sync-replica write path), auth (Zitadel), repo/file/diff UI, MR/PR
-review with protected branches, CI v0 (gVisor sandboxes).
-**Exit:** a team can host a repo, open/review/merge an MR, and run a pipeline. (Tasks T-0010–T-0017.)
+review with protected branches, CI v0 (gVisor sandboxes), and the **container images** that make any
+of it deployable.
+**Exit:** a team can host a repo, open/review/merge an MR, and run a pipeline.
+(Tasks T-0010–T-0018, T-0021.)
+
+T-0021 (images) is new and sits under the others: nothing in the four repos builds a container image
+yet, so no plane has ever run as a deployed artifact. It is **blocked on its own AC0** — a Proposed
+ADR for the image build surface, which no Accepted ADR covers. It also **conflicts with Phase 0's
+exit criterion as written**, since that criterion needs an end-to-end request in Minikube and this is
+what makes one possible; see the open questions in `../tasks/T-0021-container-images.md`, which
+records the three ways out rather than picking one.
 
 ## Phase 2 — the Ultimate wedge
 Security scanners → normalized findings → **unified dashboard**; security/approval policies

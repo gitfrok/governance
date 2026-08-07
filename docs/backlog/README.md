@@ -79,6 +79,30 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
   with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
   **SPEC-0011 Approved** — ready to start. T-0019 was folded into T-0018 at spec review.
+- **EP-10 Deployable images**: T-0021 (container images for both planes) — **Todo, blocked on its
+  own AC0.** A new epic rather than an addition to EP-1 on scope grounds: EP-1 is a Phase-0 epic
+  scoped to the Minikube dev environment, and this is neither Phase 0 nor dev-env work. (Not the EP-9
+  precedent, which was about *not reopening a closed epic* for scope it never owned — EP-1 is still
+  open, so that reasoning does not apply here and the scope mismatch has to carry the argument by
+  itself.)
+
+  Nothing in the four repos builds an image — no `Dockerfile`, `Containerfile`, `.ko.yaml` or
+  goreleaser config, and no image build in any CI workflow. Found while closing out T-0003
+  (2026-08-08): the policy bundle that task now publishes as a ConfigMap has no consumer, because
+  there is no pod to mount it into.
+
+  **Blocked on AC0, deliberately.** No Accepted ADR covers how a first-party image is produced —
+  ADR-0013 chose Helm + Operator and *assumes* images exist; ADR-0034 governs third-party dev-env
+  tag pinning. Base image, build tool, registry and tagging, runtime posture, and whether SBOM and
+  signature attestation are v1 scope all need a Proposed ADR first (the last of those is not a detail
+  for a product selling supply-chain assurance).
+
+  **Carries an unresolved conflict with Phase 0's exit criterion**, recorded in the task's open
+  questions rather than settled: Phase 0 exits when "a tenant-scoped, policy-checked, audited request
+  runs end-to-end in Minikube", which is unreachable without a deployable image — so as filed, a
+  Phase-0 exit now depends on a Phase-1 task, inverting the roadmap's phase rule. Three options are
+  written down (amend Phase 0's criterion / move this to Phase 0 / accept the inversion); all three
+  are human calls.
 
 ## Phase 2 — Ultimate wedge  *(to be expanded)*
 Scanner integration; unified security dashboard; security/approval policies-as-code; audit
