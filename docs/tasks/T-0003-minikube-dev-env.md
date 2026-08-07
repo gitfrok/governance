@@ -21,9 +21,31 @@ One-command local cluster matching prod topology, with real TLS.
 - [x] AC2: PostgreSQL 18, Valkey 9.1, Redpanda, Zitadel, SeaweedFS 4.40 come up from
   manifests using image tags in `deploy/dev/versions.env`. **Verified** — six deployments Available,
   six running images all from `versions.env`. Took **seven manifest fixes**; as written, three of the
-  five services could not start. Redpanda is now `docker.redpanda.com/redpandadata/redpanda:v26.2.1`
-  — `v26.1` was never a published tag (the series is patch-tagged only), and 26.2 still satisfies
-  ADR-0023's 26.1 floor.
+  five services could not start. Redpanda is now `docker.io/redpandadata/redpanda:v26.2.1` — `v26.1`
+  was never a published tag (the series is patch-tagged only), and 26.2 still satisfies ADR-0023's
+  26.1 floor.
+
+  **Re-verified 2026-08-08 after two Redpanda pin changes**, both of which taught something:
+
+  - **The registry moved from `docker.redpanda.com` to `docker.io`.** ADR-0034 preferred the vendor's
+    own distribution point over the Docker Hub mirror on rate-limit grounds; for this image that is
+    backwards. `docker.redpanda.com` answers an unauthenticated manifest query with
+    `toomanyrequests: You have reached your unauthenticated pull rate limit`, so it evidently sits
+    behind Docker Hub and inherits the limit. The effect is that ADR-0034's **own rule 4** —
+    resolvability is checked, not assumed — could not be met there: the probe reported
+    `?? inconclusive` on every run. On `docker.io` the same tag reports `ok resolves`. A pin that can
+    be verified beats a pin from a preferred registry that cannot. Rationale recorded in
+    `deploy/dev/README.md` ("Why Redpanda is pinned on docker.io").
+  - **Redpanda refuses downgrades.** A brief pin to `v26.1.15` crash-looped with
+    *"Incompatible downgrade detected! My version 18, feature table 19 indicates that all nodes in
+    cluster were previously >= that version"*. It writes a feature-table version into its data
+    directory and will not start against data from a newer release, so moving a Redpanda pin **down**
+    a minor requires deleting `redpanda-pvc`. Moving **up** is fine — `v26.1.15 → v26.2.1` rolled out
+    against the existing volume. Worth knowing before someone reads "26.1 floor" as an invitation to
+    pin at the floor.
+
+  All six deployments Available on the current pins, `rpk version: v26.2.1` confirmed in-container,
+  and every pinned image resolves with `CHECK_IMAGE_RESOLVE=1`.
 - [~] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
   **Verified in substance, not by the specified path.** Ingress serves the mkcert wildcard and returns
   the fixture — `http_code=200`, `ssl_verify_result=0` (validated against the mkcert CA, never
@@ -32,8 +54,64 @@ One-command local cluster matching prod topology, with real TLS.
   `rc=28`). No host-DNS or `/etc/hosts` entry fixes that. Needs a rootful driver or KVM.
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
-  prohibition; the bash-3.2 claim re-checked by grep (no `declare -A`, `mapfile`, `readarray`,
-  `${var,,}`). **macOS remains untested.**
+  prohibition.
+
+  **The macOS half was upgraded from grep to execution on 2026-08-08, and it found a real breakage.**
+  The previous record rested on grepping for bash-4 features (`declare -A`, `mapfile`, `readarray`,
+  `${var,,}`) — necessary but not sufficient, because it tested the *shell* and ignored the
+  *userland*. macOS ships bash **3.2.57** and a **BSD** userland, and the second is where the bug was.
+
+  What was actually done:
+  1. **All 15 shell scripts across the four repos parse under bash 3.2.57** (`bash -n` in a
+     `docker.io/library/bash:3.2` container — the same 3.2.57 macOS ships).
+  2. **Five fitness scripts were *executed* under bash 3.2.57 and pass**: `check-dep-direction.sh`,
+     `check-version-floors.sh`, `check-dev-images.sh`, webfrontend's `check-boundaries.sh`, and this
+     repo's `check-docs.sh`. Parsing proves no bash-4 syntax; running proves no bash-4 *behaviour*.
+  3. **Audited for GNU-only tool flags**, which no prior check looked for: `grep -P`, `readlink -f`,
+     `find -printf`, `date -d`, `stat -c`, `base64 -w`, `xargs -d`, `tac`, `sha256sum`, `sed -i`
+     without an argument, `sort -z`.
+
+  **That audit found two defects, not one.** The first version of this record said one, and was wrong —
+  it named `stat -c` among the flags it had searched while a live `stat -c` sat in the super-repo:
+
+  1. **`check-docs.sh` used `find -printf`**, a GNU extension BSD find does not have, so this repo's
+     entire docs gate would have aborted on macOS with `find: -printf: unknown primary or operator`.
+     Replaced with a portable `sed 's|.*/||'`. Verified both directions in the container: the fixed
+     gate reports `docs: OK (98 files checked)` with a non-GNU `find`, and the old line still fails
+     there. The duplicate-ADR-number detection was re-confirmed by a negative control (a deliberately
+     duplicated ADR number is still reported) — a portability fix that silently disabled the assertion
+     would be worse than the bug.
+  2. **`bench-storage.sh` used `stat -f -c %T` with the failure swallowed** by
+     `2>/dev/null || echo unknown`, so on macOS its RAM-disk guard was **silently inert** — the one
+     check between T-0007's benchmark and a flattering tmpfs number, on the platform nobody had run it
+     on. Fixed in the super-repo with a portable detector that refuses to run rather than guess.
+     (T-0007's verdict fed ADR-0033, so this was not a cosmetic risk.)
+
+  **What the bash 3.2 container does and does not prove.** It is Alpine + busybox — an independent
+  minimal reimplementation with no lineage to Darwin's tools. That busybox *also* rejects
+  `find -printf` corroborates the finding but is not evidence about BSD; the `-printf` conclusion rests
+  on it being a documented GNU extension that no BSD-family `find(1)` implements. What the container
+  legitimately proves is that the replacements work without GNU extensions. Useful, and a different
+  claim from "verified on macOS".
+
+  **`sort -z` in the super-repo's `dev-up.sh` is flagged but not confirmed as a defect** — it is a GNU
+  extension, yet FreeBSD-derived `sort` (and busybox) accept it, so whether macOS's does cannot be
+  established from here. It is being removed regardless, because it is cosmetic there and removing it
+  costs nothing. Recorded as *unverified*, not as a bug, to avoid the overclaim.
+
+  **Still untested: the scripts running on an actual Mac.** What changed is that the two things
+  reachable without one — bash-version and userland-portability — are now tested rather than asserted,
+  and the audit turned up two genuine macOS-fatal defects that grep could never have found.
+
+  One surviving limit, named rather than buried: `bench-git-workload.sh` requires GNU `date`'s `%N` and
+  exits with a clear message without it. It is macOS-*parseable*, not macOS-*runnable* — so "all 15
+  scripts parse under bash 3.2" must not be read as "all 15 run on macOS".
+
+  A note on how this record was produced, since it bears on how much to trust it: the "audit found one
+  defect" version above was caught by review, not by me. The lesson is the specific one — an audit that
+  lists the flags it searched for is only as good as the search, and mine claimed `stat -c` while
+  missing a live `stat -c`. Treat the table in `deploy/dev/README.md`
+  ("What is verified about macOS, and what is not") as the authoritative split.
 
 ## Tests to write first
 - integration: a smoke test hits an ingress host over TLS and gets 200 from a hello service.
