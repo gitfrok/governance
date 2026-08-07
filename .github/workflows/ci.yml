@@ -24,7 +24,7 @@ jobs:
       # fetch-depth: 0 so `buf breaking` has a baseline. With the default depth of 1 there is no
       # origin/main to compare against, and the check would have to be skipped — a skipped gate on
       # the shared surface is how the contract-schema row in ci-gates.md went years without one.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -57,10 +57,22 @@ jobs:
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
-      - uses: bufbuild/buf-setup-action@v1
-        with:
-          version: 1.72.0
-          github_token: ${{ github.token }}
+      #
+      # Installed directly rather than via bufbuild/buf-setup-action: that action is the one here
+      # with no node24 release to move to — its v1 line ends at v1.50.0 and every tag in it is still
+      # node20 — so the runner deprecation cannot be cleared by a version bump the way checkout's
+      # was. The pin is the part that matters, and a pinned download holds it without depending on
+      # an action's release cadence. Same shape as the shellcheck step above, for the same reason.
+      - name: pin buf to v1.72.0
+        env:
+          BUF_VERSION: v1.72.0
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/bufbuild/buf/releases/download/${BUF_VERSION}/buf-Linux-x86_64" \
+            -o "$HOME/.local/bin/buf"
+          chmod +x "$HOME/.local/bin/buf"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/buf" --version
 
       # The baseline is passed explicitly rather than left to the script's local-use fallback, so CI
       # can never end up comparing the branch against itself.
@@ -77,8 +89,9 @@ jobs:
       # between runs is a gate whose verdict depends on the day.
       #
       # `@v2.4.0` and not `@v2`: this action publishes no moving major-version tag (unlike
-      # actions/checkout and buf-setup-action above), so `@v2` resolves to nothing and the step
-      # would fail at load time rather than run unpinned.
+      # actions/checkout above), so `@v2` resolves to nothing and the step would fail at load time
+      # rather than run unpinned. It is left at v2.4.0 by the node24 sweep because it already
+      # declares node24 — it was never one of the actions the deprecation warning named.
       - uses: open-policy-agent/setup-opa@v2.4.0
         with:
           version: 1.19.0
