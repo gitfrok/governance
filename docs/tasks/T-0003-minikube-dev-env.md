@@ -1,6 +1,6 @@
 # T-0003: Minikube dev environment
 
-- **Status:** In progress — **AC2 and AC4-on-Linux verified**; AC1 blocked on one host `sysctl`, AC3 on a rootless-podman routing limit, AC4's macOS half on a macOS (see the record)
+- **Status:** In progress — **AC1, AC2 and AC4-on-Linux verified**; AC3's ingress half verified and its host-DNS half still unwired (root); AC4's macOS half still needs a macOS (see the record)
 - **Phase / Epic:** 0 / EP-1
 - **Repo(s):** super-repo (`Makefile`, `deploy/dev/`)
 - **Spec:** chore — acceptance criteria below
@@ -11,13 +11,20 @@
 One-command local cluster matching prod topology, with real TLS.
 
 ## Acceptance criteria (test-first)
-- [~] AC1: `make dev-up` starts Minikube with `ingress` + `ingress-dns` addons. **Addon half
-  verified** — `dev-up.sh` ran end to end and enabled both (they were `disabled` first). The
-  *cluster-create* path was **attempted for real on 2026-08-08** and failed on a host limit, after
-  exposing two defects in the script itself (see the 2026-08-08 record). It is still unverified, but
-  the blocker is now named and one `sysctl` wide rather than "needs a different host":
-  `fs.inotify.max_user_instances=512`. Raising it needs root, which this environment does not have
-  without a password.
+- [x] AC1: `make dev-up` starts Minikube with `ingress` + `ingress-dns` addons. **Verified** — on
+  2026-08-08 the *cluster-create* path ran to completion for the first time, against a deleted and
+  recreated `gitfrok` profile: node created, both addons enabled (`disabled` beforehand), wildcard
+  installed, policy bundle published, all six deployments Available, `dev-up: OK`. Re-running against
+  the live cluster exits 0 and changes nothing, so the converge branch still converges.
+
+  It took three attempts, and each failure was a real defect rather than a host problem:
+  `fs.inotify.max_user_instances` at Fedora's default of 128 (raised to 512 and persisted in
+  `/etc/sysctl.d/`); a stale podman volume that survived a failed create; and — the one only a create
+  that gets *past* inotify can reach — **`dev-up.sh` never passing `--container-runtime`**. minikube
+  1.35 defaults to *docker*, so provisioning started `dockerd` inside the node and failed
+  (`Job for docker.service failed` → `StartHost failed` → `GUEST_PROVISION`). `deploy/dev/README.md`
+  had documented `containerd` since the first bring-up; the script disagreed with its own README, and
+  the disagreement survived because the create branch had never once run to completion.
 - [x] AC2: PostgreSQL 18, Valkey 9.1, Redpanda, Zitadel, SeaweedFS 4.40 come up from
   manifests using image tags in `deploy/dev/versions.env`. **Verified** — six deployments Available,
   six running images all from `versions.env`. Took **seven manifest fixes**; as written, three of the
@@ -47,11 +54,23 @@ One-command local cluster matching prod topology, with real TLS.
   All six deployments Available on the current pins, `rpk version: v26.2.1` confirmed in-container,
   and every pinned image resolves with `CHECK_IMAGE_RESOLVE=1`.
 - [~] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
-  **Verified in substance, not by the specified path.** Ingress serves the mkcert wildcard and returns
-  the fixture — `http_code=200`, `ssl_verify_result=0` (validated against the mkcert CA, never
-  `curl -k`) — but reached via `kubectl port-forward`, because under **rootless** podman the node IP
-  is unroutable from the host (`ping` 100% loss; `smoke-dev.sh`'s `--resolve` fallback times out at
-  `rc=28`). No host-DNS or `/etc/hosts` entry fixes that. Needs a rootful driver or KVM.
+  **Verified over the real ingress path, under rootless podman, with no `port-forward`** —
+  `GET https://hello.gitsaas.test/` returns `http_code=200`, `ssl_verify_result=0` (validated against
+  the mkcert CA, never `curl -k`) and the hello fixture, hitting `127.0.0.1:443`. Left at `[~]` for
+  one reason only: **host DNS is still unwired**, so that request is made with `curl --resolve`.
+  Wiring it needs root and touches system DNS, which `dev-up.sh` prints rather than does.
+
+  **The previous entry here was wrong, and the correction is the point.** It said AC3 "needs a rootful
+  driver or KVM". The evidence behind that — the node IP being unroutable from the host under rootless
+  podman — was measured correctly. The inference drawn from it was not: the node's 80/443 can simply be
+  published to the host (`minikube start --ports=80:80,443:443`, supported by the podman driver), and
+  then nothing rootful is required. `smoke-dev.sh` had been pinning its `--resolve` fallback to the
+  node IP alone, so its `rc=28` looked like confirmation of a limit that was not there.
+
+  Binding 80/443 as a non-root user also needs `net.ipv4.ip_unprivileged_port_start=0`; the create path
+  now checks that sysctl and prints the fix. *"The node IP is unroutable"* was an observation;
+  *"so this needs a different host"* was an inference, and it entered the record with the same
+  confidence as the measurement.
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
   prohibition.
@@ -128,7 +147,10 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
 |---|---|---|
 | super-repo | `b605b26` (#18) | manifests, `dev-up.sh`, `smoke-dev.sh` — written, never executed |
 | super-repo | `41e2f45` (#32) | first real cluster run: seven manifest defects fixed, `mkcert -install` no longer aborts the bring-up, `smoke-dev.sh` distinguishes a missing context from a dead cluster |
-| super-repo | *pending* | first real cluster-**create** attempt: stale-volume convergence + inotify preflight, and the policy bundle published as a generated ConfigMap |
+| super-repo | `0eaffee` (#42) | first real cluster-**create** attempt: stale-volume convergence + inotify preflight, and the policy bundle published as a generated ConfigMap |
+| super-repo | `b7d1663` (#45) | macOS portability audit: `sort -z` dropped, `bench-storage.sh`'s silently-inert RAM-disk guard fixed |
+| governance | `9667a36` (#39) | `check-docs.sh` no longer uses GNU `find -printf`, which aborted this repo's docs gate on macOS |
+| super-repo | *pending* | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver |
 
 ### What the first run found (2026-08-06)
 
