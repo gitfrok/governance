@@ -10,8 +10,14 @@
   ADR-0034 (third-party pin form — **refined for first-party artifacts, not superseded**) ·
   ADR-0023 (version floors) · ADR-0025 (one binary per plane) · ADR-0009/0011/0017 (the agent
   applies releases) · ADR-0026 (extraction adds images later) ·
-  **Invariants:** 9 (signed releases only), 10 (proto v1 additive-only), 13 (reproducible pins),
-  19 (one binary per plane) · **Tasks:** T-0021 (this is its AC0)
+  **Invariants:** 9 (signed releases only), 10 (proto v1 additive-only), 19 (one binary per plane) ·
+  **Tasks:** T-0021 (this is its AC0)
+
+  *(A first draft of this ADR also cited "invariant 13 (reproducible pins)". Invariant 13 is
+  per-environment configuration and says nothing about pins or reproducibility. The mistake was
+  inherited by copying ADR-0034's front matter, which carries the same mislabel — and being Accepted,
+  ADR-0034 is immutable, so that one stands as written. Noted here so the error is not copied a third
+  time.)*
 
 ## Context
 
@@ -72,12 +78,22 @@ produces; third-party dependency pins remain governed by ADR-0034 unchanged.
    implying it: two runtimes legitimately get two bases, and that is not an inconsistency to be
    embarrassed about.
 
-4. **First-party images are referenced by digest (`@sha256:…`) and signed with cosign against a pinned
-   key.** This honours invariant 9 and `SignedRelease`; it is not a new decision. A human-readable
-   tag (`v<semver>` and the commit SHA) is published *alongside* the digest for legibility, but the
-   digest is what any consumer — the agent, Helm values, `deploy/dev/` — resolves. Key-based rather
-   than keyless/OIDC signing, because invariant 9 says *"verifies vs pinned key"* and keyless attests
-   a workload identity instead.
+4. **First-party images are referenced by digest (`@sha256:…`) and signed with cosign.** *That* much
+   honours invariant 9 and `SignedRelease` and is not a new decision. A human-readable tag
+   (`v<semver>` and the commit SHA) is published *alongside* the digest — fully qualified and
+   patch-level, so ADR-0034's form rules are satisfied — but the digest is what any consumer (the
+   agent, Helm values, `deploy/dev/`) resolves.
+
+   **The signing *mechanism* is a new decision, and this ADR owns it: key-based, not keyless/OIDC.**
+   An earlier draft justified this by quoting invariant 9 as saying *"verifies vs pinned key"*. It
+   does not — invariant 9 says only *"applies only signed releases it verifies (cosign)"*. The
+   "pinned key" phrase is an inline comment on `SignedRelease.signature` in the proto, which is a
+   contract annotation and not decided governance text; ADR-0017 still lists supply-chain signing of
+   agent-applied releases as an open follow-up. So the choice needs its own argument, and it is
+   **ADR-0011**: the agent is outbound-only and runs in customer clusters that may have no route to a
+   transparency log, which is precisely what keyless verification depends on. Keyless attests the
+   identity of the builder — a genuinely stronger claim where it is checkable — and should be
+   revisited if the agent ever gains a reliable path to Rekor.
 
 5. **A third-party base image that publishes no patch tag must be digest-pinned.** This is the only
    place this ADR refines ADR-0034, and it refines rather than contradicts it: ADR-0034's own
@@ -86,7 +102,10 @@ produces; third-party dependency pins remain governed by ADR-0034 unchanged.
    reference that is not floating, and floating is what ADR-0034 exists to forbid.
 
 6. **An SBOM per image, generated with Syft and attached as an OCI attestation, and a Grype scan in
-   CI.** Syft/Grype are already the recorded stack choice (ADR-0019/0020, carried into ADR-0023).
+   CI.** Syft/Grype appear in ADR-0019 and ADR-0020, both Superseded; ADR-0023's Decision does not
+   re-list the scanners among what it carries forward, so treat this as *this* ADR choosing them for
+   our own images rather than as inheriting a live stack choice. They remain the obvious pick, and
+   they are what the product's scanning surface already assumes (G3).
    Initially the scan **reports**; the threshold at which it **blocks** is deliberately left to T-0021,
    because a blocking gate whose failure mode nobody has seen tends to be disabled the first time it
    is inconvenient.
@@ -130,9 +149,13 @@ Node on a pinned base) is more to explain than one.
   it is a custody decision, and guessing at it would be the kind of default this ADR exists to avoid.
 - The Grype threshold that blocks a build (T-0021).
 - Amend T-0021's AC list to include the `webfrontend` SSR image (decision 9).
-- `deploy/dev/` must resolve first-party images by digest, which `check-dev-images.sh` currently cannot
-  express — it compares manifest text to `versions.env` patch tags. That check needs a first-party
-  code path.
+- `deploy/dev/` must resolve first-party images by digest. An earlier draft claimed
+  `check-dev-images.sh` "cannot express a digest" and needs a new first-party code path; **that was
+  wrong** — the script already has a `*@sha256:*) ;; # digest-pinned: exact by construction` arm in
+  its pin-shape check, and its resolution probe works the same on a digest as on a tag. The real
+  remaining work is just registering the new manifests in that script's expected-image list, which is
+  ordinary. Recorded because the mistaken version was the more alarming one, and a follow-up that
+  invents work is as costly as one that omits it.
 - Whether `controlplane-app` runs in `deploy/dev/` in Phase 1 or waits for Phase 3's BYO split
   (ADR-0009) — carried from T-0021's open questions, still open.
 
@@ -151,10 +174,11 @@ Node on a pinned base) is more to explain than one.
   to every image for the sake of three files we can copy.
 - **`alpine`** — rejected: publishes patch tags and is convenient, but ships a shell and a package
   manager into production for debugging convenience, which is the opposite of decision 8.
-- **Keyless / OIDC cosign signing** — rejected: attests the identity of the workload that built the
-  artifact, which is a different and in some ways stronger claim, but invariant 9 specifies
-  verification *against a pinned key*, and the agent runs in customer clusters that may have no
-  outbound path to a transparency log.
+- **Keyless / OIDC cosign signing** — rejected, on ADR-0011 rather than on invariant 9 (see decision 4:
+  invariant 9 does not specify a mechanism, and an earlier draft of this ADR wrongly claimed it did).
+  Keyless attests the identity of the workload that built the artifact, which is in some ways a
+  stronger claim — but it depends on reaching a transparency log, and the agent is outbound-only in
+  customer clusters that may have no such route. Worth revisiting if that changes.
 - **Defer signing to Phase 3, when the agent ships** — rejected. It is the tempting sequencing, since
   nothing verifies signatures until the agent exists. But it means every image built between now and
   then is unsigned, and the retrofit lands exactly when the component that depends on it is being
