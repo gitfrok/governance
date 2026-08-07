@@ -58,10 +58,10 @@ of buried in a task that is already blocked on host limits.
       mount contract this consumes; T-0003 verified the bundle loads from that mount by evaluating
       the real policy to `allow: true`, so what is untested is the plane, not the bundle.
 - [ ] AC5: `deploy/dev/` gains dataplane and controlplane manifests, with their references recorded in
-      `versions.env` so `check-dev-images.sh` covers them. Note the wrinkle ADR-0035 exposes: first-party
-      images resolve **by digest** (decision 4) while `check-dev-images.sh` only knows how to compare
-      manifest text against patch tags (ADR-0034), so this needs a first-party code path in that script
-      rather than another row in the file.
+      `versions.env` so `check-dev-images.sh` covers them. First-party images resolve **by digest**
+      (ADR-0035 decision 4), which that script already handles — it has a
+      `*@sha256:*) ;; # digest-pinned: exact by construction` arm and probes resolution identically for
+      a digest or a tag. So this is registering new manifests in its expected-image list, nothing more.
 - [ ] AC6: CI builds the images on PR in the repo that owns each one, and `ci-gates.md` is updated —
       it currently names no image-build gate for any repo.
 
