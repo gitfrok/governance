@@ -1,11 +1,12 @@
 # T-0021: Container images for both planes
 
-- **Status:** Todo — **blocked on AC0** (no ADR covers the image build surface)
+- **Status:** Todo — **AC0 drafted as ADR-0035 (Proposed); blocked until it is Accepted**
 - **Phase / Epic:** 1 / EP-10
 - **Repo(s):** governance (ADR), backend (`Dockerfile`, both `cmd/` targets), bff (`Dockerfile`),
-  super-repo (`deploy/dev/`, `versions.env`, CI) — ADR-0027 order, one commit per repo (invariant 23)
+  webfrontend (`Dockerfile`, SSR — added by ADR-0035 decision 9), super-repo (`deploy/dev/`,
+  `versions.env`, CI) — ADR-0027 order, one commit per repo (invariant 23)
 - **Spec:** chore — acceptance criteria below. **AC0 is a Proposed ADR**, not a chore step.
-- **ADRs:** 0009, 0013, 0023, 0024, 0025, 0034 — and the new one AC0 produces
+- **ADRs:** 0009, 0013, 0023, 0024, 0025, 0034, **0035** (AC0's output)
 - **Owner:** unassigned
 
 ## Goal
@@ -25,23 +26,30 @@ task owns. Filing it here rather than widening T-0003 keeps the missing-image pr
 of buried in a task that is already blocked on host limits.
 
 ## Acceptance criteria (test-first)
-- [ ] **AC0 — a Proposed ADR for the image build surface, reviewed before any Dockerfile is
-      written.** No Accepted ADR covers it: ADR-0013 chose Helm + Operator and *assumes* images
-      exist (it requires mirrored images for air-gapped installs); ADR-0034 governs how *third-party
-      dev-env* tags are pinned, not how first-party images are produced. The decisions with no home:
-      base image (scratch / distroless / alpine), build tool (multi-stage `Dockerfile` vs `ko` vs
-      buildpacks), registry and tagging scheme, non-root + read-only root filesystem, and whether
-      SBOM and signature attestation are in scope for v1. That last one is not a detail for a
-      product whose wedge is security governance (ADR-0015, PRD): shipping unsigned images while
-      selling supply-chain assurance is a contradiction, so it should be decided deliberately and
-      recorded, not defaulted into.
+- [~] **AC0 — a Proposed ADR for the image build surface, reviewed before any Dockerfile is written.**
+      **Drafted 2026-08-08 as ADR-0035 (Proposed).** Nothing below AC0 may start until it is Accepted;
+      the PR review is the approval gate (`../adr/README.md`).
+      Its premise held — no Accepted ADR covered image *production*: ADR-0013 chose Helm + Operator and
+      *assumes* images exist, and ADR-0034 governs third-party dev-env pin form. But drafting it found
+      that two parts were **already decided and simply ungrounded**: invariant 9 requires the agent to
+      apply only cosign-verified signed releases, and `contracts/proto/agent/v1`'s `SignedRelease`
+      already specifies a digest and a signature verified against a pinned key — additive-only under
+      invariant 10, so not revocable. So signing and digest-referencing are not open questions for
+      first-party artifacts; what ADR-0035 decides is base image, build tool, registry, SBOM handling,
+      runtime posture, and building those guarantees in now rather than retrofitting them.
 - [ ] AC1: one image per plane binary (invariant 19) — `cmd/dataplane-app` and
       `cmd/controlplane-app` — built from `backend/`, respecting ADR-0023's Go 1.26 floor.
 - [ ] AC2: an image for `bff/`.
+- [ ] AC2a: an image for `webfrontend/`'s SSR server. **Added by ADR-0035 decision 9** — this AC list
+      originally named only the two planes and the BFF, but the SSR front door is equally undeployable,
+      so four images are in scope, not three. It is also the one image that cannot use the Go base
+      (ADR-0035 decision 3).
 - [ ] AC3: the runtime posture the ADR settles is **asserted, not assumed** — a test reads the built
-      image and fails on a violation (runs as non-root, read-only root filesystem, no shell if the
-      base is distroless). `deploy/dev/hello.yaml` already models this posture for the fixture; the
-      real planes should not be laxer than the busybox that tests them.
+      image and fails on a violation (runs as non-root, read-only root filesystem, no shell).
+      `deploy/dev/hello.yaml` already models this posture for the fixture; the real planes should not
+      be laxer than the busybox that tests them. On a `scratch` base (ADR-0035 decision 2) the
+      no-shell half is free, but it is still asserted — an image is only as posture-correct as its
+      last Dockerfile edit.
 - [ ] AC4: the data plane **starts and stays up** in the dev cluster with the
       `gitfrok-policy-bundle` ConfigMap mounted at `/etc/gitfrok/policy` and
       `GITFROK_POLICY_BUNDLE_DIR` set to it — and **exits non-zero without it**. Both directions are
@@ -49,8 +57,11 @@ of buried in a task that is already blocked on host limits.
       made it start anyway would be silent. `deploy/dev/README.md` ("Policy bundle") documents the
       mount contract this consumes; T-0003 verified the bundle loads from that mount by evaluating
       the real policy to `allow: true`, so what is untested is the plane, not the bundle.
-- [ ] AC5: `deploy/dev/` gains dataplane and controlplane manifests, with their tags recorded in
-      `versions.env` like every other image (ADR-0034) so `check-dev-images.sh` covers them.
+- [ ] AC5: `deploy/dev/` gains dataplane and controlplane manifests, with their references recorded in
+      `versions.env` so `check-dev-images.sh` covers them. Note the wrinkle ADR-0035 exposes: first-party
+      images resolve **by digest** (decision 4) while `check-dev-images.sh` only knows how to compare
+      manifest text against patch tags (ADR-0034), so this needs a first-party code path in that script
+      rather than another row in the file.
 - [ ] AC6: CI builds the images on PR in the repo that owns each one, and `ci-gates.md` is updated —
       it currently names no image-build gate for any repo.
 
