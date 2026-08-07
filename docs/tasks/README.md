@@ -7,7 +7,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 |------|-------|-------|--------|
 | T-0001 | Scaffold super-repo + submodules (polyrepo + HCLC) | 0 | Done |
 | T-0002 | Boundary/arch enforcement in CI | 0 | Done |
-| T-0003 | Minikube dev environment | 0 | Todo |
+| T-0003 | Minikube dev environment | 0 | In progress |
 | T-0004 | Tenancy + RLS baseline | 0 | Done |
 | T-0005 | PDP skeleton (OPA) | 0 | Done |
 | T-0006 | Append-only audit log | 0 | Done |
@@ -24,6 +24,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
 | T-0018 | Repository & review-history import (GitHub/GitLab) | 1 | Todo |
 | T-0020 | Contract schema gate (`buf lint` + `buf breaking` + codegen freshness) | 0 | Done |
+| T-0021 | Container images for both planes | 1 | Todo (blocked on AC0: no ADR covers image build) |
 
 ## Retired numbers (never reused)
 - **T-0019** — Review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review

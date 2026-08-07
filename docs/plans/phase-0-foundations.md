@@ -68,9 +68,19 @@ conclusion held for the wrong reason. `dev-up` now generates it as a ConfigMap f
 author (invariants 13, 21) — verified by mounting it and evaluating the real policy to `allow: true`.
 Nothing consumes it yet, and cannot until a dataplane image exists.
 
-**That last point is the one Phase-0 gap nobody has filed.** Neither plane has a container image or a
-Dockerfile, so "a tenant-scoped, policy-checked, audited request runs end-to-end in Minikube" is not
-reachable by any amount of work on T-0003 — the exit criterion needs a deployable backend, and no
-Phase-0 task owns building one. Whether that belongs in Phase 0 or is properly Phase 1's is a
-decision for whoever owns this plan; it is recorded here rather than silently absorbed into T-0003,
-whose acceptance criteria are about infrastructure and TLS.
+**That last point is the one Phase-0 gap nobody had filed — now T-0021, in Phase 1.** Neither plane
+has a container image or a Dockerfile, so "a tenant-scoped, policy-checked, audited request runs
+end-to-end in Minikube" is not reachable by any amount of work on T-0003, whose acceptance criteria
+are about infrastructure and TLS. It is filed as **T-0021 under EP-10**, phased into 1 by direction.
+
+**Which leaves this plan's exit criterion depending on a Phase-1 task, and that is not resolved.**
+The criterion below is written in terms of an end-to-end request; T-0021 is what makes one possible;
+T-0021 is Phase 1. So Phase 0 as specified cannot close on Phase-0 work alone — an inversion of the
+rule in `../roadmap/README.md` that each phase meets an exit criterion before the next begins.
+
+The three ways out are enumerated in `../tasks/T-0021-container-images.md` (amend this plan's exit
+criterion to what Phase 0 actually built; or move T-0021 into Phase 0; or accept the inversion in
+writing). Amending an exit criterion is a reviewed change rather than something a task file absorbs,
+so nothing here is amended yet — this paragraph exists so the gap cannot be mistaken for closed.
+T-0021 is itself blocked on **AC0**, a Proposed ADR for the image build surface, which no Accepted
+ADR covers.
