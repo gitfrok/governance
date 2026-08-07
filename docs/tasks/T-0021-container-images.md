@@ -1,6 +1,6 @@
 # T-0021: Container images for both planes
 
-- **Status:** Todo — **AC0 drafted as ADR-0035 (Proposed); blocked until it is Accepted**
+- **Status:** Todo — **unblocked 2026-08-08: AC0 is met, ADR-0035 Accepted.** AC1–AC6 are ready to start.
 - **Phase / Epic:** 1 / EP-10
 - **Repo(s):** governance (ADR), backend (`Dockerfile`, both `cmd/` targets), bff (`Dockerfile`),
   webfrontend (`Dockerfile`, SSR — added by ADR-0035 decision 9), super-repo (`deploy/dev/`,
@@ -26,17 +26,19 @@ task owns. Filing it here rather than widening T-0003 keeps the missing-image pr
 of buried in a task that is already blocked on host limits.
 
 ## Acceptance criteria (test-first)
-- [~] **AC0 — a Proposed ADR for the image build surface, reviewed before any Dockerfile is written.**
-      **Drafted 2026-08-08 as ADR-0035 (Proposed).** Nothing below AC0 may start until it is Accepted;
-      the PR review is the approval gate (`../adr/README.md`).
+- [x] **AC0 — a Proposed ADR for the image build surface, reviewed before any Dockerfile is written.**
+      **Met: ADR-0035, Accepted 2026-08-08.** It carries a correction note — the version first merged
+      claimed invariant 9 compelled key-based cosign signing, which it does not; that choice is the
+      ADR's own, argued from ADR-0011. Read the note before citing decision 4.
       Its premise held — no Accepted ADR covered image *production*: ADR-0013 chose Helm + Operator and
-      *assumes* images exist, and ADR-0034 governs third-party dev-env pin form. But drafting it found
-      that two parts were **already decided and simply ungrounded**: invariant 9 requires the agent to
-      apply only cosign-verified signed releases, and `contracts/proto/agent/v1`'s `SignedRelease`
-      already specifies a digest and a signature verified against a pinned key — additive-only under
-      invariant 10, so not revocable. So signing and digest-referencing are not open questions for
-      first-party artifacts; what ADR-0035 decides is base image, build tool, registry, SBOM handling,
-      runtime posture, and building those guarantees in now rather than retrofitting them.
+      *assumes* images exist, and ADR-0034 governs third-party dev-env pin form. Drafting it found that
+      **two parts were already decided and simply ungrounded**: invariant 9 requires the agent to apply
+      only cosign-verified signed releases, and `contracts/proto/agent/v1`'s `SignedRelease` carries a
+      digest the agent MUST verify — additive-only under invariant 10, so not revocable. *That* something
+      is signed and digest-referenced is settled. **How it is signed was not** — key-based vs keyless is
+      ADR-0035's own call (decision 4), and an earlier version of this AC wrongly said otherwise. What
+      the ADR decides: base image, build tool, registry, SBOM handling, runtime posture, signing
+      mechanism, and building the contract's guarantees in now rather than retrofitting them.
 - [ ] AC1: one image per plane binary (invariant 19) — `cmd/dataplane-app` and
       `cmd/controlplane-app` — built from `backend/`, respecting ADR-0023's Go 1.26 floor.
 - [ ] AC2: an image for `bff/`.

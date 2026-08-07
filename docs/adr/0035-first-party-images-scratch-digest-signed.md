@@ -1,7 +1,7 @@
 # ADR-0035: First-party images — `scratch` base, digest-referenced, cosign-signed
 
-- **Status:** Proposed
-- **Date:** 2026-08-08
+- **Status:** Accepted
+- **Date:** 2026-08-08 (proposed 2026-08-08; corrected and accepted the same day — see the note below)
 - **Deciders:** platform
 - **Governs:** G4 change governance, G9 least-privilege footprint — and the credibility of G3, which
   is scoped in `docs/agents/context.md` as a *product feature* (scanning the customer's supply chain)
@@ -13,11 +13,26 @@
   **Invariants:** 9 (signed releases only), 10 (proto v1 additive-only), 19 (one binary per plane) ·
   **Tasks:** T-0021 (this is its AC0)
 
-  *(A first draft of this ADR also cited "invariant 13 (reproducible pins)". Invariant 13 is
-  per-environment configuration and says nothing about pins or reproducibility. The mistake was
-  inherited by copying ADR-0034's front matter, which carries the same mislabel — and being Accepted,
-  ADR-0034 is immutable, so that one stands as written. Noted here so the error is not copied a third
-  time.)*
+> **Accepted after correction — read this before citing the ADR.** The version first merged (#36)
+> contained three defects, found in review and fixed in #37 *while this was still `Proposed`* and
+> therefore still mutable. No decision changed; one lost a justification it was not entitled to:
+>
+> 1. **Decision 4 claimed invariant 9 says *"verifies vs pinned key"*. It does not** — that phrase is
+>    an inline comment on `SignedRelease.signature` in the proto, and ADR-0017 still lists agent-release
+>    signing as an open follow-up. Key-based signing was therefore an *open* choice this ADR makes, not
+>    an inherited constraint; it now argues from ADR-0011 instead. This is the correction that mattered:
+>    citing a hard rule that did not exist would have closed a legitimate debate by assertion.
+> 2. The front matter cited "invariant 13 (reproducible pins)" — invariant 13 is per-environment
+>    configuration (see the note below).
+> 3. A follow-up claimed `check-dev-images.sh` cannot express a digest; it already can.
+>
+> Recorded in the ADR itself rather than only in git history, because an Accepted ADR is what people
+> read and cite, and the first two errors were the kind that get quoted onward.
+
+  *(On the invariant-13 mislabel: invariant 13 is per-environment configuration and says nothing about
+  pins or reproducibility. The mistake was inherited by copying ADR-0034's front matter, which carries
+  the same mislabel — and being Accepted, ADR-0034 is immutable, so that one stands as written. Noted
+  here so the error is not copied a third time.)*
 
 ## Context
 
@@ -31,8 +46,8 @@ publishes as a ConfigMap has no consumer, because there is no pod to mount it in
 ADR-0013 chose Helm + Operator for distribution and **assumes** the images already exist — it requires
 mirrored images for air-gapped installs without saying who builds them or how. That is the gap.
 
-**Two parts of this are already decided, and finding that changed the shape of this ADR.** It would
-have been easy to write "should we sign our images?" as an open question. It is not one:
+**Part of this is already decided, and finding that changed the shape of this ADR.** It would have
+been easy to write "should we sign our images at all?" as an open question. That much is not one:
 
 - **Invariant 9:** *"The agent applies only signed releases it verifies (cosign) — CP cannot push
   arbitrary code (ADR-0017)."* Unconditional.
@@ -44,14 +59,20 @@ have been easy to write "should we sign our images?" as an open question. It is 
     string signature = 3;   // cosign/DSSE sig; agent verifies vs pinned key
   }
   ```
-  Proto v1 is additive-only (invariant 10), so this cannot be walked back. A **digest**, and a
-  **cosign signature verified against a pinned key**, are already the contract for anything the agent
-  applies.
+  Proto v1 is additive-only (invariant 10), so the *fields* cannot be walked back: **a digest the
+  agent must verify, and a signature, are already the contract** for anything the agent applies.
 
-So the real question is not *whether* first-party images are digest-referenced and signed, but whether
-we build that in from the first image or retrofit it once images exist and are being consumed.
-Retrofitting is strictly worse: it means a period in which the agent's own contract describes a
-guarantee the artifacts do not have.
+**What is *not* already decided is the signing mechanism**, and the distinction matters enough to
+state here rather than only at decision 4. `signature`'s inline comment reads *"cosign/DSSE sig;
+agent verifies vs pinned key"* — but a proto comment is a contract annotation, not decided governance
+text, and invariant 9 names only cosign, not a key model. ADR-0017 still carries supply-chain signing
+of agent-applied releases as an open follow-up. So key-based versus keyless is this ADR's call
+(decision 4), argued on ADR-0011 rather than asserted from an invariant.
+
+So the real question is not *whether* first-party images are digest-referenced and signed, but how
+they are signed, and whether we build any of it in from the first image or retrofit once images exist
+and are being consumed. Retrofitting is strictly worse: it means a period in which the agent's own
+contract describes a guarantee the artifacts do not have.
 
 **The one genuine tension is with ADR-0034**, which requires every image reference to be a
 fully-qualified, resolvable, **patch-level tag**, and which explicitly says: *"Digest pinning is

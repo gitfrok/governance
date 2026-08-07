@@ -82,5 +82,6 @@ The three ways out are enumerated in `../tasks/T-0021-container-images.md` (amen
 criterion to what Phase 0 actually built; or move T-0021 into Phase 0; or accept the inversion in
 writing). Amending an exit criterion is a reviewed change rather than something a task file absorbs,
 so nothing here is amended yet — this paragraph exists so the gap cannot be mistaken for closed.
-T-0021 is itself blocked on **AC0**, a Proposed ADR for the image build surface, which no Accepted
-ADR covers.
+T-0021's own blocker is gone: its AC0 is met by **ADR-0035 (Accepted 2026-08-08)**, so the task is
+ready to start. That does not close this gap — the conflict is about which *phase* owns the
+end-to-end assertion, and no amount of progress on T-0021 answers it.
