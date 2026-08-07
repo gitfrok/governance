@@ -84,8 +84,12 @@ indexed_by_id docs/tasks/README.md docs/tasks 'T-*.md'    task
 
 # ADR-0001 makes these the Source of Truth and immutable once Accepted; two files sharing a number
 # means one of them cannot be cited unambiguously.
-dupes=$(find docs/adr -maxdepth 1 -name '[0-9][0-9][0-9][0-9]-*.md' -printf '%f\n' \
-  | cut -c1-4 | sort | uniq -d)
+# `-printf` is a GNU extension that BSD find — and therefore macOS — does not have, so this line
+# aborted the whole gate there with "find: -printf: unknown primary or operator". `sed` strips the
+# directory instead, which is portable and needs no second process per file the way `-exec basename`
+# would. T-0003 AC4 requires these scripts to work on macOS as well as Linux.
+dupes=$(find docs/adr -maxdepth 1 -name '[0-9][0-9][0-9][0-9]-*.md' \
+  | sed 's|.*/||' | cut -c1-4 | sort | uniq -d)
 if [ -n "$dupes" ]; then
   while IFS= read -r n; do
     report "ADR number $n is used by more than one file"

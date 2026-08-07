@@ -32,8 +32,38 @@ One-command local cluster matching prod topology, with real TLS.
   `rc=28`). No host-DNS or `/etc/hosts` entry fixes that. Needs a rootful driver or KVM.
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
-  prohibition; the bash-3.2 claim re-checked by grep (no `declare -A`, `mapfile`, `readarray`,
-  `${var,,}`). **macOS remains untested.**
+  prohibition.
+
+  **The macOS half was upgraded from grep to execution on 2026-08-08, and it found a real breakage.**
+  The previous record rested on grepping for bash-4 features (`declare -A`, `mapfile`, `readarray`,
+  `${var,,}`) — necessary but not sufficient, because it tested the *shell* and ignored the
+  *userland*. macOS ships bash **3.2.57** and a **BSD** userland, and the second is where the bug was.
+
+  What was actually done:
+  1. **All 15 shell scripts across the four repos parse under bash 3.2.57** (`bash -n` in a
+     `docker.io/library/bash:3.2` container — the same 3.2.57 macOS ships).
+  2. **Five fitness scripts were *executed* under bash 3.2.57 and pass**: `check-dep-direction.sh`,
+     `check-version-floors.sh`, `check-dev-images.sh`, webfrontend's `check-boundaries.sh`, and this
+     repo's `check-docs.sh`. Parsing proves no bash-4 syntax; running proves no bash-4 *behaviour*.
+  3. **Audited for GNU-only tool flags**, which no prior check looked for: `grep -P`, `readlink -f`,
+     `find -printf`, `date -d`, `stat -c`, `base64 -w`, `xargs -d`, `tac`, `sha256sum`, `sed -i`
+     without an argument, `sort -z`.
+
+  **Found and fixed: `check-docs.sh` used `find -printf`, a GNU extension BSD find does not have.**
+  This repo's entire docs gate would have aborted on macOS with `find: -printf: unknown primary or
+  operator`. Replaced with a portable `sed 's|.*/||'`. Verified both directions in the container: the
+  fixed gate reports `docs: OK (98 files checked)` under bash 3.2 with a non-GNU `find`, and the old
+  line still fails there. The duplicate-ADR-number detection it implements was re-confirmed by a
+  negative control (a deliberately duplicated ADR number is still reported).
+
+  **`sort -z` in the super-repo's `dev-up.sh` is flagged but not confirmed as a defect** — it is a GNU
+  extension, yet FreeBSD-derived `sort` (and busybox) accept it, so whether macOS's does cannot be
+  established from here. It is being removed regardless, because it is cosmetic there and removing it
+  costs nothing. Recorded as *unverified*, not as a bug, to avoid the overclaim.
+
+  **Still untested: the scripts running on an actual Mac.** What changed is that the two things
+  reachable without one — bash-version and userland-portability — are now tested rather than asserted,
+  and the audit turned up one genuine macOS-fatal defect that grep could never have found.
 
 ## Tests to write first
 - integration: a smoke test hits an ingress host over TLS and gets 200 from a hello service.
