@@ -1,7 +1,7 @@
 # ADR-0035: First-party images — `scratch` base, digest-referenced, cosign-signed
 
-- **Status:** Proposed
-- **Date:** 2026-08-08
+- **Status:** Accepted
+- **Date:** 2026-08-08 (proposed 2026-08-08; corrected and accepted the same day — see the note below)
 - **Deciders:** platform
 - **Governs:** G4 change governance, G9 least-privilege footprint — and the credibility of G3, which
   is scoped in `docs/agents/context.md` as a *product feature* (scanning the customer's supply chain)
@@ -13,11 +13,26 @@
   **Invariants:** 9 (signed releases only), 10 (proto v1 additive-only), 19 (one binary per plane) ·
   **Tasks:** T-0021 (this is its AC0)
 
-  *(A first draft of this ADR also cited "invariant 13 (reproducible pins)". Invariant 13 is
-  per-environment configuration and says nothing about pins or reproducibility. The mistake was
-  inherited by copying ADR-0034's front matter, which carries the same mislabel — and being Accepted,
-  ADR-0034 is immutable, so that one stands as written. Noted here so the error is not copied a third
-  time.)*
+> **Accepted after correction — read this before citing the ADR.** The version first merged (#36)
+> contained three defects, found in review and fixed in #37 *while this was still `Proposed`* and
+> therefore still mutable. No decision changed; one lost a justification it was not entitled to:
+>
+> 1. **Decision 4 claimed invariant 9 says *"verifies vs pinned key"*. It does not** — that phrase is
+>    an inline comment on `SignedRelease.signature` in the proto, and ADR-0017 still lists agent-release
+>    signing as an open follow-up. Key-based signing was therefore an *open* choice this ADR makes, not
+>    an inherited constraint; it now argues from ADR-0011 instead. This is the correction that mattered:
+>    citing a hard rule that did not exist would have closed a legitimate debate by assertion.
+> 2. The front matter cited "invariant 13 (reproducible pins)" — invariant 13 is per-environment
+>    configuration (see the note below).
+> 3. A follow-up claimed `check-dev-images.sh` cannot express a digest; it already can.
+>
+> Recorded in the ADR itself rather than only in git history, because an Accepted ADR is what people
+> read and cite, and the first two errors were the kind that get quoted onward.
+
+  *(On the invariant-13 mislabel: invariant 13 is per-environment configuration and says nothing about
+  pins or reproducibility. The mistake was inherited by copying ADR-0034's front matter, which carries
+  the same mislabel — and being Accepted, ADR-0034 is immutable, so that one stands as written. Noted
+  here so the error is not copied a third time.)*
 
 ## Context
 

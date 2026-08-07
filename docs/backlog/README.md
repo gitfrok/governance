@@ -79,8 +79,9 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
   with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
   **SPEC-0011 Approved** — ready to start. T-0019 was folded into T-0018 at spec review.
-- **EP-10 Deployable images**: T-0021 (container images for both planes) — **Todo, blocked on its
-  own AC0.** A new epic rather than an addition to EP-1 on scope grounds: EP-1 is a Phase-0 epic
+- **EP-10 Deployable images**: T-0021 (container images for both planes) — **Todo, unblocked
+  2026-08-08: AC0 met by ADR-0035 (Accepted).** A new epic rather than an addition to EP-1 on scope
+  grounds: EP-1 is a Phase-0 epic
   scoped to the Minikube dev environment, and this is neither Phase 0 nor dev-env work. (Not the EP-9
   precedent, which was about *not reopening a closed epic* for scope it never owned — EP-1 is still
   open, so that reasoning does not apply here and the scope mismatch has to carry the argument by
@@ -91,11 +92,18 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   (2026-08-08): the policy bundle that task now publishes as a ConfigMap has no consumer, because
   there is no pod to mount it into.
 
-  **Blocked on AC0, deliberately.** No Accepted ADR covers how a first-party image is produced —
-  ADR-0013 chose Helm + Operator and *assumes* images exist; ADR-0034 governs third-party dev-env
-  tag pinning. Base image, build tool, registry and tagging, runtime posture, and whether SBOM and
-  signature attestation are v1 scope all need a Proposed ADR first (the last of those is not a detail
-  for a product selling supply-chain assurance).
+  **AC0 was the blocker and is now met — ADR-0035, Accepted 2026-08-08.** No Accepted ADR had covered
+  how a first-party image is produced: ADR-0013 chose Helm + Operator and *assumes* images exist;
+  ADR-0034 governs third-party dev-env tag pinning. ADR-0035 settles base image (`scratch` for Go),
+  build tool (multi-stage Dockerfile over `ko`), registry (`ghcr.io/gitfrok`), digest-referencing and
+  cosign signing, SBOM via Syft as an OCI attestation, and runtime posture — and adds a **fourth**
+  image, the `webfrontend` SSR server, which T-0021's original ACs omitted.
+
+  Worth carrying forward, because it is the kind of thing that gets quoted onward: the ADR was merged
+  and *then* found to claim invariant 9 compelled key-based cosign signing. It does not — that phrase
+  is a proto comment, and ADR-0017 still lists agent-release signing as open. Key-based-vs-keyless was
+  an open choice the ADR makes on ADR-0011 grounds (the outbound-only agent may have no route to a
+  transparency log). Corrected while still `Proposed`; the ADR carries the note.
 
   **Carries an unresolved conflict with Phase 0's exit criterion**, recorded in the task's open
   questions rather than settled: Phase 0 exits when "a tenant-scoped, policy-checked, audited request

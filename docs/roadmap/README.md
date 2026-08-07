@@ -17,11 +17,13 @@ of it deployable.
 (Tasks T-0010–T-0018, T-0021.)
 
 T-0021 (images) is new and sits under the others: nothing in the four repos builds a container image
-yet, so no plane has ever run as a deployed artifact. It is **blocked on its own AC0** — a Proposed
-ADR for the image build surface, which no Accepted ADR covers. It also **conflicts with Phase 0's
-exit criterion as written**, since that criterion needs an end-to-end request in Minikube and this is
-what makes one possible; see the open questions in `../tasks/T-0021-container-images.md`, which
-records the three ways out rather than picking one.
+yet, so no plane has ever run as a deployed artifact. Its AC0 — an ADR for the image build surface —
+is **met: ADR-0035, Accepted 2026-08-08**, so the task is unblocked and AC1–AC6 are ready to start.
+
+It still **conflicts with Phase 0's exit criterion as written**, since that criterion needs an
+end-to-end request in Minikube and this is what makes one possible. See the open questions in
+`../tasks/T-0021-container-images.md`, which records the three ways out rather than picking one; that
+conflict is unaffected by ADR-0035 and remains a human call.
 
 ## Phase 2 — the Ultimate wedge
 Security scanners → normalized findings → **unified dashboard**; security/approval policies
