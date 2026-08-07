@@ -21,9 +21,31 @@ One-command local cluster matching prod topology, with real TLS.
 - [x] AC2: PostgreSQL 18, Valkey 9.1, Redpanda, Zitadel, SeaweedFS 4.40 come up from
   manifests using image tags in `deploy/dev/versions.env`. **Verified** — six deployments Available,
   six running images all from `versions.env`. Took **seven manifest fixes**; as written, three of the
-  five services could not start. Redpanda is now `docker.redpanda.com/redpandadata/redpanda:v26.2.1`
-  — `v26.1` was never a published tag (the series is patch-tagged only), and 26.2 still satisfies
-  ADR-0023's 26.1 floor.
+  five services could not start. Redpanda is now `docker.io/redpandadata/redpanda:v26.2.1` — `v26.1`
+  was never a published tag (the series is patch-tagged only), and 26.2 still satisfies ADR-0023's
+  26.1 floor.
+
+  **Re-verified 2026-08-08 after two Redpanda pin changes**, both of which taught something:
+
+  - **The registry moved from `docker.redpanda.com` to `docker.io`.** ADR-0034 preferred the vendor's
+    own distribution point over the Docker Hub mirror on rate-limit grounds; for this image that is
+    backwards. `docker.redpanda.com` answers an unauthenticated manifest query with
+    `toomanyrequests: You have reached your unauthenticated pull rate limit`, so it evidently sits
+    behind Docker Hub and inherits the limit. The effect is that ADR-0034's **own rule 4** —
+    resolvability is checked, not assumed — could not be met there: the probe reported
+    `?? inconclusive` on every run. On `docker.io` the same tag reports `ok resolves`. A pin that can
+    be verified beats a pin from a preferred registry that cannot. Rationale recorded in
+    `deploy/dev/README.md` ("Why Redpanda is pinned on docker.io").
+  - **Redpanda refuses downgrades.** A brief pin to `v26.1.15` crash-looped with
+    *"Incompatible downgrade detected! My version 18, feature table 19 indicates that all nodes in
+    cluster were previously >= that version"*. It writes a feature-table version into its data
+    directory and will not start against data from a newer release, so moving a Redpanda pin **down**
+    a minor requires deleting `redpanda-pvc`. Moving **up** is fine — `v26.1.15 → v26.2.1` rolled out
+    against the existing volume. Worth knowing before someone reads "26.1 floor" as an invitation to
+    pin at the floor.
+
+  All six deployments Available on the current pins, `rpk version: v26.2.1` confirmed in-container,
+  and every pinned image resolves with `CHECK_IMAGE_RESOLVE=1`.
 - [~] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
   **Verified in substance, not by the specified path.** Ingress serves the mkcert wildcard and returns
   the fixture — `http_code=200`, `ssl_verify_result=0` (validated against the mkcert CA, never
