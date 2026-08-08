@@ -1,6 +1,6 @@
 # ADR-0040: Apache-2.0 across the whole tree
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-08
 - **Deciders:** platform
 - **Governs:** G7 process integrity — four of five repos shipped with no licence at all, which is the
