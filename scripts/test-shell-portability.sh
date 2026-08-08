@@ -127,26 +127,46 @@ case_run "a waiver with no reason does not waive" 1 "" waiver-without-reason "GN
 case_run "a waiver two lines above does not reach" 1 "" waiver-too-far "GNU findutils only"
 
 # --- part 3: the environment assertion (AC2, AC3) -----------------------------------------------
-# These are the reason the gate is worth anything on a runner that ships Homebrew. Both are hard
-# failures; neither is a skip.
-case_run "strict mode rejects a bash that is not 3.2" 1 "PORTABILITY_STRICT=1" clean "is not 3.2"
-case_run "strict mode rejects a GNU userland" 1 "PORTABILITY_STRICT=1" clean "is the GNU implementation"
-
-# Half of the positive control, and the only half reachable without Darwin: prove the version
-# assertion *accepts* 3.2 rather than merely always failing. On Linux the userland half still fails,
-# as it must, so this asserts rc=1 with the bash complaint absent. On the macOS lane the whole
-# assertion passes for real, which is the other half.
+#
+# These are the reason the gate is worth anything on a runner that ships Homebrew, and they are the
+# only cases whose *expected result depends on the host*. The first draft did not account for that
+# and asserted "strict mode rejects a bash that is not 3.2" on both lanes — which is true on Linux
+# and false on Darwin, where the bash really is 3.2 and the assertion is supposed to pass. It went
+# green on Linux and red on the first macOS run.
+#
+# So the controls that can be made host-independent are, by stubbing rather than by hoping, and the
+# two that cannot are run on the one OS where they mean something and named there.
 stub=$(mktemp -d)
+printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "GNU bash, version 5.2.15(1)-release (test-stub)"; exit 0; fi\nexec /bin/bash "$@"\n' > "$stub/bash52"
 printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "GNU bash, version 3.2.57(1)-release (test-stub)"; exit 0; fi\nexec /bin/bash "$@"\n' > "$stub/bash32"
-chmod +x "$stub/bash32"
+printf '#!/bin/sh\nexit 0\n' > "$stub/find"
+chmod +x "$stub/bash52" "$stub/bash32" "$stub/find"
+
+# AC2, both lanes: a bash claiming 5.2 is rejected whatever the host really ships.
+case_run "strict mode rejects a bash that is not 3.2" 1 \
+  "PORTABILITY_STRICT=1 PORTABILITY_BASH=$stub/bash52" clean "is not 3.2"
+
+# AC2's mirror, both lanes: one claiming 3.2 draws no version complaint. Says nothing about the
+# userland, which is why the expected rc is left to the host — this asserts on output only.
+case_run "strict mode accepts 3.2 — the version assertion is not a blanket refusal" \
+  "$([ "$(uname -s)" = Darwin ] && echo 0 || echo 1)" \
+  "PORTABILITY_STRICT=1 PORTABILITY_BASH=$stub/bash32" clean "" "is not 3.2"
+
+# AC3, both lanes: a tool shimmed ahead of /usr/bin is caught by path alone, before any question of
+# who implements it. This is the Homebrew case the whole assertion exists for.
+case_run "strict mode rejects a tool shimmed ahead of the system one" 1 \
+  "PORTABILITY_STRICT=1 PATH=$stub:$PATH" clean "resolves to"
+
 if [ "$(uname -s)" = "Darwin" ]; then
-  # Here the real assertion passes, so the stub would only prove that a stub works. Skipped, and
-  # said out loud: an unrun case and a passing one must not look alike in a log.
-  echo "  --    strict mode accepts 3.2 — not run on Darwin, where the unstubbed assertion is the control"
+  # The positive control, and the only place it can exist: a real BSD userland at /usr/bin. Faking
+  # it anywhere else means weakening the path check that would reject the fake.
+  case_run "strict mode passes on a real BSD userland" 0 "PORTABILITY_STRICT=1" clean \
+    "userland asserted BSD"
 else
-  case_run "strict mode accepts 3.2 — the version assertion is not a blanket refusal" 1 \
-    "PORTABILITY_STRICT=1 PORTABILITY_BASH=$stub/bash32" clean \
-    "is the GNU implementation" "is not 3.2"
+  # Its counterpart, and equally unavailable on the other side: GNU tools where BSD ones are
+  # expected. Printed rather than omitted, so an unrun case and a passing one differ in the log.
+  case_run "strict mode rejects a GNU userland" 1 "PORTABILITY_STRICT=1" clean \
+    "is the GNU implementation"
 fi
 rm -rf "$stub"
 

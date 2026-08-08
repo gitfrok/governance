@@ -177,7 +177,7 @@ because it changes what a later reader may assume was reviewed.
 |---|---|---|
 | `check-shell-portability.sh` | all five repos | the gate: parse, audit, environment assertion |
 | `portability-flags.tsv` | all five repos | the codified list — 17 patterns |
-| `test-shell-portability.sh` | governance only | 19 cases, alongside the other three suites |
+| `test-shell-portability.sh` | governance only | 20 cases, alongside the other three suites |
 | `testdata/portability/*.sh.txt` | governance only | 14 fixtures, kept out of the `*.sh` glob on purpose |
 | `.github/workflows/ci.yml` | all five repos | `macOS portability` job, plus the audit on the Linux lane |
 | `scripts/apply-rulesets.sh` | super-repo only | multiple required contexts per repo |
@@ -226,7 +226,19 @@ inside its own PR body, the pattern list had to leave the gate for a `.tsv`, and
 give up its fixtures. The rule that keeps falling out is one line — *keep the literals out of every
 file the gate reads* — and it is cheaper than any of the exemptions that would otherwise be needed.
 
-**5. One control cannot exist on Linux, and was not faked.** The *passing* side of the part-3
+**5. Two test cases had a host-dependent expected result, and the suite did not know it.** "Strict
+mode rejects a bash that is not 3.2" and "strict mode rejects a GNU userland" are true on Linux and
+**false on Darwin**, where the bash really is 3.2 and the userland really is BSD — the assertion is
+supposed to *pass* there. Both went green on Linux and red on the first macOS run.
+
+The fix is the general lesson rather than a patch: **a control that depends on the host must be
+stubbed, not hoped for.** A stub bash reporting 5.2 is rejected on either lane; a stub `find` ahead of
+`/usr/bin` is caught by the path check on either lane — and that second one is the Homebrew case the
+whole assertion exists for, now tested rather than argued. Only the two genuinely unfakeable ends —
+a real BSD userland, and real GNU tools where BSD ones are expected — remain per-OS, and each is run
+on the side where it means something and named on the other.
+
+**6. One control cannot exist on Linux, and was not faked.** The *passing* side of the part-3
 assertion needs a real BSD userland at `/usr/bin`; a stub anywhere else is rejected by the same path
 check it would be trying to satisfy. Making that test pass would have meant weakening the assertion.
 The macOS lane is that control, and the suite says so where the missing case would have been.
