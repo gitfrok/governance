@@ -60,6 +60,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0034](0034-image-pins-are-resolvable-patch-tags.md) | Image pins are fully-qualified, resolvable, patch-level tags | Accepted |
 | [ADR-0035](0035-first-party-images-scratch-digest-signed.md) | First-party images: `scratch` base, digest-referenced, cosign-signed | Accepted |
 | [ADR-0036](0036-resolvability-over-vendor-registry.md) | When a vendor registry cannot be verified, prefer the one that can | Accepted |
+| [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
