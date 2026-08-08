@@ -420,3 +420,46 @@ spent two entries calling impossible on this host.
 
 Nothing here changes AC3's state; it was closed on 2026-08-08 and stays closed. AC4's macOS half
 remains the only open criterion, and it still needs a macOS rather than a change.
+
+### 2026-08-09: the AC4 audit was stale, and is now current — still not closed
+
+AC4's macOS evidence rested on an audit of 15 shell scripts. Since then this tree gained **eleven
+more**, none of which that audit had seen:
+
+```
+scripts/check-agent-surfaces-fresh.sh   scripts/dispatch-worktree.sh
+scripts/check-ceremony-tier.sh          scripts/lib-pr-declaration.sh
+scripts/check-dispatch-scope.sh         scripts/lib-submodule-scope.sh
+scripts/dispatch-pre-commit.sh          governance/scripts/gen-agent-surfaces.sh
+governance/scripts/test-ceremony-tier.sh
+governance/scripts/test-dispatch-scope.sh
+governance/scripts/test-dispatch-scope-ci.sh
+```
+
+Closing AC4 today would have closed it over evidence that predated most of the code it covers. That
+is the failure this task has already made twice in the other direction — asserting something about
+the environment without running it — so the audit was re-run rather than the criterion re-labelled.
+
+**Re-run against the same two checks, with the same tools:**
+
+1. **GNU-only tool flags** — `grep -P`, `readlink -f`, `find -printf`, `date -d`, `stat -c`,
+   `base64 -w`, `xargs -d`, `tac`, `sha256sum`, `sort -z`, `sed -i` without an argument: **none
+   found** in any of the eleven.
+2. **bash 4+ features** — `declare -A`, `mapfile`, `readarray`, `${var,,}`, `${var^^}`, `local -n`:
+   **none found**.
+3. **Parse under bash 3.2.57**, the version macOS ships, in `docker.io/library/bash:3.2`:
+   **11 of 11 parse clean.**
+
+One harness note, because it produced a false failure worth not repeating: bind-mounting the tree
+read-only into the container under rootless podman gives `Permission denied` on every file, which
+`bash -n` reports as a failure indistinguishable from a syntax error. Feeding each script on stdin
+avoids the UID mapping entirely.
+
+**This does not close AC4, and the reason is the one this record already gave.** The container is
+Alpine + busybox — an independent reimplementation with no lineage to Darwin's tools — so it proves
+the scripts avoid *GNU* extensions, not that they work on *BSD*. And parsing proves no bash-4
+syntax, not no bash-4 behaviour; the earlier round found `stat -c` failing silently at runtime,
+which no parse would have caught.
+
+AC4's macOS half still needs a macOS. What changed is that its Linux-side evidence is no longer
+eleven scripts out of date.
