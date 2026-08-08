@@ -7,3 +7,5 @@
   span two submodules in one commit (ADR-0027, invariants 21–25).
 - Follow AGDD: spec-first, TDD, boundaries enforced by fitness functions + CI.
 - New decision → Proposed ADR in `governance/` and stop. API change → governance PR first.
+
+{{include:graphify}}

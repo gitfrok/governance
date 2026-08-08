@@ -39,3 +39,5 @@ webfrontend ──HTTP──▶ bff ──gRPC──▶ backend ──imports─
 ## Start
 `make bootstrap` → read `governance/AGENTS.md` → pick a task in `governance/docs/tasks/` →
 follow the AGDD loop (`governance/docs/process/agdd.md`).
+
+{{include:graphify}}
