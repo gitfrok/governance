@@ -199,7 +199,7 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
 | super-repo | `b7d1663` (#45) | macOS portability audit: `sort -z` dropped, `bench-storage.sh`'s silently-inert RAM-disk guard fixed |
 | governance | `9667a36` (#39) | `check-docs.sh` no longer uses GNU `find -printf`, which aborted this repo's docs gate on macOS |
 | super-repo | `a126acd` (#47) | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver, and `worker-processes=2` pinned on the ingress-nginx ConfigMap so requests stop hanging |
-| super-repo | `8de701f` (#49) | `smoke-dev.sh` probes ingress six times instead of once, so an intermittent 200 fails the run instead of passing it; `--resolve` fallback tries the published loopback before the node IP |
+| super-repo | `8de701f` (#49) | `smoke-dev.sh` probes ingress six times instead of once, so an intermittent 200 fails the run instead of passing it |
 
 ### What the first run found (2026-08-06)
 
