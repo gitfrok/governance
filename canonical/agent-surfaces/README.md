@@ -35,6 +35,18 @@ directory exists to keep answerable.
 `../governance` from the three code repos, `.` from here. It is what lets one fragment serve repos
 that sit at different depths.
 
+## Authoring a template from an existing file
+
+Seed it from **committed** state — `git show HEAD:AGENTS.md` — never from the working tree. A
+template built from a dirty checkout bakes whatever local tooling has appended into the canonical
+source, and from then on every repo regenerates it as if it were a governance rule. That happened
+once already: a locally-installed tool had added a section to the super-repo's `AGENTS.md` and
+`CLAUDE.md`, and the first cut of these templates captured it. The byte-identity check did not catch
+it, because it compared against the same dirty tree the templates came from.
+
+Nothing enforces this — canonical is authored, not derived, so there is no upstream to diff against.
+It is a rule you follow.
+
 ## Changing a rule
 
 1. Edit the fragment if the rule is shared, or the repo's template if it is not.
