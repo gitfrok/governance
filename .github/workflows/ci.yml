@@ -84,6 +84,20 @@ jobs:
       - name: dispatch scope tests
         run: ./scripts/test-dispatch-scope.sh
 
+      # SPEC-0013 open question 1: the pre-commit hook is skipped by --no-verify, so the boundary
+      # only binds if CI checks the pushed diff too. Invariant 23 is asserted here unconditionally —
+      # the ceremony gate only reaches its span check under the `bugfix` tier, which left a
+      # `full`-tier PR spanning two submodules unchecked.
+      - name: dispatch scope
+        if: github.event_name == 'pull_request'
+        run: ./scripts/check-dispatch-scope.sh
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          SCOPE_BASE: origin/${{ github.base_ref }}
+
+      - name: dispatch scope CI tests
+        run: ./scripts/test-dispatch-scope-ci.sh
+
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
