@@ -1,6 +1,6 @@
 # ADR-0039: Vendor no third-party code — the surface pipeline is ours, and `governance` keeps GPL v2 by choice
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-08
 - **Deciders:** platform
 - **Governs:** G7 process integrity — a dependency we carry is a dependency we own

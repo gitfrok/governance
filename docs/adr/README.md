@@ -62,7 +62,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0036](0036-resolvability-over-vendor-registry.md) | When a vendor registry cannot be verified, prefer the one that can | Accepted |
 | [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Accepted |
 | [ADR-0038](0038-governance-gplv2-vendor-rdf.md) | `governance` is GPL v2 and vendors RDF; the code repos' licence stays open | Superseded by ADR-0039 |
-| [ADR-0039](0039-no-vendored-third-party-code.md) | Vendor no third-party code; the surface pipeline is ours and `governance` keeps GPL v2 by choice | Proposed |
+| [ADR-0039](0039-no-vendored-third-party-code.md) | Vendor no third-party code; the surface pipeline is ours and `governance` keeps GPL v2 by choice | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - **Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038).** They
