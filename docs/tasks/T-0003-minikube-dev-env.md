@@ -190,17 +190,27 @@ One-command local cluster matching prod topology, with real TLS.
   fail it. Proving true wildcard resolution is therefore a claim this record makes about this host,
   evidenced above, and not something the script requires of every machine.
 
-  **Three limits on this result, none of them blocking, all worth naming.**
+  **Four limits on this result, none of them blocking, all worth naming.**
 
   1. **The resolver is host configuration, applied by hand with root.** `dev-up.sh` prints it rather
      than applies it — it touches system DNS — the same posture it takes with `mkcert -install` and
      the inotify sysctl, and the same posture under which AC1 is marked verified. A fresh machine
      still has to run the printed commands.
-  2. **The macOS variant is unverified.** The Homebrew-dnsmasq instructions are written and carry an
+  2. **Exactly one of the three printed Linux/macOS variants was run.** What is verified is
+     standalone dnsmasq plus `systemd-resolved` — `/etc/dnsmasq.d/gitsaas-test.conf` and
+     `/etc/systemd/resolved.conf.d/gitsaas-test.conf` are live, `dnsmasq.service` is active, and
+     `resolvectl` shows `~gitsaas.test` routed to `127.0.0.1`. The **NetworkManager-dnsmasq
+     alternative has never been executed**: this host leaves `dns=` unset, so NetworkManager defers
+     to `systemd-resolved` and `/etc/NetworkManager/dnsmasq.d/` is empty. Its `local=/gitsaas.test/`
+     line — the one that prevents the AAAA hang described above — was added to it by pattern-match
+     against the bug found in the branch that *was* run, not by reproducing and fixing it there.
+     Worth stating plainly, because a reader on a `dns=dnsmasq` system would otherwise read this
+     record's evidence as covering their setup.
+  3. **The macOS variant is unverified.** The Homebrew-dnsmasq instructions are written and carry an
      explicit note that they were not run on a Mac, because there is no Mac here. That includes the
      `conf-dir=` step Homebrew ships commented out, without which every printed command succeeds and
      the domain still does not resolve. Same standard as AC4's macOS half.
-  3. **`smoke-dev.sh`'s new "does not resolve" branch is not exercised end-to-end.** With a working
+  4. **`smoke-dev.sh`'s new "does not resolve" branch is not exercised end-to-end.** With a working
      wildcard every name under `gitsaas.test` resolves, and a name outside it fails TLS before
      reaching that branch. What *is* measured is the fact that motivated it — on this host `curl` to
      an unresolvable `.test` name exits **28**, not 6, because the lookup goes upstream and stalls
