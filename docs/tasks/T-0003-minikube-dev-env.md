@@ -394,3 +394,29 @@ path on a machine nobody had run it on.
 Also found: `make` is not installed on this host, so `make dev-up` cannot run at all here and the
 script must be invoked directly. Not a defect in this task — but AC1 is written in terms of
 `make dev-up`, so the acceptance criterion is not literally satisfiable on a host without `make`.
+
+### Re-verified 2026-08-09 — the closure holds, unattended
+
+`smoke-dev.sh` run again on the same rootless-podman host, `rc=0`, with nothing touched since the
+2026-08-08 closure:
+
+```
+AC2 — deployments Available            6/6
+AC2 — running images match versions.env  6 images, all from versions.env
+AC3 — mkcert TLS over ingress
+  ok  GET https://hello.gitsaas.test/ -> 200 on all 6 probes, certificate validated against the mkcert CA
+  ok  response body is the hello fixture
+AC3 — the other *.gitsaas.test hosts, by name
+  ok  https://filer.gitsaas.test/   -> HTTP 200, resolved by name
+  ok  https://s3.gitsaas.test/      -> HTTP 200, resolved by name
+  ok  https://zitadel.gitsaas.test/ -> HTTP 302, resolved by name
+```
+
+Recorded because a closure verified once on the day it was made is weaker evidence than the same
+closure holding a day later, across a machine reboot's worth of ordinary use and a large body of
+unrelated work in all five repos. **All four hosts the ingress declares resolve by name** — no
+`--resolve`, no per-host `/etc/hosts` line, no rootful driver, no KVM. That is the wildcard this task
+spent two entries calling impossible on this host.
+
+Nothing here changes AC3's state; it was closed on 2026-08-08 and stays closed. AC4's macOS half
+remains the only open criterion, and it still needs a macOS rather than a change.
