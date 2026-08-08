@@ -1,6 +1,6 @@
 # SPEC-0013: Dispatch scope boundary & worktree isolation
 
-- **Status:** Proposed
+- **Status:** Approved (implemented)
 - **Owner:** platform
 - **Context(s):** process (governance + super-repo tooling — no runtime code)
 - **ADRs:** 0037 (decision 5 deferred this "to its own task with its own spec"), 0027 (repo topology),
@@ -99,23 +99,27 @@ committed matches what was declared. It orchestrates nothing.
 
 ## Acceptance criteria (each becomes a test)
 
-- [ ] **AC1:** A commit staging a file matching a `paths` glob is permitted.
-- [ ] **AC2:** A commit staging a file matching no glob is rejected, and the message names the file
+- [x] **AC1:** A commit staging a file matching a `paths` glob is permitted.
+- [x] **AC2:** A commit staging a file matching no glob is rejected, and the message names the file
       and the declared scope.
-- [ ] **AC3:** With no scope declaration the hook exits 0 **and prints that it is inert**, so an
+- [x] **AC3:** With no scope declaration the hook exits 0 **and prints that it is inert**, so an
       uninstalled hook and a permitting hook are distinguishable in the log.
-- [ ] **AC4:** The hook rejects a commit whose staged paths span two submodules, citing invariant 23,
+- [x] **AC4:** The hook rejects a commit whose staged paths span two submodules, citing invariant 23,
       using the shared detection rather than its own copy.
-- [ ] **AC5:** The worktree helper refuses a target that is not a submodule path in `.gitmodules`,
+- [x] **AC5:** The worktree helper refuses a target that is not a submodule path in `.gitmodules`,
       naming the valid targets.
-- [ ] **AC6:** The helper installs the hook and writes the scope such that a commit violating it in
+- [x] **AC6:** The helper installs the hook and writes the scope such that a commit violating it in
       the new worktree fails without any further setup.
-- [ ] **AC7:** The scope file is not committable — it lives under `.git/` and never appears in
+- [x] **AC7:** The scope file is not committable — it lives under `.git/` and never appears in
       `git status`.
-- [ ] **AC8:** Extracting the invariant-23 detection leaves `check-ceremony-tier.sh` behaviourally
+- [x] **AC8:** Extracting the invariant-23 detection leaves `check-ceremony-tier.sh` behaviourally
       unchanged: its 13 existing cases still pass.
 
 ## Resolutions
+
+**Approved 2026-08-09.** These were first answered by instruction and are now the approved design;
+the record keeps the distinction because it changes what a later reader may assume was reviewed.
+
 
 1. **Advisory or blocking? Both, and the CI half is the one that binds.** `git commit --no-verify`
    skips the hook and always will, so the hook stops mistakes and CI stops intent.
@@ -163,3 +167,26 @@ submodule-relative, because that is what the hook sees — it runs inside the su
 composition the diff carries a `backend/` prefix the hook never encounters, so the CI check strips
 it before matching. Without that the same declaration would mean two different things depending on
 which side checked it, which is worse than not checking at all.
+
+## What the implementation found
+
+Four defects, all surfaced by running the gates and none by reading them. They are recorded here
+because the spec's acceptance criteria did not predict any of them, and the shape is worth carrying
+into the next checker of this kind.
+
+| # | Defect | Fixed in |
+|---|---|---|
+| 1 | `for glob in $want_paths` word-splits **and pathname-expands**, so `.github/**` became whatever files existed at that directory's top level and stopped matching anything deeper | governance `243620a` |
+| 2 | `rev-parse --git-path hooks` resolves against the **caller's** directory; the hook was installed into an unrelated tree | governance `bf24814` |
+| 3 | A plain `sed` for `Scope:` matched the **example inside a fenced block in the gate's own PR body** and enforced it | governance `243620a` |
+| 4 | `^sub$` counted a bare **gitlink** — mode `160000`, i.e. a pin bump — as a submodule span, so the gate rejected the very super-repo commit landing it and told the author to follow the ADR-0027 workflow it was refusing | governance `58ca605` |
+
+Three share one shape: a shell construct that silently consults something other than what it appears
+to — the filesystem, the caller's working directory, git's notion of what a path in a diff means.
+The fourth is a parser handed its own documentation.
+
+**The most useful finding is not any of the four.** All twenty tests passed while defect 1 was live,
+because every fixture happened to expand to exactly the file under test — `src/**` in a repo whose
+only `src` file was the one being checked. A fixture that cannot distinguish the mechanism from the
+outcome is not testing the mechanism. Every case added afterwards was verified failing against the
+unfixed code before being trusted.
