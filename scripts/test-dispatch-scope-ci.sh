@@ -82,6 +82,14 @@ case_run "declared repo disagreeing with the diff is rejected" 1 "Scope: bff **"
 case_run "Scope with no glob is a usage error" 1 "Scope: backend" \
   .gitmodules backend/a -- backend/a
 
+# The regression that shipped: an unquoted glob list is pathname-expanded before it is ever used as
+# a pattern, so `dir/**` becomes the files that happen to exist at dir's top level and stops matching
+# anything deeper. Every earlier case passed with the bug present, because their fixtures expanded to
+# exactly the file under test. This one has a sibling file at the top level and the changed file one
+# directory down, so the expansion and the pattern give different answers.
+case_run "glob is a pattern, not a filesystem expansion" 0 "Scope: backend .github/**" \
+  .gitmodules backend/.github/other.md backend/.github/workflows/ci.yml -- backend/.github/workflows/ci.yml
+
 # No declaration means the path half is inert — and must say so.
 tmp=$(mktemp -d)
 (
