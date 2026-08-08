@@ -1,0 +1,31 @@
+{{include:banner}}
+# AGENTS.md — backend (Go modular monolith)
+
+Depends on **governance** (SoT + `contracts/` + `policies/`). Read `{{GOV}}/AGENTS.md`
+and `{{GOV}}/docs/` **first**; obey invariants 1–25.
+
+## This repo owns
+`modules/<ctx>/{api,internal/{domain,app,adapters}}`, `cmd/{dataplane-app,controlplane-app}`,
+`platform/{ids,bus,telemetry}`, plus `git-storaged`, the `agent`, and the `operator`.
+
+## Module layout
+Each `modules/<ctx>/` has three importable levels:
+- `api/` — the public in-process surface. Plain data + ports, no infra types (invariant 20).
+- `module.go` (package `<ctx>`) — the **composition root**. It assembles the internals and returns
+  `api/` interfaces. It exists because Go's `internal/` rule stops `cmd/` from naming an internal
+  type, so without it "wire in `cmd/`" (ADR-0025) is not expressible. One constructor per adapter
+  choice; `cmd/` picks one and passes the infrastructure it needs.
+- `internal/{domain,app,adapters}` — everything else; unimportable from outside the module.
+
+## Strict
+- **Modular monolith** (ADR-0025): one binary per plane; cross-module only via `api/` or the
+  in-process bus; **never** import another module's `internal/*` (Go `internal/` enforces it).
+- Cross-module wiring lives in `cmd/`, never in a module. A module never constructs another.
+- Each module **owns its schema**; no cross-module DB access. Prefer events over sync.
+- `domain` imports no infra. All authZ via the **PDP** — `modules/policy/api.DecisionPoint`, never
+  an inline check (invariant 2; the `inline-permission-check` fitness function fails the build, with
+  a `//arch:allow-inline-authz <reason>` waiver for the rare false positive). The rules themselves
+  live in `{{GOV}}/policies` and are changed there. Every query **tenant-scoped** + RLS.
+- gRPC/events must match `{{GOV}}/contracts/` (additive-only, changed in governance first).
+- **TDD**: failing tests from the spec's acceptance criteria before code.
+- Do not expose infra types in a module's `api/` (fitness-checked — T-0009).

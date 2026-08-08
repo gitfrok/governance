@@ -1,0 +1,54 @@
+{{include:banner}}
+# AGENTS.md — super-repo entry (READ FIRST)
+
+This is the **super-repo** for a multi-tenant Git SaaS, built with **AGDD** (AI-Agent
+Governance-Driven Development, ADR-0028). Source is split into **four git submodules**
+(ADR-0027). **Governance is the control surface — read it first, always.**
+
+## Repositories (submodules) & the one-way dependency rule
+```
+webfrontend ──HTTP──▶ bff ──gRPC──▶ backend ──imports──▶ governance/contracts
+     └───────────── generated TS types ◀────────────────┘   governance depends on NOTHING
+```
+| Submodule | Owns | Depends on |
+|---|---|---|
+| **governance/** | ADRs (SoT), specs, `contracts/`, `policies/`, product requirements (`docs/product/PRD.md`), roadmap/backlog/plans/tasks, process, invariants, agent rules | nothing |
+| **backend/** | Go modular monolith (`modules/`, `cmd/{dataplane,controlplane}-app`, `platform/`, git-storaged, agent, operator) | governance |
+| **bff/** | Go BFF (aggregation only) | governance, backend |
+| **webfrontend/** | Astro + React SSR | governance, bff |
+
+## STRICT rules for agents (non-negotiable — ADR-0027, invariants 21–25)
+1. **Read `governance/AGENTS.md` and `governance/docs/` before doing anything.** Governance is SoT.
+2. **Know which submodule your task targets** (each task states `Repo(s):`). **One commit never
+   spans two submodules.** Do your work inside that submodule's own repo/branch and PR there.
+3. **Dependency direction is one-way.** No repo imports another's internals; `webfrontend` never
+   calls `backend` directly; `bff` holds no business logic.
+4. **Decisions & shared surface live only in `governance/`** — ADRs, specs, invariants,
+   `contracts/`, `policies/`. Changing an API = a **governance PR first** (additive-only), then
+   consumers bump the pinned pointer.
+   **What** the product must do is `governance/docs/product/PRD.md` (`PR-#` requirements, phases,
+   non-goals, GA definition); **why it is built that way** is still the ADRs. The PRD restates
+   Accepted ADRs and never decides architecture — a requirement needing a new decision becomes a
+   Proposed ADR (ADR-0001, PRD §12). Check a task's requirement against the PRD's phase and
+   §7 non-goals before building; scope it does not list is not yours to add.
+5. **Cross-repo change order:** governance PR → consumer implements (bump governance pointer) →
+   super-repo bumps submodule pointers to **merged** commits only. The super-repo stores **pins**,
+   never in-place edits to a submodule path.
+6. **Clone/pull with `--recurse-submodules`** (`make bootstrap`).
+
+## Start
+`make bootstrap` → read `governance/AGENTS.md` → pick a task in `governance/docs/tasks/` →
+follow the AGDD loop (`governance/docs/process/agdd.md`).
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
