@@ -2,3 +2,8 @@ AGENTS.md	AGENTS.md
 CLAUDE.md	CLAUDE.md
 opencode.json	opencode.json
 cursor-agdd.mdc	.cursor/rules/agdd.mdc
+shared/agent-planner.md	.claude/agents/gitfrok-planner.md
+shared/agent-engineer.md	.claude/agents/gitfrok-engineer.md
+shared/agent-qa.md	.claude/agents/gitfrok-qa.md
+shared/agent-reviewer.md	.claude/agents/gitfrok-reviewer.md
+shared/agent-uat.md	.claude/agents/gitfrok-uat.md

@@ -20,9 +20,16 @@ every copy is generated.
 ```
 manifest.tsv                     repo → where it sits → how it reaches governance
 fragments/<name>.md              prose shared by more than one repo
+shared/<file>                    a whole file every repo renders from one source
 repos/<repo>/files.tsv           template → destination, relative to that repo's root
 repos/<repo>/<template>          the repo's own copy, with {{...}} expansions
 ```
+
+A `files.tsv` row whose template starts with `shared/` reads from `shared/` instead of the repo's
+own directory, so one file serves all five. That is how the agent personas work: the same
+`shared/agent-qa.md` becomes `.claude/agents/gitfrok-qa.md` in every repo, with `{{GOV}}` resolving
+the governance path each one needs. Use `shared/` when a whole file is identical everywhere and
+`fragments/` when only part of one is.
 
 ## The two expansions
 
@@ -32,8 +39,10 @@ reads fine and composes badly: "which file did this line come from" is exactly t
 directory exists to keep answerable.
 
 `{{GOV}}` becomes the path from that repo's root to `governance` — `governance` from the super-repo,
-`../governance` from the three code repos, `.` from here. It is what lets one fragment serve repos
-that sit at different depths.
+`../governance` from the three code repos, and nothing at all from here. It is what lets one
+fragment or shared file serve repos that sit at different depths. Always write it with a following
+slash, `{{GOV}}/docs/…`: for governance itself the slash is consumed too, so the path comes out
+bare rather than as `./docs/…`.
 
 ## Authoring a template from an existing file
 

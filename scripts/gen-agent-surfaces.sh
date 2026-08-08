@@ -70,8 +70,14 @@ fi
 # Includes are expanded one level deep on purpose. A fragment that includes another fragment reads
 # fine and composes badly: the second-order question "which file does this line actually come from"
 # is exactly the one this whole exercise exists to keep answerable.
+#
+# {{GOV}} is always written with a following slash — `{{GOV}}/docs/...`. For governance itself the
+# manifest says ".", and expanding that literally gives `./docs/...`, which works and reads like a
+# typo. So for that one repo the slash is consumed too and the path comes out bare.
 render() {
   local template=$1 gov=$2 line name frag
+  local from='{{GOV}}/' to="$gov/"
+  [ "$gov" = "." ] && to=''
 
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
@@ -88,9 +94,10 @@ render() {
           echo "gen-agent-surfaces: $template line must be exactly '{{include:$name}}': $line" >&2
           return 4
         fi
-        sed "s|{{GOV}}|$gov|g" "$frag"
+        sed -e "s|${from}|${to}|g" -e "s|{{GOV}}|$gov|g" "$frag"
         ;;
       *)
+        line=${line//"$from"/"$to"}
         printf '%s\n' "${line//\{\{GOV\}\}/$gov}"
         ;;
     esac
@@ -131,7 +138,13 @@ while IFS=$'\t' read -r repo path gov; do
   while IFS=$'\t' read -r template dest; do
     case "$template" in ''|\#*) continue ;; esac
 
-    src="$CANON/repos/$repo/$template"
+    # A files.tsv row naming shared/<file> reads one template that every repo renders. {{GOV}} is
+    # what makes that work across repos at different depths — without it a shared template could
+    # only hold text with no paths in it, which is most of nothing.
+    case "$template" in
+      shared/*) src="$CANON/$template" ;;
+      *)        src="$CANON/repos/$repo/$template" ;;
+    esac
     [ -f "$src" ] || { echo "gen-agent-surfaces: missing template $src" >&2; exit 4; }
 
     target="$repo_root/$dest"
