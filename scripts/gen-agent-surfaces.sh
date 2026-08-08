@@ -13,8 +13,9 @@
 # Usage:
 #   scripts/gen-agent-surfaces.sh [--scratch] <out-root> [repo ...]
 #
-# <out-root> is the directory the repos sit under — the super-repo root in a full composition, or a
-# scratch directory when you only want to look at the output. Naming repos limits the run to those;
+# <out-root> is the SUPER-REPO ROOT — every path in the manifest is relative to it, and the script
+# refuses anything without a .gitmodules unless --scratch says otherwise. Relative paths resolve
+# against your current directory, not this repo's. Naming repos limits the run to those;
 # with none, every repo in the manifest is rendered. A repo whose submodule is not checked out is
 # skipped with a warning rather than failing the run: the manifest is canonical, the working tree is
 # not.
@@ -22,6 +23,13 @@
 # --scratch says the out-root is a throwaway directory, not a composition, so that skip does not
 # apply and every named repo is rendered. The freshness check uses it; nothing else should.
 set -euo pipefail
+
+# Resolve the out-root against the CALLER's directory, before this script cd's to the repo root.
+# Doing it after means a relative path is silently reinterpreted against governance/ — running
+# `./governance/scripts/gen-agent-surfaces.sh . super-repo` from the super-repo then writes the
+# super-repo's four surfaces on top of governance's own three. That is not hypothetical; it is what
+# happened the first time it was run from the composition.
+_caller_pwd=$PWD
 cd "$(dirname "$0")/.."
 
 CANON="canonical/agent-surfaces"
@@ -39,10 +47,22 @@ esac
 [ $# -ge 1 ] || { usage >&2; exit 2; }
 out_root=$1
 shift
+case "$out_root" in /*) ;; *) out_root="$_caller_pwd/$out_root" ;; esac
 [ -d "$out_root" ] || { echo "gen-agent-surfaces: no such directory: $out_root" >&2; exit 4; }
 out_root=$(cd "$out_root" && pwd)
 
 [ -f "$CANON/manifest.tsv" ] || { echo "gen-agent-surfaces: missing $CANON/manifest.tsv" >&2; exit 4; }
+
+# Every path in the manifest is relative to the SUPER-REPO root, so an out-root that is not one
+# silently means something else: "governance" resolves to a subdirectory that does not exist, and
+# "." — the super-repo's own row — resolves to whatever directory was passed. Pointing this at a
+# submodule root is how the super-repo's surfaces landed on top of governance's own.
+if [ "$scratch" -eq 0 ] && [ ! -f "$out_root/.gitmodules" ]; then
+  echo "gen-agent-surfaces: $out_root is not the super-repo root (no .gitmodules)." >&2
+  echo "  The manifest's paths are relative to it. Pass the super-repo root, or --scratch to" >&2
+  echo "  render into a throwaway directory." >&2
+  exit 4
+fi
 
 # render <template> <gov> — expand {{include:NAME}} and {{GOV}} on stdout.
 #
