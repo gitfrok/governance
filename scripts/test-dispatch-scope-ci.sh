@@ -46,7 +46,7 @@ case_run() {
   # The gate needs its library beside it, exactly as the generated layout places them.
   mkdir -p "$tmp/scripts"
   cp "$GATE" "$tmp/scripts/"
-  cp "$PWD/scripts/lib-submodule-scope.sh" "$tmp/scripts/"
+  cp "$PWD/scripts/lib-submodule-scope.sh" "$PWD/scripts/lib-pr-declaration.sh" "$tmp/scripts/"
 
   local got=0
   PR_BODY="$body" SCOPE_BASE=origin/main bash -c "cd '$tmp' && ./scripts/check-dispatch-scope.sh" >"$tmp/.out" 2>&1 || got=$?
@@ -90,6 +90,20 @@ case_run "Scope with no glob is a usage error" 1 "Scope: backend" \
 case_run "glob is a pattern, not a filesystem expansion" 0 "Scope: backend .github/**" \
   .gitmodules backend/.github/other.md backend/.github/workflows/ci.yml -- backend/.github/workflows/ci.yml
 
+# printf formats are single-quoted so backticks stay literal — they are markdown fences, not
+# command substitution.
+# shellcheck disable=SC2016
+# The second regression CI caught: a PR body DOCUMENTS this syntax, so a plain grep enforces the
+# example instead of the declaration. That is not hypothetical — a governance PR was rejected
+# against a backend scope it had copied out of its own explanatory text. A declaration counts only
+# outside fenced blocks and above the first heading.
+case_run "an example inside a fenced block is not a declaration" 0 "$(printf 'Ceremony: full\n\n## Notes\n\n```\nScope: backend modules/policy/**\n```\n')" \
+  .gitmodules backend/anything.go -- backend/anything.go
+case_run "a Scope: line below a heading is discussion, not a declaration" 0 "$(printf 'Ceremony: full\n\n## How it works\n\nScope: backend modules/**\n')" \
+  .gitmodules backend/anything.go -- backend/anything.go
+case_run "a header Scope: line above any heading is the declaration" 1 "$(printf 'Scope: backend modules/**\n\n## Notes\n')" \
+  .gitmodules backend/other/x.go -- backend/other/x.go
+
 # No declaration means the path half is inert — and must say so.
 tmp=$(mktemp -d)
 (
@@ -97,7 +111,7 @@ tmp=$(mktemp -d)
   echo x > a.md; git add -A; git commit -qm base; git update-ref refs/remotes/origin/main HEAD
   echo y > b.md; git add -A; git commit -qm change
 ) >/dev/null 2>&1
-mkdir -p "$tmp/scripts"; cp "$GATE" "$PWD/scripts/lib-submodule-scope.sh" "$tmp/scripts/"
+mkdir -p "$tmp/scripts"; cp "$GATE" "$PWD/scripts/lib-submodule-scope.sh" "$PWD/scripts/lib-pr-declaration.sh" "$tmp/scripts/"
 PR_BODY="nothing declared" SCOPE_BASE=origin/main bash -c "cd '$tmp' && ./scripts/check-dispatch-scope.sh" >"$tmp/.out" 2>&1 || true
 if grep -q 'path scope not' "$tmp/.out"; then
   printf '  ok    %s\n' "undeclared path scope says it is not checked"; pass=$((pass + 1))
@@ -109,7 +123,7 @@ rm -rf "$tmp"
 # An undeterminable diff fails rather than passing, same as every other gate here.
 tmp=$(mktemp -d)
 (cd "$tmp"; git init -q -b main .; git config user.email t@t; git config user.name t; echo x > a; git add -A; git commit -qm base) >/dev/null 2>&1
-mkdir -p "$tmp/scripts"; cp "$GATE" "$PWD/scripts/lib-submodule-scope.sh" "$tmp/scripts/"
+mkdir -p "$tmp/scripts"; cp "$GATE" "$PWD/scripts/lib-submodule-scope.sh" "$PWD/scripts/lib-pr-declaration.sh" "$tmp/scripts/"
 got=0
 PR_BODY="" SCOPE_BASE=refs/heads/nope bash -c "cd '$tmp' && ./scripts/check-dispatch-scope.sh" >/dev/null 2>&1 || got=$?
 if [ "$got" -eq 3 ]; then printf '  ok    %s\n' "missing base ref exits 3"; pass=$((pass+1));

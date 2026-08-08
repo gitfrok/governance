@@ -32,10 +32,12 @@
 # Exit: 0 clean · 1 violation · 3 the diff could not be determined
 set -euo pipefail
 
-_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-submodule-scope.sh"
-[ -f "$_lib" ] || { echo "dispatch-scope: missing $_lib" >&2; exit 3; }
-# shellcheck source=/dev/null
-. "$_lib"
+_here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for _lib in lib-submodule-scope.sh lib-pr-declaration.sh; do
+  [ -f "$_here/$_lib" ] || { echo "dispatch-scope: missing $_here/$_lib" >&2; exit 3; }
+  # shellcheck source=/dev/null
+  . "$_here/$_lib"
+done
 
 base=${SCOPE_BASE:-origin/main}
 
@@ -67,7 +69,10 @@ if [ "$(printf '%s\n' "$spanned" | grep -c .)" -gt 1 ]; then
 fi
 
 # --- 2. declared path scope, when present -------------------------------------------------------
-declared=$(printf '%s\n' "$body" | sed -n 's/^[[:space:]]*Scope:[[:space:]]*//p' | head -1)
+# Not a plain grep: a PR body documents this syntax, and the example must not be mistaken for the
+# declaration. See lib-pr-declaration.sh — this exact gate once enforced a scope it had copied out
+# of its own explanatory text.
+declared=$(printf '%s\n' "$body" | pr_declaration Scope)
 
 if [ -z "$declared" ]; then
   echo "dispatch-scope: no Scope declared — invariant 23 checked, path scope not"
