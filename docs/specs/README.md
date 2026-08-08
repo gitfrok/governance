@@ -18,4 +18,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0010 | CI v0 ephemeral isolation | Approved | T-0017 |
 | SPEC-0011 | Repository & review-history import | Approved | T-0018 |
 | SPEC-0012 | Ceremony tiers & session modes | Approved | — |
-| SPEC-0013 | Dispatch scope boundary & worktree isolation | Proposed | — |
+| SPEC-0013 | Dispatch scope boundary & worktree isolation | Approved | — |
