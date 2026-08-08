@@ -42,22 +42,35 @@ T-0020 (done — `buf lint` + `buf breaking` in governance, generated-code fresh
 unit + policy/isolation → T-0004/T-0005/T-0006 (**done 2026-08-06** — T-0005 closed the policy half
 with `opa test` + a deny-by-default assertion in governance, the PDP adapter and AC4 fitness
 function in backend, the PEP in bff, and a composition gate in the super-repo); `make dev-up` →
-T-0003 (**open**, and the only thing standing between Phase 0 and its exit).
+T-0003 (**open on its macOS criterion only**, as of 2026-08-08 — the `*.gitsaas.test` half of this
+line is verified).
 
-**Where Phase 0 actually stands.** Nine of ten tasks are Done. T-0003 is the exception, and what
-remains of it is not code:
+**Where Phase 0 actually stands.** Nine of ten tasks are Done. T-0003 is the exception, and as of
+2026-08-08 one acceptance criterion of it remains:
 
-| AC | Blocked on | Anyone can unblock it by |
-|---|---|---|
-| AC1 — cluster create | `fs.inotify.max_user_instances=128` on the dev host | one `sysctl` (needs root), then re-running `dev-up` |
-| AC3 — `*.gitsaas.test` from the host | the node IP is unroutable under **rootless** podman | a rootful container driver, or KVM |
-| AC4 — macOS half | no macOS | running the scripts on a Mac |
+| AC | State |
+|---|---|
+| AC1 — cluster create | **Verified.** Needed `fs.inotify.max_user_instances` raised (one `sysctl`, root) and three defects fixed in `dev-up.sh`'s create branch |
+| AC2 — services from pinned manifests | **Verified.** Six deployments Available on pins from `versions.env` |
+| AC3 — `*.gitsaas.test` from the host | **Verified.** Every host the ingress declares resolves by name and answers over TLS, on rootless podman, with no rootful driver and no KVM |
+| AC4 — macOS half | **Open.** No macOS. Anyone can close it by running the scripts on a Mac |
 
-AC2 and AC4-on-Linux are verified. The plan's recorded risk — *"version availability … verify at
-setup"* — is what the 2026-08-06 run spent itself on; the 2026-08-08 create-path attempt fired a risk
-this plan never recorded, **host configuration**, which is worth adding to the register for Phase 1:
-a limit low enough on a mainstream distro to stop the one-command bring-up, invisible to every static
-check, and findable only by running the path on a machine nobody had run it on.
+The two rows this table used to carry as blockers were both retired by evidence rather than by a
+different machine, and each had been recorded as a host limit when it was a defect. AC1 wanted a
+sysctl *and* a `--container-runtime` flag `dev-up.sh` had never passed. AC3 was called "needs a
+rootful driver or KVM"; what it actually needed was the node's 80/443 published, and then a
+resolver that the script's own printed instructions had been describing incorrectly — they gave a
+DNS *forwarder* aimed at an address with no nameserver on it. Both are written up in
+`../tasks/T-0003-minikube-dev-env.md`.
+
+The plan's recorded risk — *"version availability … verify at setup"* — is what the 2026-08-06 run
+spent itself on; the 2026-08-08 create-path attempt fired a risk this plan never recorded, **host
+configuration**, which is worth adding to the register for Phase 1: a limit low enough on a
+mainstream distro to stop the one-command bring-up, invisible to every static check, and findable
+only by running the path on a machine nobody had run it on. The AC3 story adds a second entry for
+that register — **printed operator instructions are untested code**. The DNS snippet had been in the
+tree since the first bring-up, was quoted in three documents as the thing left to do, and had never
+once been run.
 
 The item T-0005 added to T-0003 — the missing policy bundle — is **done as of 2026-08-08**, though
 not as described. Its premise was wrong: it said a bring-up would "start a plane that immediately

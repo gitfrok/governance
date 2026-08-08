@@ -1,6 +1,6 @@
 # T-0003: Minikube dev environment
 
-- **Status:** In progress — **AC1, AC2 and AC4-on-Linux verified**; AC3's ingress half verified and its host-DNS half wired for **one name, by hand** (`/etc/hosts`), not for the `*.gitsaas.test` wildcard the criterion asks for; AC4's macOS half still needs a macOS (see the record)
+- **Status:** In progress — **AC1, AC2, AC3 and AC4-on-Linux verified**; AC4's macOS half still needs a macOS, and is the only thing left (see the record)
 - **Phase / Epic:** 0 / EP-1
 - **Repo(s):** super-repo (`Makefile`, `deploy/dev/`)
 - **Spec:** chore — acceptance criteria below
@@ -53,13 +53,22 @@ One-command local cluster matching prod topology, with real TLS.
 
   All six deployments Available on the current pins, `rpk version: v26.2.1` confirmed in-container,
   and every pinned image resolves with `CHECK_IMAGE_RESOLVE=1`.
-- [~] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
-  **Verified over the real ingress path, under rootless podman, with no `port-forward` and — as of
-  2026-08-08 — no `curl --resolve` either.** `GET https://hello.gitsaas.test/` returns
-  `http_code=200`, `ssl_verify_result=0` (validated against the mkcert CA, never `curl -k`) and the
-  hello fixture, hitting `127.0.0.1:443`. Left at `[~]` because the name that resolves is **one
-  name**, not the wildcard the criterion is written in terms of — see "Host DNS: one name, not the
-  wildcard" below.
+- [x] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
+  **Verified 2026-08-08 over the real ingress path, under rootless podman, with no `port-forward`,
+  no `curl --resolve`, and no `/etc/hosts` entry** — every host the ingress declares, resolved by
+  name through a wildcard resolver, each validating against the mkcert CA (never `curl -k`):
+
+  ```
+  hello    http=200 ssl=0 ip=127.0.0.1      s3     http=200 ssl=0 ip=127.0.0.1
+  zitadel  http=302 ssl=0 ip=127.0.0.1      filer  http=200 ssl=0 ip=127.0.0.1
+  ```
+
+  `zitadel`'s 302 is its own redirect to `/ui/login` — the ingress was reached and answered. It is a
+  real wildcard rather than four names: `never-configured.gitsaas.test` and `deep.sub.gitsaas.test`
+  resolve to `127.0.0.1` too, `/etc/hosts` holds **zero** `gitsaas` lines so nothing confounds the
+  result, and the scope is `gitsaas.test` rather than the whole TLD (`github.com` and `example.com`
+  resolve normally; `something.other.test` does not). The record of how this was reached, and of the
+  three earlier entries that each got part of it wrong, is below.
 
   **The previous entry here was wrong, and the correction is the point.** It said AC3 "needs a rootful
   driver or KVM". The evidence behind that — the node IP being unroutable from the host under rootless
@@ -119,6 +128,91 @@ One-command local cluster matching prod topology, with real TLS.
   Stated as the split, since "smoke is green" is the sentence that will get quoted onward: **AC3's
   ingress, TLS and wildcard-certificate halves are verified for all four hosts; its host-DNS half is
   verified for one host, by a manual step, and remains unwired as a wildcard.**
+
+  > **Superseded later the same day — the host-DNS half is now wired as a wildcard.** The section
+  > above is accurate about the `/etc/hosts` state it describes and is kept because its distinction
+  > is the one that made the next step findable. What it could not know is *why* the resolver route
+  > had never been taken: the instructions for it did not work. See below.
+
+  **Why the resolver had never been wired: `dev-up.sh` was printing a config that could not work.**
+  The snippet the two entries above keep deferring to — "run the dnsmasq / systemd-resolved route
+  the script prints" — was wrong, and following it exactly would have broken `.test` resolution
+  rather than wiring it. All three variants were **forwarder** configs (`server=/test/$TARGET`,
+  `DNS=$TARGET`, `nameserver $TARGET`), and every one means *ask the DNS server at `$TARGET`*. Once
+  the ingress ports are published `$TARGET` is `127.0.0.1`, where nothing listens:
+
+  ```
+  $ dig @127.0.0.1 hello.gitsaas.test
+  ;; communications error to 127.0.0.1#53: connection refused
+  ```
+
+  **Publishing `:53` alongside 80/443 would not have rescued it,** which is worth recording because
+  it is the obvious next guess and it is wrong. The `ingress-dns` addon does work — asked from
+  inside the node it answers all four hosts — but it answers with `192.168.49.2`, the node IP, which
+  is precisely the address a rootless driver leaves unroutable from the host. The addon cannot be
+  the answer source here no matter which port is published.
+
+  What the situation actually needs is a **static answer** — `*.gitsaas.test` resolves to the
+  loopback where 80/443 already are — and neither `systemd-resolved` nor macOS's `/etc/resolver` can
+  express one, since both take a nameserver address and never a record. That is a dnsmasq job.
+  `dev-up.sh` now branches on the same condition that picks the target: published ports get the
+  static shape, a reachable node IP keeps the forwarder shape, which is correct there.
+
+  **`local=` next to `address=`, and why the first attempt looked like it worked.**
+  `address=/gitsaas.test/127.0.0.1` answers **A and nothing else**, so an AAAA query falls through
+  to dnsmasq's upstream — which, on a `systemd-resolved` host, is the stub that just routed the
+  query in. It loops until it times out. The failure is nastily shaped: `dig` for an A record
+  answers instantly and makes the setup look correct, while `getent hosts` — which asks A and AAAA
+  together — simply *hangs*. `local=/gitsaas.test/` makes dnsmasq authoritative for the domain, so
+  AAAA gets an immediate NODATA and never leaves the process. Found by running it, not by reading
+  it; the first config written during this session omitted it.
+
+  **What now runs in CI's stead — `smoke-dev.sh` asks the whole wildcard.** The smoke test had only
+  ever asked `hello`, which is exactly what a single `/etc/hosts` line satisfies, so it could not
+  have distinguished the state above from a closed AC3. It now asks every host the ingress declares,
+  by name, with no `--resolve`:
+
+  ```
+  AC3 — mkcert TLS over ingress
+    ok    GET https://hello.gitsaas.test/ -> 200 on all 6 probes, certificate validated against the mkcert CA
+    ok    response body is the hello fixture
+  AC3 — the other *.gitsaas.test hosts, by name
+    ok    https://filer.gitsaas.test/ -> HTTP 200, resolved by name, certificate validated against the mkcert CA
+    ok    https://s3.gitsaas.test/ -> HTTP 200, resolved by name, certificate validated against the mkcert CA
+    ok    https://zitadel.gitsaas.test/ -> HTTP 302, resolved by name, certificate validated against the mkcert CA
+  smoke: OK (AC2 workloads + images, AC3 TLS over ingress for every *.gitsaas.test host)
+  ```
+
+  Any HTTP status counts there, deliberately: what is under test is that the name resolved, TLS
+  validated and the ingress served it. It asks the *declared* hosts rather than a synthetic name,
+  because `dev-up.sh` offers an `/etc/hosts` fallback naming those four and says plainly it is not a
+  wildcard — that fallback is a legitimate way to run the smoke test, and a synthetic name would
+  fail it. Proving true wildcard resolution is therefore a claim this record makes about this host,
+  evidenced above, and not something the script requires of every machine.
+
+  **Three limits on this result, none of them blocking, all worth naming.**
+
+  1. **The resolver is host configuration, applied by hand with root.** `dev-up.sh` prints it rather
+     than applies it — it touches system DNS — the same posture it takes with `mkcert -install` and
+     the inotify sysctl, and the same posture under which AC1 is marked verified. A fresh machine
+     still has to run the printed commands.
+  2. **The macOS variant is unverified.** The Homebrew-dnsmasq instructions are written and carry an
+     explicit note that they were not run on a Mac, because there is no Mac here. That includes the
+     `conf-dir=` step Homebrew ships commented out, without which every printed command succeeds and
+     the domain still does not resolve. Same standard as AC4's macOS half.
+  3. **`smoke-dev.sh`'s new "does not resolve" branch is not exercised end-to-end.** With a working
+     wildcard every name under `gitsaas.test` resolves, and a name outside it fails TLS before
+     reaching that branch. What *is* measured is the fact that motivated it — on this host `curl` to
+     an unresolvable `.test` name exits **28**, not 6, because the lookup goes upstream and stalls
+     instead of returning NXDOMAIN — which is why the branch establishes its diagnosis by re-asking
+     pinned rather than reading it off the exit code.
+
+  **Two defects in the work of closing this were caught by review rather than by the author**, and
+  the pattern is the same one this file keeps recording. A `grep -v` under `set -euo pipefail` exited
+  1 when the ingress declared no host besides `hello`, killing `smoke-dev.sh` silently in exactly the
+  case the following branch existed to explain; and the NetworkManager variant of the dnsmasq snippet
+  omitted the `local=` line whose importance the surrounding comment argues at length. Both were in
+  code written to fix a problem of the same kind.
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
   prohibition.
@@ -200,6 +294,7 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
 | governance | `9667a36` (#39) | `check-docs.sh` no longer uses GNU `find -printf`, which aborted this repo's docs gate on macOS |
 | super-repo | `a126acd` (#47) | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver, and `worker-processes=2` pinned on the ingress-nginx ConfigMap so requests stop hanging |
 | super-repo | `8de701f` (#49) | `smoke-dev.sh` probes ingress six times instead of once, so an intermittent 200 fails the run instead of passing it |
+| super-repo | `b5b110a` (#51) | AC3 closed: the printed DNS setup was a forwarder aimed at an address with no nameserver on it — replaced with a static dnsmasq answer (`address=` + `local=`), and `smoke-dev.sh` now asks every host the ingress declares rather than `hello` alone |
 
 ### What the first run found (2026-08-06)
 
