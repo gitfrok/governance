@@ -19,3 +19,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0011 | Repository & review-history import | Approved | T-0018 |
 | SPEC-0012 | Ceremony tiers & session modes | Approved | — |
 | SPEC-0013 | Dispatch scope boundary & worktree isolation | Approved | — |
+| SPEC-0014 | Shell portability gate (macOS lane) | Proposed | T-0003 |
