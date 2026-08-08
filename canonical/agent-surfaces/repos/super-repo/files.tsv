@@ -12,3 +12,4 @@ shared/lib-submodule-scope.sh	scripts/lib-submodule-scope.sh
 shared/agent-dispatcher.md	.claude/agents/gitfrok-dispatcher.md
 shared/dispatch-pre-commit.sh	scripts/dispatch-pre-commit.sh
 shared/dispatch-worktree.sh	scripts/dispatch-worktree.sh
+shared/check-dispatch-scope.sh	scripts/check-dispatch-scope.sh

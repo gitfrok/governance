@@ -115,15 +115,51 @@ committed matches what was declared. It orchestrates nothing.
 - [ ] **AC8:** Extracting the invariant-23 detection leaves `check-ceremony-tier.sh` behaviourally
       unchanged: its 13 existing cases still pass.
 
-## Open questions
+## Resolutions
 
-1. **Should the hook be advisory or blocking by default?** Blocking is the point, but a `pre-commit`
-   hook is bypassable with `--no-verify` and always will be. The honest position is that this
-   protects against mistakes, not against intent, and CI is the thing that protects against intent.
-   Does that mean the same check also belongs in CI, where `--no-verify` cannot reach?
-2. **Do scope globs belong in the plan, or only in the worktree?** In the plan they are reviewable
-   before work starts; in the worktree they are trivially editable by whoever is working. Reviewable
-   is better, but no plan format exists to put them in yet.
-3. **Is `paths` worth it at all, or is `repo` the whole value?** Invariant 23 is the rule with teeth.
-   A per-path scope catches a narrower class of mistake — touching an unrelated module in the right
-   repo — and costs a glob list on every unit of work.
+1. **Advisory or blocking? Both, and the CI half is the one that binds.** `git commit --no-verify`
+   skips the hook and always will, so the hook stops mistakes and CI stops intent.
+   `check-dispatch-scope.sh` runs on what was pushed rather than on what the author chose to run.
+
+   It cannot read the hook's scope — that lives in a worktree's gitdir and is deliberately
+   uncommittable (AC7) — so the declaration moves to the PR body, the same place the ceremony tier
+   lives and for the same reason: it is what CI can actually read.
+
+   ```
+   Scope: backend modules/policy/** **/*_test.go
+   ```
+
+   **This closed a real gap rather than only duplicating the hook.** Invariant 23 is now checked
+   unconditionally on every PR, declaration or not. Previously the only automated span check sat
+   inside `check-ceremony-tier.sh`'s `bugfix` branch, so a `Ceremony: full` PR spanning two
+   submodules passed CI unchecked — a hard rule guarded only when someone declared the lighter tier
+   is a rule guarded backwards.
+
+2. **Plan or worktree? Neither, in the end — the PR body.** The plan was the better answer and no
+   plan format exists to hold it. The PR body is worse in one way the record should carry: after
+   squash-merge the declaration lives in the PR rather than in git history, exactly as the ceremony
+   tier does.
+
+3. **Is `paths` worth it? Kept, on instruction, and still the weakest of the three.** `repo` is the
+   rule with teeth and is now enforced unconditionally without any declaration at all. `paths` is
+   opt-in and inert when absent — which is the honest shape for a check that catches a narrower
+   class of mistake.
+
+## Implementation
+
+| File | Where | What |
+|---|---|---|
+| `dispatch-pre-commit.sh` | all five repos | the hook; installed only by the helper, never automatically |
+| `check-dispatch-scope.sh` | all five repos | the CI half; invariant 23 always, path scope when declared |
+| `lib-submodule-scope.sh` | all five repos | shared invariant-23 detection (AC8) |
+| `dispatch-worktree.sh` | super-repo only | needs `.gitmodules` |
+| `agent-dispatcher.md` | all five repos | the sixth persona |
+
+All generated from `canonical/agent-surfaces/shared/` by the ADR-0037 pipeline. Tested by
+`test-dispatch-scope.sh` (11 cases, hook) and `test-dispatch-scope-ci.sh` (9 cases, CI).
+
+**One thing the implementation had to settle that the spec did not anticipate.** Globs are
+submodule-relative, because that is what the hook sees — it runs inside the submodule. In the
+composition the diff carries a `backend/` prefix the hook never encounters, so the CI check strips
+it before matching. Without that the same declaration would mean two different things depending on
+which side checked it, which is worse than not checking at all.
