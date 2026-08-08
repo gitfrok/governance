@@ -1,12 +1,13 @@
 # ADR-0037: Adopt RDF's canonical-first agent surface — generated from governance, not a second governance
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-08
 - **Deciders:** platform
 - **Governs:** G7 process integrity — the files that steer our agents are currently the only
   governance artifacts in the tree that nothing checks
 - **Relates to:** **ADR-0028** (AGDD — *refined, not superseded*) · ADR-0027 (repo topology) ·
   ADR-0002 (governance-driven design) · ADR-0001 (ADR SoT) ·
+  **ADR-0038** (answers this ADR's deferred licensing question — decision 4 below) ·
   **Invariants:** 11, 12, 21, 23 · **Upstream:** [rfxn/rdf](https://github.com/rfxn/rdf) (GPL v2)
 
 ## Context
