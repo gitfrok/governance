@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+# state/git-hooks/pre-commit — RDF worktree scope enforcement (Wave A)
+# (C) 2026 R-fx Networks <proj@rfxn.com>
+# GNU GPL v2
+#
+# Installed into worktrees by dispatcher (canonical/agents/dispatcher.md).
+# Rejects commits that touch files outside the phase's declared Files list
+# or Tests-may-touch flex zone (plan-schema.md Rule 8).
+#
+# Bypass: --no-verify (intentional override; dispatcher post-merge check
+# serves as defense-in-depth backstop).
+set -euo pipefail
+
+# Locate project root (nearest ancestor with state/rdf-bus.sh — the RDF anchor)
+_proj=""
+_dir="$(command pwd)"
+while [[ "$_dir" != "/" ]]; do
+    [[ -f "$_dir/state/rdf-bus.sh" ]] && { _proj="$_dir"; break; }
+    _dir="$(command dirname "$_dir")"
+done
+if [[ -z "$_proj" ]]; then
+    echo "rdf pre-commit: state/rdf-bus.sh not found in any ancestor; skipping scope check" >&2
+    exit 0
+fi
+
+# Source helpers
+if [[ ! -f "$_proj/state/rdf-bus.sh" ]]; then
+    echo "rdf pre-commit: state/rdf-bus.sh not found; skipping scope check" >&2
+    exit 0
+fi
+# shellcheck source=/dev/null
+source "$_proj/state/rdf-bus.sh"
+
+# Derive phase number from branch name: rdf/phase-<N>-<UUID>
+# symbolic-ref resolves correctly on both empty and non-empty repos;
+# git rev-parse --abbrev-ref returns "HEAD" (not the branch) on empty repos.
+_branch="$(git symbolic-ref --short HEAD 2>/dev/null || echo "")" # fails on detached HEAD → no-op
+_phase_n=""
+if [[ "$_branch" =~ ^rdf/phase-([0-9]+)- ]]; then
+    _phase_n="${BASH_REMATCH[1]}"
+fi
+if [[ -z "$_phase_n" ]]; then
+    # Not a worktree branch; no enforcement
+    exit 0
+fi
+
+# Parse phase scope — read loop, not eval; plan files arrive via commits
+# (post-3.1.2 canonical workflow) and may carry shell metachars (`;`, `&`)
+# in Files entries that bypass rdf_parse_phase_scope's regex-metachar escape.
+_plan="$(rdf_active_plan_path "$_proj")"
+if [[ -z "$_plan" ]]; then
+    echo "rdf pre-commit: no active plan found; skipping scope check" >&2
+    exit 0
+fi
+ALLOWED_REGEX=""
+FLEX_REGEX=""
+FLEX_FILE_CEILING=""
+FLEX_LINE_CEILING=""
+while IFS='=' read -r _k _v; do
+    case "$_k" in
+        ALLOWED_REGEX)     ALLOWED_REGEX="$_v" ;;
+        FLEX_REGEX)        FLEX_REGEX="$_v" ;;
+        FLEX_FILE_CEILING) FLEX_FILE_CEILING="$_v" ;;
+        FLEX_LINE_CEILING) FLEX_LINE_CEILING="$_v" ;;
+    esac
+done < <(rdf_parse_phase_scope "$_plan" "$_phase_n")
+if [[ -z "$ALLOWED_REGEX" ]]; then
+    echo "rdf pre-commit: Phase $_phase_n not found in $_plan or has no Files block" >&2
+    exit 1
+fi
+
+# Build union regex
+_scope_regex="$ALLOWED_REGEX"
+if [[ -n "${FLEX_REGEX:-}" ]]; then
+    _scope_regex="$_scope_regex|$FLEX_REGEX"
+fi
+
+# Get staged files
+_staged="$(git diff --cached --name-only)"
+if [[ -z "$_staged" ]]; then
+    exit 0   # nothing staged
+fi
+
+# Validate each staged path
+_violations=""
+while IFS= read -r _path; do
+    if ! [[ "$_path" =~ ^(${_scope_regex})$ ]]; then
+        _violations="${_violations:+$_violations}$_path"$'\n'
+    fi
+done <<< "$_staged"
+
+if [[ -n "$_violations" ]]; then
+    echo "rdf pre-commit: SCOPE VIOLATION — files outside Phase $_phase_n scope:" >&2
+    echo "$_violations" >&2
+    echo "Phase Files allowed: $(echo "$ALLOWED_REGEX" | command tr '|' ' ')" >&2
+    [[ -n "${FLEX_REGEX:-}" ]] && echo "Tests-may-touch flex: $(echo "$FLEX_REGEX" | command tr '|' ' ')" >&2
+    echo "If this addition is legitimate test-infra, add the path to" >&2
+    echo "the phase's **Tests-may-touch:** field in PLAN.md." >&2
+    echo "Bypass with --no-verify only if dispatcher post-merge check is acceptable." >&2
+    exit 1
+fi
+
+# Check ceilings on flex-zone files
+if [[ -n "${FLEX_REGEX:-}" ]]; then
+    _flex_files=0
+    while IFS= read -r _path; do
+        if [[ "$_path" =~ ^(${FLEX_REGEX})$ ]]; then
+            _flex_files=$((_flex_files + 1))
+            # Per-file line ceiling
+            _lines="$(git diff --cached --numstat -- "$_path" | awk '{print $1+$2}')"
+            if [[ "$_lines" -gt "${FLEX_LINE_CEILING:-30}" ]]; then
+                echo "rdf pre-commit: file $_path in flex zone changed $_lines lines (ceiling ${FLEX_LINE_CEILING:-30})" >&2
+                exit 1
+            fi
+        fi
+    done <<< "$_staged"
+    if [[ "$_flex_files" -gt "${FLEX_FILE_CEILING:-3}" ]]; then
+        echo "rdf pre-commit: $_flex_files files in flex zone (ceiling ${FLEX_FILE_CEILING:-3})" >&2
+        exit 1
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Anti-pattern grep section (appended after scope-enforcement block above)
+# Checks added lines in staged files for five anti-pattern classes.
+# Scope enforcement runs FIRST (above); anti-pattern check runs SECOND (here).
+#
+# Pattern classes (parallel indexed arrays — no declare -A; Bash 4.1+ floor):
+#   Class 0: bare-coreutils-no-prefix
+#     \b(sha256sum|md5sum|cp|mv|rm|chmod|mkdir|cat|touch|ln)\b without 'command'
+#   Class 1: tmp-file-with-pid
+#     /tmp/ path containing $$ or $RANDOM
+#   Class 2: suppression-no-comment
+#     2>/dev/null or || true on a line with no same-line #
+#   Class 3: tombstone-phrases
+#     replaces .* stub / was: .* / # removed:
+#   Class 4: local-rc-mask
+#     local <var>=$( — masks subshell exit code
+#
+# Suppression: same-line # on the offending line suppresses any class.
+# Opt-out: governance/ignore.md in project root containing
+#   # anti-pattern-skip: <class-name>  opts-out that class for all files.
+# ---------------------------------------------------------------------------
+
+_AP_CLASSES=(
+    "bare-coreutils-no-prefix"
+    "tmp-file-with-pid"
+    "suppression-no-comment"
+    "tombstone-phrases"
+    "local-rc-mask"
+)
+
+# Regexes — ERE, matched against added diff lines (+ prefix stripped).
+# For bare-coreutils: match word-boundary occurrence NOT preceded by 'command '.
+# shellcheck disable=SC2016  # $$ and $RANDOM are literal regex tokens, not expansions
+_AP_PATTERNS=(
+    '\b(sha256sum|md5sum|cp|mv|rm|chmod|mkdir|cat|touch|ln)\b'
+    '/tmp/[^"]*\$\$|/tmp/[^"]*\$RANDOM'
+    '(2>/dev/null|\|\|[[:space:]]*true)'
+    '(replaces[[:space:]].*stub|was:[[:space:]].*|#[[:space:]]*removed:)'
+    '^\s*local[[:space:]]+[a-z_]+=\$\('
+)
+
+# Load opt-out classes from governance/ignore.md (project root, not worktree).
+_ap_skipped=()
+if [[ -f "$_proj/governance/ignore.md" ]]; then
+    while IFS= read -r _igline; do
+        if [[ "$_igline" =~ ^#[[:space:]]*anti-pattern-skip:[[:space:]]*(.+)$ ]]; then
+            _ap_skipped+=("${BASH_REMATCH[1]//[[:space:]]/}")
+        fi
+    done < "$_proj/governance/ignore.md"
+fi
+
+# _ap_class_skipped name — return 0 if class is in the skip list
+_ap_class_skipped() {
+    local _cls="$1" _s
+    for _s in "${_ap_skipped[@]+"${_ap_skipped[@]}"}"; do
+        [[ "$_s" == "$_cls" ]] && return 0
+    done
+    return 1
+}
+
+# Iterate staged files; grep each added diff hunk.
+_ap_found=0
+while IFS= read -r _ap_path; do
+    # Extract only added lines from the diff (strip leading '+', skip '+++' headers).
+    _ap_diff="$(git diff --cached -U0 -- "$_ap_path" \
+        | grep -E '^\+[^+]' \
+        | command sed 's/^\+//')" || true  # grep exits 1 when no added lines; safe
+
+    [[ -z "$_ap_diff" ]] && continue
+
+    # Drop lines carrying a same-line '#' (suppression) once, so each class greps the
+    # remaining added lines a single time instead of once per line.
+    _ap_scan="$(grep -vE '#' <<< "$_ap_diff" || true)"  # rc1 when every line has #; safe
+    [[ -z "$_ap_scan" ]] && continue
+
+    _ap_i=0
+    for _ap_class in "${_AP_CLASSES[@]}"; do
+        _ap_pat="${_AP_PATTERNS[$_ap_i]}"
+        _ap_i=$((_ap_i + 1))
+
+        # Class-level opt-out via governance/ignore.md
+        _ap_class_skipped "$_ap_class" && continue
+
+        # One grep over all remaining added lines for this class.
+        _ap_hits="$(grep -E "$_ap_pat" <<< "$_ap_scan" || true)"  # rc1 when no match; safe
+        [[ -z "$_ap_hits" ]] && continue
+
+        # For bare-coreutils: drop lines where 'command ' precedes the util (valid usage).
+        if [[ "$_ap_class" == "bare-coreutils-no-prefix" ]]; then
+            _ap_hits="$(grep -vE 'command[[:space:]]+(sha256sum|md5sum|cp|mv|rm|chmod|mkdir|cat|touch|ln)\b' <<< "$_ap_hits" || true)"  # rc1 when all command-prefixed; safe
+            [[ -z "$_ap_hits" ]] && continue
+        fi
+
+        # Report each offending line.
+        while IFS= read -r _ap_line; do
+            [[ -z "$_ap_line" ]] && continue
+            echo "rdf pre-commit: ANTI-PATTERN [$_ap_class] in $_ap_path:" >&2
+            echo "  $_ap_line" >&2
+            echo "  Suppress with a same-line # comment explaining why this is safe," >&2
+            echo "  or add '# anti-pattern-skip: $_ap_class' to governance/ignore.md." >&2
+            _ap_found=1
+        done <<< "$_ap_hits"
+    done
+done <<< "$_staged"
+
+if [[ "$_ap_found" -ne 0 ]]; then
+    exit 1
+fi
+
+exit 0
