@@ -33,12 +33,17 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   is impossible while each `buf.gen.yaml` reads `../governance/contracts`, so it is gated at the
   composition boundary instead — the per-repo variant stays blocked on the ADR-0027/0028
   generated-type publishing follow-up.
-- **EP-1 Platform up**: T-0003 (Minikube dev env) — **In progress**. First real cluster run
-  2026-08-06 (rootless podman): **AC2 and AC4 verified**, AC1 and AC3 partially. It cost **seven
-  manifest fixes** — as written, three of the five services could not start, including a Redpanda tag
-  that was never published and a Zitadel config poisoned by Kubernetes service-link env vars. AC1's
-  cluster-create path and AC3's `*.gitsaas.test` path need a rootful driver or KVM; macOS needs a
-  macOS. Not more code — a different host.
+- **EP-1 Platform up**: T-0003 (Minikube dev env) — **In progress, AC4's macOS half is all that is
+  left.** First real cluster run 2026-08-06 (rootless podman) cost **seven manifest fixes** — as
+  written, three of the five services could not start, including a Redpanda tag that was never
+  published and a Zitadel config poisoned by Kubernetes service-link env vars. **AC1 and AC3 both
+  closed on 2026-08-08, on that same rootless host.** The line this entry used to carry — *"need a
+  rootful driver or KVM … not more code, a different host"* — was wrong twice over, and in both
+  cases a defect had been recorded as an environment limit. AC1 needed a sysctl plus three fixes in
+  a `dev-up.sh` branch that had never run to completion. AC3 needed the node's 80/443 published,
+  and then a resolver whose setup instructions the script had been printing incorrectly: a DNS
+  *forwarder* pointed at an address with no nameserver on it, so following them broke `.test`
+  resolution rather than wiring it. Nobody had run them. macOS still needs a macOS.
 - **EP-2 Tenancy & governance base** *(closed)*: T-0004 (tenancy+RLS, **Done 2026-08-06**),
   T-0005 (PDP, **Done 2026-08-06**), T-0006 (audit log, **Done 2026-08-06**).
   **Epic status: CLOSED 2026-08-06.** T-0005 landed across all four repos in dependency order
