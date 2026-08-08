@@ -1,6 +1,6 @@
 # T-0003: Minikube dev environment
 
-- **Status:** In progress — **AC1, AC2, AC3 and AC4-on-Linux verified**; AC4's macOS half still needs a macOS, and is the only thing left (see the record)
+- **Status:** Done — **AC1–AC4 verified**; AC4 closed on 2026-08-09 by a real macOS run, with its one residual (cluster bring-up on a Mac) named in the record
 - **Phase / Epic:** 0 / EP-1
 - **Repo(s):** super-repo (`Makefile`, `deploy/dev/`)
 - **Spec:** chore — acceptance criteria below
@@ -223,9 +223,11 @@ One-command local cluster matching prod topology, with real TLS.
   case the following branch existed to explain; and the NetworkManager variant of the dnsmasq snippet
   omitted the `local=` line whose importance the surrounding comment argues at length. Both were in
   code written to fix a problem of the same kind.
-- [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
-  Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
-  prohibition.
+- [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified on both**
+  — it ran on Linux, and on 2026-08-09 it ran on macOS: bash 3.2.57 on `arm64-apple-darwin25` against
+  Darwin's own BSD userland, not a container standing in for it (see the 2026-08-09 entry, which also
+  names the one thing that run does *not* cover). No compose files exist and every OrbStack/Compose
+  mention in the tree is a prohibition.
 
   **The macOS half was upgraded from grep to execution on 2026-08-08, and it found a real breakage.**
   The previous record rested on grepping for bash-4 features (`declare -A`, `mapfile`, `readarray`,
@@ -463,3 +465,60 @@ which no parse would have caught.
 
 AC4's macOS half still needs a macOS. What changed is that its Linux-side evidence is no longer
 eleven scripts out of date.
+
+### 2026-08-09: AC4 closes — it ran on a Mac
+
+The proxies are retired. Every claim below comes from a `macos-latest` runner: **bash 3.2.57 on
+`arm64-apple-darwin25`, against Darwin's own BSD userland**, not from a container standing in for it.
+
+Two runs carry it. [gitfrok/governance 31281070520](https://github.com/gitfrok/governance/actions/runs/31281070520)
+covers the SoT repo; [gitfrok/gitfrok 31281355398](https://github.com/gitfrok/gitfrok/actions/runs/31281355398)
+covers the composition, which is the only place the cross-repo gates can run at all.
+
+```
+portability: parsing with /bin/bash — GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+portability: userland asserted BSD — find, stat, sed, readlink, date are the system ones
+portability: OK — 19 script(s) parsed, 17 pattern(s) audited, 0 findings, 1 waived
+dep-direction: OK
+version-floors: OK
+agent surfaces: OK (82 files across 5 repos)
+docs: OK (113 files checked)
+portability: 20 passed, 0 failed
+```
+
+`docs: OK` is the line worth pausing on. That gate is the one the 2026-08 audit found would have
+**aborted outright** on macOS, on `find -printf`. It now runs there, on a BSD `find`, and passes.
+
+**`sort -z` is resolved.** It has been an open hedge in this record since it was written — a GNU
+extension that FreeBSD-derived `sort` happens to accept, which nothing reachable from a Linux host
+could settle. The macOS lane probes it and answers:
+
+```
+AC9: macOS sort ACCEPTS -z (as FreeBSD-derived sort does)
+```
+
+So the construct was never a macOS defect. It was removed anyway, and correctly — it was cosmetic
+there and removing it cost nothing — but the record no longer carries an unresolved claim about it.
+
+**What is still not verified, stated here rather than left to be inferred.** `dev-up.sh` and
+`smoke-dev.sh` were **parsed on Darwin, not executed** there. Bringing a Minikube cluster up needs a
+hypervisor, which a hosted runner has not got; SPEC-0014 put that out of scope on purpose, because a
+hosted runner attempting it would be testing the runner. `bench-git-workload.sh` also remains
+macOS-*parseable* and not macOS-*runnable* — it needs GNU `date`'s `%N` and exits with a clear
+message without it, which the gate declares on every run rather than omitting.
+
+**Why that residual does not hold AC4 open.** AC4's claim is that the tooling is not macOS-locked —
+it is the criterion ADR-0024 created when it replaced the macOS-only ADR-0021 with a cross-platform
+tool. Every script the dev environment is made of now parses on Darwin, and every gate that can run
+without a cluster does run there and passes. What is left is not a portability question; it is a
+question about a hypervisor, and it is named above so that nobody reads this closure as covering it.
+
+**And the audit can no longer go stale.** The thing that made the last two entries necessary was that
+the evidence was a person: it ran when someone remembered, and it went eleven scripts out of date
+inside a month. It is now `check-shell-portability.sh` (SPEC-0014), generated into all five repos and
+run on both lanes of every PR. A new script that would break on macOS fails the PR that adds it.
+
+**One caveat with a deadline.** The macOS lane is a separate CI job, so it is a separate
+required-status-check context, and `scripts/apply-rulesets.sh` must be run with an admin token before
+it blocks anything. **Until `make rulesets-apply` runs, all five macOS lanes report without
+blocking** — they are evidence, not yet enforcement.
