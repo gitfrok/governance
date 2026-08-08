@@ -1,0 +1,9 @@
+# repo	path under the out-root	path from that repo to governance
+#
+# "." means the repo IS the out-root. The super-repo is the composition, so it is the only one
+# whose path is "."; the other four are submodule paths beneath it (ADR-0027).
+super-repo	.	governance
+governance	governance	.
+backend	backend	../governance
+bff	bff	../governance
+webfrontend	webfrontend	../governance

@@ -54,6 +54,14 @@ jobs:
       - name: docs gates
         run: ./scripts/check-docs.sh
 
+      # ADR-0037: the agent-facing surfaces are generated from canonical/agent-surfaces/, so a
+      # hand-edit to AGENTS.md, CLAUDE.md or opencode.json is drift. Only this repo's three surfaces
+      # are checkable here — the other four repos are submodules a standalone run does not have, the
+      # same composition boundary the super-repo's check-codegen-fresh.sh documents. Riding inside
+      # the already-required `docs gates` context means it is required from the moment it merges.
+      - name: agent surface freshness
+        run: ./scripts/check-agent-surfaces-fresh.sh
+
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
