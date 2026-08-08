@@ -78,6 +78,12 @@ jobs:
       - name: ceremony tier tests
         run: ./scripts/test-ceremony-tier.sh
 
+      # SPEC-0013: the scope hook is only worth installing if it behaves. Same shape as the ceremony
+      # tests — a throwaway repo per case, driven through `git commit` rather than by calling the
+      # script directly, so the hook's real invocation path is what gets exercised.
+      - name: dispatch scope tests
+        run: ./scripts/test-dispatch-scope.sh
+
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
