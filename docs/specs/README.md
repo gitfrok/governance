@@ -17,4 +17,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0009 | Merge requests & approval policy | Approved | T-0016 |
 | SPEC-0010 | CI v0 ephemeral isolation | Approved | T-0017 |
 | SPEC-0011 | Repository & review-history import | Approved | T-0018 |
-| SPEC-0012 | Ceremony tiers & session modes | Proposed | — |
+| SPEC-0012 | Ceremony tiers & session modes | Approved | — |

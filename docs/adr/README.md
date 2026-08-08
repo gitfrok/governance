@@ -63,7 +63,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Accepted |
 | [ADR-0038](0038-governance-gplv2-vendor-rdf.md) | `governance` is GPL v2 and vendors RDF; the code repos' licence stays open | Superseded by ADR-0039 |
 | [ADR-0039](0039-no-vendored-third-party-code.md) | Vendor no third-party code; the surface pipeline is ours and `governance` keeps GPL v2 by choice | Accepted |
-| [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Proposed |
+| [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
@@ -72,6 +72,12 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   and ADR-0014 (Zoekt) mandate, which is the constraint that ruled out GPL v2, and its express patent
   grant matters for the binaries ADR-0009 and ADR-0013 hand to BYO customers. Still open inside
   ADR-0040: whether the distributed artifacts need a `NOTICE` or an SBOM of third-party licences.
+- **No gate asserts an ADR's status matches what merging it meant.** Proposed on `main` is legitimate
+  — `AGENTS.md` tells an agent to draft a Proposed ADR and stop, and that ADR merges while it waits.
+  The defect is narrower: an ADR whose PR review *was* the approval should merge `Accepted`, and
+  nothing in the file distinguishes that from propose-and-stop. It is a question about intent, so it
+  lives in `.github/pull_request_template.md` rather than in `check-docs.sh`. Has caught out
+  ADR-0038, ADR-0039 and ADR-0040 so far.
 - CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
   The *image* half is now **ADR-0034 (Accepted 2026-08-06)**: `redpandadata/redpanda:v26.1` was never a published
   tag, because a floor written as a bare minor is not a pullable pin. Still open here: the *toolchain*

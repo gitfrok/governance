@@ -1,6 +1,6 @@
 # SPEC-0012: Ceremony tiers & session modes
 
-- **Status:** Proposed
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** process (governance only — no runtime code)
 - **ADRs:** 0037 (decision 7 requires this spec before anything is adopted), 0039 (the flow this
