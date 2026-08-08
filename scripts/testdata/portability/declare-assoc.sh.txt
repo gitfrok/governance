@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+declare -A m
+m[a]=b

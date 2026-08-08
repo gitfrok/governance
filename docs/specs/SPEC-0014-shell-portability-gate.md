@@ -178,6 +178,7 @@ because it changes what a later reader may assume was reviewed.
 | `check-shell-portability.sh` | all five repos | the gate: parse, audit, environment assertion |
 | `portability-flags.tsv` | all five repos | the codified list — 17 patterns |
 | `test-shell-portability.sh` | governance only | 19 cases, alongside the other three suites |
+| `testdata/portability/*.sh.txt` | governance only | 14 fixtures, kept out of the `*.sh` glob on purpose |
 | `.github/workflows/ci.yml` | all five repos | `macOS portability` job, plus the audit on the Linux lane |
 | `scripts/apply-rulesets.sh` | super-repo only | multiple required contexts per repo |
 
@@ -210,7 +211,22 @@ running it, not by reading it — the same shape as SPEC-0013's finding that a f
 distinguish the mechanism from the outcome is not testing the mechanism. Every detection case here
 was afterwards re-run with its pattern removed from the list and confirmed to stop firing.
 
-**4. One control cannot exist on Linux, and was not faked.** The *passing* side of the part-3
+**4. The gate reported fifteen violations against its own test suite — and the local run had said it
+was clean.** The suite is a tracked `*.sh`, so the gate audits it, and its fixtures were inline shell
+source containing exactly the constructs being detected. Moving them to `testdata/portability/*.sh.txt`
+was not enough on its own: the **case names and the assertion strings** still spelled the flags out,
+and a case named after the flag it tests is a flag in a tracked script. The names now describe the
+construct in prose and each case asserts against the pattern list's *explanation* column instead.
+
+Two things this cost are worth carrying forward. **The local run passed only because the file was
+still untracked** — `git ls-files` could not see it — so a gate that reads the index is only as
+honest as what has been added to it, and a local green before `git add` proves nothing. And this is
+the **third** time the same shape has been paid for: SPEC-0013's `Scope:` parser enforced the example
+inside its own PR body, the pattern list had to leave the gate for a `.tsv`, and now the suite had to
+give up its fixtures. The rule that keeps falling out is one line — *keep the literals out of every
+file the gate reads* — and it is cheaper than any of the exemptions that would otherwise be needed.
+
+**5. One control cannot exist on Linux, and was not faked.** The *passing* side of the part-3
 assertion needs a real BSD userland at `/usr/bin`; a stub anywhere else is rejected by the same path
 check it would be trying to satisfy. Making that test pass would have meant weakening the assertion.
 The macOS lane is that control, and the suite says so where the missing case would have been.

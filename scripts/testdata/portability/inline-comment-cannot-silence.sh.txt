@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+find . -printf "%f\n"  # this comment does not make it portable

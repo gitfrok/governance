@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Never use find -printf here: it is GNU-only.
+find . -name "*.md"

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+if out=$(stat -c %s "$1" 2>/dev/null); then echo "$out"; fi  # portability-ok: probed, fallback below
