@@ -5,15 +5,15 @@ backlog/plans/tasks, process, invariants, and agent rules. **Depends on nothing.
 
 ## Licence
 
-This repository is licensed under the **GNU General Public License v2.0** — see [`LICENSE`](LICENSE)
-and **ADR-0039**, which explains why this repo and only this repo carries it. Nothing obliges the
-choice; it costs nothing here, because this repo links no libraries, produces no binary, and ships to
-no customer.
+This repository is licensed under the **Apache License, Version 2.0** — see [`LICENSE`](LICENSE) and
+**ADR-0040**, which licenses every repo in the tree the same way. It replaces the GPL v2 this repo
+briefly carried; that grant is not withdrawn for commits already published under it, but this version
+onward is Apache-2.0.
 
-`backend`, `bff`, `webfrontend`, and the super-repo are **not** covered and **must not** simply
-inherit it. Their licence is an open decision (ADR-0039 decision 5): GPL v2 without "or later" is
-incompatible with Apache-2.0, and ADR-0006 (OPA) and ADR-0014 (Zoekt) mandate Apache-2.0 dependencies
-inside the binaries ADR-0009 distributes to BYO customers.
+Apache-2.0 is compatible with the dependencies ADR-0006 (OPA) and ADR-0014 (Zoekt) mandate — the
+constraint that ruled out GPL v2 — and its express patent grant matters for binaries ADR-0009 and
+ADR-0013 hand to BYO customers. It is permissive: a customer may fork and redistribute without
+contributing back. ADR-0040 decision 4 records that as a deliberate trade.
 
 **No third-party code is vendored in this repo** (ADR-0039 decision 2). Everything here, including
 `scripts/gen-agent-surfaces.sh`, is ours.

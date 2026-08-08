@@ -63,13 +63,15 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Accepted |
 | [ADR-0038](0038-governance-gplv2-vendor-rdf.md) | `governance` is GPL v2 and vendors RDF; the code repos' licence stays open | Superseded by ADR-0039 |
 | [ADR-0039](0039-no-vendored-third-party-code.md) | Vendor no third-party code; the surface pipeline is ours and `governance` keeps GPL v2 by choice | Accepted |
+| [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
-- **Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038).** They
-  carry no `LICENSE` today and **must not** simply inherit governance's. GPL v2 *only* is
-  incompatible with the Apache-2.0 dependencies that ADR-0006 (OPA) and ADR-0014 (Zoekt) mandate,
-  inside binaries ADR-0009 distributes to BYO customers. GPL v3 / AGPL v3 / permissive /
-  source-available is an open decision needing its own ADR.
+- ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
+  **Closed — ADR-0040 (Proposed 2026-08-08): Apache-2.0 across the whole tree**, including
+  relicensing `governance` off GPL v2. Apache-2.0 is compatible with the dependencies ADR-0006 (OPA)
+  and ADR-0014 (Zoekt) mandate, which is the constraint that ruled out GPL v2, and its express patent
+  grant matters for the binaries ADR-0009 and ADR-0013 hand to BYO customers. Still open inside
+  ADR-0040: whether the distributed artifacts need a `NOTICE` or an SBOM of third-party licences.
 - CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
   The *image* half is now **ADR-0034 (Accepted 2026-08-06)**: `redpandadata/redpanda:v26.1` was never a published
   tag, because a floor written as a bare minor is not a pullable pin. Still open here: the *toolchain*
