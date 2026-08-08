@@ -98,6 +98,15 @@ jobs:
       - name: dispatch scope CI tests
         run: ./scripts/test-dispatch-scope-ci.sh
 
+      # SPEC-0014 AC8: the flag audit binds on Linux too, so a contributor with no Mac finds a GNU-only
+      # construct here rather than on the macOS lane. Part 3 — the userland assertion — does not apply
+      # on this OS and the gate says so on its own output line rather than passing silently.
+      - name: shell portability audit
+        run: ./scripts/check-shell-portability.sh
+
+      - name: shell portability tests
+        run: ./scripts/test-shell-portability.sh
+
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
@@ -142,3 +151,46 @@ jobs:
 
       - name: policy gates
         run: ./scripts/check-policies.sh
+
+  # SPEC-0014, T-0003 AC4. The macOS half of "works on macOS and Linux" had never run on macOS; what
+  # stood in for it was a bash:3.2 container that is Alpine plus busybox, with no lineage to Darwin.
+  # This is the real thing, and it is free because the repo is public.
+  #
+  # A SEPARATE JOB, WHICH MEANS A SEPARATE REQUIRED-CHECK CONTEXT. The `docs gates` name above is
+  # registered in this repo's `main-integrity` ruleset; this job's name is registered alongside it by
+  # the super-repo's scripts/apply-rulesets.sh. Until `make rulesets-apply` runs, this lane reports
+  # but does not block — the gap is named here rather than discovered later.
+  portability:
+    name: macOS portability
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Part 3 of the gate asserts the bash and the userland before anything else runs, so a runner
+      # image that put Homebrew's GNU coreutils ahead of /usr/bin fails here loudly instead of
+      # quietly turning this lane into a second Linux one.
+      - name: shell portability gate
+        run: ./scripts/check-shell-portability.sh
+
+      # Parsing proves no bash-4 syntax; running proves no bash-4 behaviour and no GNU userland
+      # dependency. The two defects the 2026-08 audit found were both invisible to parsing — one
+      # aborted this repo's docs gate outright, the other failed silently inside a `|| echo unknown`.
+      - name: docs gates on BSD
+        run: ./scripts/check-docs.sh
+
+      - name: agent surface freshness on BSD
+        run: ./scripts/check-agent-surfaces-fresh.sh
+
+      - name: ceremony tier tests on BSD
+        run: ./scripts/test-ceremony-tier.sh
+
+      - name: dispatch scope tests on BSD
+        run: ./scripts/test-dispatch-scope.sh
+
+      - name: dispatch scope CI tests on BSD
+        run: ./scripts/test-dispatch-scope-ci.sh
+
+      # The positive control for part 3 that Linux cannot supply: on this runner the userland really
+      # is BSD, so the assertion has to pass rather than being stubbed into passing.
+      - name: shell portability tests on BSD
+        run: ./scripts/test-shell-portability.sh

@@ -1,6 +1,6 @@
 # SPEC-0014: Shell portability gate (macOS lane)
 
-- **Status:** Proposed
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** process (CI + super-repo tooling — no runtime code)
 - **ADRs:** 0024 (Minikube local dev — "one cross-platform tool (macOS/Linux/Windows), no macOS
@@ -116,43 +116,101 @@ would have to keep in sync.
 
 ## Acceptance criteria (each becomes a test)
 
+Unticked boxes below are the ones that **need a Mac to answer**, and they stay unticked until a
+green `macOS portability` run exists. That is the whole point of the spec; ticking them from a Linux
+run would be the fabrication AC4 has twice refused.
+
 - [ ] **AC1:** On a `macos-latest` runner, every tracked `*.sh` in the repo parses under the system
-      bash, and the run prints the bash path and version it used.
-- [ ] **AC2:** The gate **fails** — not skips, not warns — if that bash does not report `3.2`.
-      Verified by a negative control that forces a different bash and observes a non-zero exit.
-- [ ] **AC3:** The gate **fails** if `find`, `stat`, `sed`, `readlink` or `date` on `PATH` is the GNU
-      implementation. Verified by a negative control that puts a GNU tool ahead of `/usr/bin`.
-- [ ] **AC4:** The GNU-only flag audit reads one codified list; adding a flag to that list is the
-      only edit required to extend it.
-- [ ] **AC5:** A script containing `find -printf` fails the gate. Confirmed **failing against the
-      unfixed gate before the fix is trusted** — SPEC-0013's twenty tests all passed while a live
-      defect made them meaningless, and no fixture here is believed until it has been seen to fail.
+      bash, and the run prints the bash path and version it used. *Needs the run.*
+- [x] **AC2:** The gate **fails** — not skips, not warns — if that bash does not report `3.2`.
+      Verified by a negative control that forces a different bash and observes a non-zero exit, and
+      by its mirror: a stub reporting 3.2.57 makes the bash complaint disappear while the userland
+      one remains, so the assertion is not a blanket refusal.
+- [x] **AC3:** The gate **fails** if `find`, `stat`, `sed`, `readlink` or `date` on `PATH` is the GNU
+      implementation. `PORTABILITY_STRICT=1` on Linux is that control and reports all five.
+- [x] **AC4:** The GNU-only flag audit reads one codified list — `portability-flags.tsv`, 17
+      patterns; adding a flag to that list is the only edit required to extend it.
+- [x] **AC5:** A script containing `find -printf` fails the gate. Confirmed by deleting that row
+      from the list and observing the same fixture exit 0 — the detection is the pattern's doing and
+      not the fixture's.
 - [ ] **AC6:** Each repo's existing shell gates execute on the macOS lane and pass, against the BSD
-      userland rather than a container's.
-- [ ] **AC7:** Scripts that cannot run on macOS are declared **with their reason** and are excluded
+      userland rather than a container's. *Needs the run.*
+- [x] **AC7:** Scripts that cannot run on macOS are declared **with their reason** and are excluded
       from execution only. Every one of them is still parsed.
-- [ ] **AC8:** The same gate runs on the Linux lane and passes, so the flag audit binds for
-      contributors with no Mac.
+- [x] **AC8:** The same gate runs on the Linux lane and passes, so the flag audit binds for
+      contributors with no Mac. Green in all five repos: 18, 19, 5, 5 and 6 scripts respectively.
 - [ ] **AC9:** `sort -z` is resolved: either macOS `sort` accepts it or it does not, recorded as a
-      fact rather than as the open hedge the record currently carries.
+      fact rather than as the open hedge the record currently carries. *Needs the run.* The
+      construct itself is already gone from `dev-up.sh`; what is unresolved is the claim about
+      Darwin, and only Darwin can settle it.
 - [ ] **AC10:** T-0003 AC4 cites the green run. If the lane is red, AC4 stays open and names what
       failed — a red lane is a finding, not a reason to soften the criterion.
 
-## Open questions
+## Resolutions
 
-1. **Does the macOS lane block merges, or report?** Blocking is the honest reading of AC4 — an
-   unenforced gate is the arrangement this spec exists to replace. The cost is that a runner-image
-   change can block five repos at once, and the environment assertions in part 3 are deliberately
-   brittle. Recommendation: **blocking**, on the grounds that a portability gate nobody must satisfy
-   restates the current situation with more YAML.
-2. **All five repos, or the super-repo only?** Per-repo catches the defect in the PR that introduces
-   it; super-repo-only catches it later, at the pin bump, in someone else's change.
-   Recommendation: **all five**, matching SPEC-0012 and SPEC-0013.
-3. **Does `check-agent-surfaces-fresh.sh` belong on the macOS lane?** It needs all five repos checked
-   out, which only the super-repo lane has. Probably super-repo-only; the implementation should
-   confirm rather than assume.
+**Approved 2026-08-09.** All three were answered by instruction; the record keeps the distinction
+because it changes what a later reader may assume was reviewed.
+
+1. **Blocking, not reporting.** A portability gate nobody must satisfy restates the current
+   situation with more YAML. The accepted cost is that the part-3 assertions are deliberately
+   brittle, so a runner-image change can block five repos at once — which is the intended behaviour,
+   not a regrettable side effect: the alternative is a lane that goes quietly meaningless.
+
+   **This has a prerequisite the spec did not anticipate, and it is not automatic.** The macOS lane
+   is a separate job, so it is a separate required-status-check context, and contexts are registered
+   by the super-repo's `scripts/apply-rulesets.sh` against each repo's `main-integrity` ruleset
+   (ADR-0031). Until `make rulesets-apply` is run with an admin token, **every macOS lane reports
+   and does not block.** That gap is named in each workflow file rather than left to be discovered.
+
+2. **All five repos**, matching SPEC-0012 and SPEC-0013. Per-repo catches the defect in the PR that
+   introduces it; super-repo-only would catch it later, at the pin bump, inside someone else's
+   change.
+
+3. **`check-agent-surfaces-fresh.sh` runs on both lanes, and means different things on each.** In
+   governance it checks that repo's own surfaces and runs standalone, so it is on the macOS lane
+   there. In the composition it needs all five repos checked out, so the super-repo's macOS lane runs
+   it over all of them. Confirmed by running it rather than assumed.
 
 ## Implementation
 
-Not started. Blocked on approval of this spec (`docs/process/spec-driven-development.md`: Approved
-before RED).
+| File | Where | What |
+|---|---|---|
+| `check-shell-portability.sh` | all five repos | the gate: parse, audit, environment assertion |
+| `portability-flags.tsv` | all five repos | the codified list — 17 patterns |
+| `test-shell-portability.sh` | governance only | 19 cases, alongside the other three suites |
+| `.github/workflows/ci.yml` | all five repos | `macOS portability` job, plus the audit on the Linux lane |
+| `scripts/apply-rulesets.sh` | super-repo only | multiple required contexts per repo |
+
+Generated from `canonical/agent-surfaces/shared/` by the ADR-0037 pipeline. The surfaces gate goes
+from 72 files to 82.
+
+## What the implementation found
+
+**1. The gate's first real run condemned the fix that the audit it replaces had produced.**
+`bench-storage.sh` detects filesystem type by *probing* `stat -f -c %T` inside a conditional and
+falling through to a `df`+`mount` pair when it fails — which is portable, and is that shape precisely
+because the 2026-08 audit made it so. A flat "mentions a GNU flag" rule marks it a violation.
+
+That is a false positive with a real lesson in it: **the pattern list is a proxy**, and the proxy is
+wrong for a GNU construct guarded by a portable fallback. The answer is a waiver marker
+(`# portability-ok: <reason>`) that binds to one line or the line above it, requires a reason, and is
+**printed on every run and counted in the summary**. A waiver you cannot see in the log is an
+exemption; one you cannot avoid reading is a declaration.
+
+**2. The pattern list cannot live inside the gate.** A heredoc of these patterns would be scanned by
+the gate that contains it, and every entry would report itself. SPEC-0013 shipped that defect one
+level down — a `Scope:` parser that enforced the example inside its own PR body. Here the cheaper fix
+exists: a `.tsv` is not a `*.sh`, so nothing self-matches and the gate audits its own source honestly
+rather than by exemption.
+
+**3. A test asserted a syntax error that was not one.** The first draft's parse-half fixture was
+`if [ -z "$x" ; then …`, which *looks* broken and is not: `[` is a command, so a missing `]` is a
+runtime failure `bash -n` correctly says nothing about. The case passed the gate and was caught by
+running it, not by reading it — the same shape as SPEC-0013's finding that a fixture which cannot
+distinguish the mechanism from the outcome is not testing the mechanism. Every detection case here
+was afterwards re-run with its pattern removed from the list and confirmed to stop firing.
+
+**4. One control cannot exist on Linux, and was not faked.** The *passing* side of the part-3
+assertion needs a real BSD userland at `/usr/bin`; a stub anywhere else is rejected by the same path
+check it would be trying to satisfy. Making that test pass would have meant weakening the assertion.
+The macOS lane is that control, and the suite says so where the missing case would have been.

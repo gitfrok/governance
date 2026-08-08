@@ -14,3 +14,5 @@ shared/dispatch-pre-commit.sh	scripts/dispatch-pre-commit.sh
 shared/dispatch-worktree.sh	scripts/dispatch-worktree.sh
 shared/check-dispatch-scope.sh	scripts/check-dispatch-scope.sh
 shared/lib-pr-declaration.sh	scripts/lib-pr-declaration.sh
+shared/check-shell-portability.sh	scripts/check-shell-portability.sh
+shared/portability-flags.tsv	scripts/portability-flags.tsv
