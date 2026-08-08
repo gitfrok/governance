@@ -1,6 +1,6 @@
 # SPEC-0014: Shell portability gate (macOS lane)
 
-- **Status:** Approved
+- **Status:** Approved (implemented)
 - **Owner:** platform
 - **Context(s):** process (CI + super-repo tooling — no runtime code)
 - **ADRs:** 0024 (Minikube local dev — "one cross-platform tool (macOS/Linux/Windows), no macOS
@@ -116,12 +116,13 @@ would have to keep in sync.
 
 ## Acceptance criteria (each becomes a test)
 
-Unticked boxes below are the ones that **need a Mac to answer**, and they stay unticked until a
-green `macOS portability` run exists. That is the whole point of the spec; ticking them from a Linux
-run would be the fabrication AC4 has twice refused.
+**All ten are met.** Four of them needed a Mac and stayed unticked until one existed; they were
+closed on 2026-08-09 by [gitfrok/governance 31281070520](https://github.com/gitfrok/governance/actions/runs/31281070520)
+and [gitfrok/gitfrok 31281355398](https://github.com/gitfrok/gitfrok/actions/runs/31281355398).
 
-- [ ] **AC1:** On a `macos-latest` runner, every tracked `*.sh` in the repo parses under the system
-      bash, and the run prints the bash path and version it used. *Needs the run.*
+- [x] **AC1:** On a `macos-latest` runner, every tracked `*.sh` in the repo parses under the system
+      bash, and the run prints the bash path and version it used —
+      `GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)`, by way of `/bin/bash`.
 - [x] **AC2:** The gate **fails** — not skips, not warns — if that bash does not report `3.2`.
       Verified by a negative control that forces a different bash and observes a non-zero exit, and
       by its mirror: a stub reporting 3.2.57 makes the bash complaint disappear while the userland
@@ -133,18 +134,21 @@ run would be the fabrication AC4 has twice refused.
 - [x] **AC5:** A script containing `find -printf` fails the gate. Confirmed by deleting that row
       from the list and observing the same fixture exit 0 — the detection is the pattern's doing and
       not the fixture's.
-- [ ] **AC6:** Each repo's existing shell gates execute on the macOS lane and pass, against the BSD
-      userland rather than a container's. *Needs the run.*
+- [x] **AC6:** Each repo's existing shell gates execute on the macOS lane and pass, against the BSD
+      userland rather than a container's: `docs: OK (113 files checked)`, `dep-direction: OK`,
+      `version-floors: OK`, `agent surfaces: OK (82 files across 5 repos)`, and all four governance
+      suites. The docs gate is the one the 2026-08 audit found would have aborted outright on macOS.
 - [x] **AC7:** Scripts that cannot run on macOS are declared **with their reason** and are excluded
       from execution only. Every one of them is still parsed.
 - [x] **AC8:** The same gate runs on the Linux lane and passes, so the flag audit binds for
       contributors with no Mac. Green in all five repos: 18, 19, 5, 5 and 6 scripts respectively.
-- [ ] **AC9:** `sort -z` is resolved: either macOS `sort` accepts it or it does not, recorded as a
-      fact rather than as the open hedge the record currently carries. *Needs the run.* The
-      construct itself is already gone from `dev-up.sh`; what is unresolved is the claim about
-      Darwin, and only Darwin can settle it.
-- [ ] **AC10:** T-0003 AC4 cites the green run. If the lane is red, AC4 stays open and names what
-      failed — a red lane is a finding, not a reason to soften the criterion.
+- [x] **AC9:** `sort -z` is resolved. `AC9: macOS sort ACCEPTS -z (as FreeBSD-derived sort does)` —
+      so it was never a macOS defect. It was still right to remove it from `dev-up.sh`, where it was
+      cosmetic and cost nothing to drop, but the record no longer carries an unresolved claim.
+- [x] **AC10:** T-0003 AC4 cites both green runs and is closed, **with its one residual named in the
+      same entry**: `dev-up.sh` and `smoke-dev.sh` were parsed on Darwin, not executed there, because
+      a cluster bring-up needs a hypervisor a hosted runner has not got. That is a hypervisor
+      question, not a portability one — and it is written down rather than left to be inferred.
 
 ## Resolutions
 
