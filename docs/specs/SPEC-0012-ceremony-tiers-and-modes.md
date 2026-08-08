@@ -1,6 +1,6 @@
 # SPEC-0012: Ceremony tiers & session modes
 
-- **Status:** Approved
+- **Status:** Approved (implemented)
 - **Owner:** platform
 - **Context(s):** process (governance only — no runtime code)
 - **ADRs:** 0037 (decision 7 requires this spec before anything is adopted), 0039 (the flow this
@@ -92,35 +92,62 @@ amended.
 
 ## Acceptance criteria (each becomes a test)
 
-- [ ] **AC1:** A PR declaring `Ceremony: quick` whose diff changes a `.go`, `.ts`, or `.astro` file
+- [x] **AC1:** A PR declaring `Ceremony: quick` whose diff changes a `.go`, `.ts`, or `.astro` file
       outside `*_test.go` / `*.test.ts` fails the gate, and the failure names `full` or `bugfix` as
       the valid tiers.
-- [ ] **AC2:** A PR declaring `Ceremony: bugfix` whose diff spans two submodules fails the gate,
+- [x] **AC2:** A PR declaring `Ceremony: bugfix` whose diff spans two submodules fails the gate,
       citing invariant 23.
-- [ ] **AC3:** A PR declaring `Ceremony: quick` or `bugfix` whose diff touches any security-relevant
+- [x] **AC3:** A PR declaring `Ceremony: quick` or `bugfix` whose diff touches any security-relevant
       path fails the gate and names the path that forced `full`.
-- [ ] **AC4:** A PR with no `Ceremony:` line is treated as `full` and the gate passes without the
+- [x] **AC4:** A PR with no `Ceremony:` line is treated as `full` and the gate passes without the
       declaration — absence never grants a waiver.
-- [ ] **AC5:** A PR declaring `Ceremony: bugfix` passes only if the diff adds or modifies at least one
+- [x] **AC5:** A PR declaring `Ceremony: bugfix` passes only if the diff adds or modifies at least one
       test file. A bugfix with no test is a failure, not a warning.
-- [ ] **AC6:** The gate hard-fails, rather than skipping, when it cannot determine the diff — for
+- [x] **AC6:** The gate hard-fails, rather than skipping, when it cannot determine the diff — for
       example on a shallow clone with no merge base.
-- [ ] **AC7:** `docs/process/modes.md` exists, is indexed, and states in its own text that a mode
+- [x] **AC7:** `docs/process/modes.md` exists, is indexed, and states in its own text that a mode
       never changes a requirement. No script reads it.
-- [ ] **AC8:** `docs/process/agdd.md` and `docs/process/definition-of-done.md` state where tiers
+- [x] **AC8:** `docs/process/agdd.md` and `docs/process/definition-of-done.md` state where tiers
       apply, so the spec requirement and its exceptions are described in the same place rather than
       only here.
 
-## Open questions
+## Resolutions (answered by the implementation)
 
-1. **Who may declare `quick`?** Anyone opening a PR, or only after a reviewer agrees? Self-declaration
-   is faster and is what the gate assumes; requiring agreement makes the tier useless for the
-   one-line fixes it exists for. Leaning self-declared and gate-checked.
-2. **Should the tier live in the commit message rather than the PR body?** The commit is the durable
-   record and the PR body is not; against that, the gate runs on a PR and squash-merge rewrites the
-   message anyway.
-3. **Is `quick` distinguishable from `bugfix` in practice**, or does one of them absorb the other? A
-   docs typo and a one-line defect fix feel different but may not need different rules.
-4. **Does the security-relevant path list belong here or in `invariants.md`?** Here it is a spec
-   detail that changes with the tree; there it is a rule. It is currently a spec detail, which means
-   changing it does not need an ADR — that may be too easy.
+The four questions this spec opened are answered below. Implementation forced each one — none could
+be deferred past writing the gate.
+
+1. **Who may declare `quick`?** **Self-declared, gate-checked.** Requiring a reviewer to agree first
+   would make the tier useless for the one-line fixes it exists for — the round trip costs more than
+   the ceremony it saves. The mitigation is that the declaration is not trusted: the gate asserts the
+   diff is entitled to the tier, so a wrong declaration is a red build rather than a quiet waiver.
+
+2. **Commit message or PR body?** **PR body.** The gate runs on a pull request and that is where CI
+   can read the declaration; squash-merge rewrites the message anyway, so the commit was never the
+   durable record it looked like. The cost is real and worth naming: after the squash the tier is not
+   in git history, only in the PR. If that becomes a problem the fix is to have the merge commit carry
+   it, not to move the declaration.
+
+3. **Are `quick` and `bugfix` distinct?** **Yes, and they waive for different reasons.** `quick`
+   waives the spec because there is no behaviour to specify. `bugfix` waives the *separate* spec
+   because the failing test is the specification — and therefore *requires* that test, which `quick`
+   does not. Collapsing them would either force a test onto a docs typo or let a defect fix ship
+   without one.
+
+4. **Where does the security-path list live?** **In the gate, not in `invariants.md`.** The list
+   tracks the tree's layout — `policies/`, `contracts/`, `.github/workflows/`, and path substrings
+   like `authz`, `tenant`, `rls`, `audit` — and layout changes without any decision changing. Putting
+   it in `invariants.md` would mean an ADR to add a directory. What belongs in governance prose is the
+   *rule*, and that is now in `../process/definition-of-done.md` and `../process/agdd.md`: a
+   security-relevant change takes `full`. The list is reviewed like any other code, and it is
+   deliberately over-broad, so the failure mode of getting it wrong is a spec nobody needed.
+
+## Implementation
+
+`scripts/check-ceremony-tier.sh` — generated into all five repos from
+`canonical/agent-surfaces/shared/` by the ADR-0037 pipeline, so there is one source and drift fails
+`make surfaces-check`. Tested by `scripts/test-ceremony-tier.sh`, which builds a throwaway git repo
+per case and asserts the exit code: 13 cases, one or more per acceptance criterion above.
+
+`docs/process/modes.md` carries the modes (AC7). `agdd.md` and `definition-of-done.md` state where
+tiers apply (AC8), so the spec requirement and its exceptions are described together rather than only
+here.

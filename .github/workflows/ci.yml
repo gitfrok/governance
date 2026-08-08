@@ -62,6 +62,22 @@ jobs:
       - name: agent surface freshness
         run: ./scripts/check-agent-surfaces-fresh.sh
 
+      # SPEC-0012: the ceremony tier a PR declares must match what its diff does. The tier is read
+      # from the PR body, so this only has something to assert on a pull_request event — on a push
+      # to main there is no declaration and the gate is not the right place to invent one.
+      # fetch-depth: 0 above is what makes the diff resolvable; without it this exits 3 rather than
+      # passing quietly.
+      - name: ceremony tier
+        if: github.event_name == 'pull_request'
+        run: ./scripts/check-ceremony-tier.sh
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          CEREMONY_BASE: origin/${{ github.base_ref }}
+
+      # The gate is only worth having if it behaves; SPEC-0012's acceptance criteria are its tests.
+      - name: ceremony tier tests
+        run: ./scripts/test-ceremony-tier.sh
+
       # T-0020 / ADR-0032: contracts/ is the only shared surface, and every consumer generates from
       # it. Pinned rather than floating — a linter that changes its mind between runs is a gate
       # whose verdict depends on the day.
