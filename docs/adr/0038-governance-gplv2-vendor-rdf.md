@@ -1,6 +1,6 @@
 # ADR-0038: License `governance` under GPL v2 and vendor RDF into it — and do not extend GPL v2 to the code repos yet
 
-- **Status:** Proposed
+- **Status:** Superseded by ADR-0039
 - **Date:** 2026-08-08
 - **Deciders:** platform
 - **Governs:** G7 process integrity — ADR-0037 phase 2 cannot start while the licence of the tree it
