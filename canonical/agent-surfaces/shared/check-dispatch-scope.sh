@@ -98,12 +98,19 @@ else
     case "$f" in "$want_repo"/*) rel=${f#"$want_repo"/} ;; esac
 
     matched=0
-    # Word-split on purpose: the glob list is space-separated and each entry must stay a pattern.
+    # `set -f` is load-bearing. Unquoted $want_paths needs word-splitting — the list is
+    # space-separated — but WITHOUT it bash also does pathname expansion, so a glob like `.github/**`
+    # is replaced by whatever files happen to exist before it is ever used as a pattern. That is not
+    # theoretical: it is how this check rejected `.github/workflows/ci.yml` against a scope that
+    # plainly covered it, and why the first version's tests passed by coincidence — their fixtures
+    # expanded to exactly the file being tested.
+    set -f
     # shellcheck disable=SC2086
     for glob in $want_paths; do
       # shellcheck disable=SC2254
       case "$rel" in $glob) matched=1; break ;; esac
     done
+    set +f
     [ "$matched" -eq 1 ] || report "$f is outside the declared scope: $want_paths"
   done <<<"$changed"
 fi
