@@ -7,3 +7,4 @@ shared/agent-engineer.md	.claude/agents/gitfrok-engineer.md
 shared/agent-qa.md	.claude/agents/gitfrok-qa.md
 shared/agent-reviewer.md	.claude/agents/gitfrok-reviewer.md
 shared/agent-uat.md	.claude/agents/gitfrok-uat.md
+shared/check-ceremony-tier.sh	scripts/check-ceremony-tier.sh
