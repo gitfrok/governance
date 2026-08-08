@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# portability-ok: too far away to bind
+echo unrelated
+find . -printf "%f\n"
