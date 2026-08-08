@@ -1,6 +1,6 @@
 # T-0003: Minikube dev environment
 
-- **Status:** In progress — **AC1, AC2 and AC4-on-Linux verified**; AC3's ingress half verified and its host-DNS half still unwired (root); AC4's macOS half still needs a macOS (see the record)
+- **Status:** In progress — **AC1, AC2 and AC4-on-Linux verified**; AC3's ingress half verified and its host-DNS half wired for **one name, by hand** (`/etc/hosts`), not for the `*.gitsaas.test` wildcard the criterion asks for; AC4's macOS half still needs a macOS (see the record)
 - **Phase / Epic:** 0 / EP-1
 - **Repo(s):** super-repo (`Makefile`, `deploy/dev/`)
 - **Spec:** chore — acceptance criteria below
@@ -54,11 +54,12 @@ One-command local cluster matching prod topology, with real TLS.
   All six deployments Available on the current pins, `rpk version: v26.2.1` confirmed in-container,
   and every pinned image resolves with `CHECK_IMAGE_RESOLVE=1`.
 - [~] AC3: Services are reachable at `*.gitsaas.test` over HTTPS via a mkcert wildcard secret.
-  **Verified over the real ingress path, under rootless podman, with no `port-forward`** —
-  `GET https://hello.gitsaas.test/` returns `http_code=200`, `ssl_verify_result=0` (validated against
-  the mkcert CA, never `curl -k`) and the hello fixture, hitting `127.0.0.1:443`. Left at `[~]` for
-  one reason only: **host DNS is still unwired**, so that request is made with `curl --resolve`.
-  Wiring it needs root and touches system DNS, which `dev-up.sh` prints rather than does.
+  **Verified over the real ingress path, under rootless podman, with no `port-forward` and — as of
+  2026-08-08 — no `curl --resolve` either.** `GET https://hello.gitsaas.test/` returns
+  `http_code=200`, `ssl_verify_result=0` (validated against the mkcert CA, never `curl -k`) and the
+  hello fixture, hitting `127.0.0.1:443`. Left at `[~]` because the name that resolves is **one
+  name**, not the wildcard the criterion is written in terms of — see "Host DNS: one name, not the
+  wildcard" below.
 
   **The previous entry here was wrong, and the correction is the point.** It said AC3 "needs a rootful
   driver or KVM". The evidence behind that — the node IP being unroutable from the host under rootless
@@ -83,6 +84,41 @@ One-command local cluster matching prod topology, with real TLS.
   `/dev/tcp` connect to the controller pod succeeded on both 80 and 443 at the same moment `curl` to
   those ports timed out. Pinning `worker-processes=2` in the `ingress-nginx-controller` ConfigMap fixed
   it, and `dev-up.sh` now does that on every run.
+
+  **Host DNS: one name, not the wildcard (2026-08-08).** `smoke-dev.sh` now takes its `rc=0` branch —
+  the direct one, with no `--resolve` anywhere — and reports `smoke: OK` for all four of its checks:
+
+  ```
+  ok    secret/gitsaas-tls present
+  ok    ingress-nginx worker-processes pinned to 2
+  ok    GET https://hello.gitsaas.test/ -> 200 on all 6 probes, certificate validated against the mkcert CA
+  ok    response body is the hello fixture
+  ```
+
+  What made that possible is a single line in `/etc/hosts` — `127.0.0.1 hello.gitsaas.test` — added by
+  hand, with root, from the snippet `dev-up.sh` prints. That is worth stating precisely, because the
+  gap between it and AC3 as written is the whole reason this stays `[~]`:
+
+  - **`/etc/hosts` cannot express a wildcard.** It maps names, one line each. AC3 asks for
+    `*.gitsaas.test`, and what is wired is `hello.gitsaas.test`. The ingress defines four hosts —
+    `hello`, `zitadel`, `s3`, `filer` — and **only `hello` resolves on this host.** The other three
+    still need `--resolve`, exactly as before.
+  - **The rest of the wildcard is verified; only its DNS is not.** Pinned to `127.0.0.1`, all four
+    hosts reach the ingress and validate against the mkcert CA: `hello` 200, `s3` 200, `filer` 200,
+    `zitadel` 302 (its own redirect — the ingress was reached and answered). The secret's certificate
+    carries `X509v3 Subject Alternative Name: DNS:*.gitsaas.test`, a real wildcard, and
+    `ssl_verify_result=0` on every one of the four. So the wildcard *certificate* and the wildcard
+    *routing* are both real; what is missing is a resolver that answers for the whole TLD.
+  - **It is host state, not repo state.** Nothing in the four repos changed to produce this run, and
+    `dev-up.sh` still prints the DNS snippet rather than applying it (it touches system DNS and needs
+    root — the same treatment it gives `mkcert -install` and the inotify sysctl). A fresh checkout on
+    a fresh machine gets the `rc=6` branch and its "host DNS is not wired" message, unchanged. Closing
+    AC3 wants the dnsmasq / systemd-resolved / `/etc/resolver` route that answers for `.test` as a
+    whole, which is the snippet's other half.
+
+  Stated as the split, since "smoke is green" is the sentence that will get quoted onward: **AC3's
+  ingress, TLS and wildcard-certificate halves are verified for all four hosts; its host-DNS half is
+  verified for one host, by a manual step, and remains unwired as a wildcard.**
 - [x] AC4: No OrbStack and no Docker Compose anywhere; works on macOS and Linux. **Verified for
   Linux** — it ran. No compose files exist and every OrbStack/Compose mention in the tree is a
   prohibition.
@@ -163,6 +199,7 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
 | super-repo | `b7d1663` (#45) | macOS portability audit: `sort -z` dropped, `bench-storage.sh`'s silently-inert RAM-disk guard fixed |
 | governance | `9667a36` (#39) | `check-docs.sh` no longer uses GNU `find -printf`, which aborted this repo's docs gate on macOS |
 | super-repo | `a126acd` (#47) | create path completed: `--container-runtime=containerd` pinned, orphaned-volume sweep, ingress ports published so AC3 needs no rootful driver, and `worker-processes=2` pinned on the ingress-nginx ConfigMap so requests stop hanging |
+| super-repo | `8de701f` (#49) | `smoke-dev.sh` probes ingress six times instead of once, so an intermittent 200 fails the run instead of passing it; `--resolve` fallback tries the published loopback before the node IP |
 
 ### What the first run found (2026-08-06)
 
@@ -191,6 +228,13 @@ services could not have started:
 `*.gitsaas.test` path both need a host with a rootful container driver or KVM; macOS needs a macOS.
 The environment used here — rootless podman, no `/dev/kvm`, no passwordless sudo — can verify
 everything else, and now has.
+
+> **Superseded — this paragraph's conclusion is wrong and is kept only as the record of what was
+> believed on 2026-08-06.** Neither AC1 nor AC3 needed a rootful driver or KVM. AC1's create path ran
+> to completion on this same rootless-podman host once the inotify limit, the stale volume and the
+> missing `--container-runtime` were fixed; AC3 reaches the ingress on this same host once the node's
+> 80/443 are published. See the AC1 and AC3 entries above, which carry the evidence and the retraction.
+> Do not quote this paragraph forward.
 
 ### Added by T-0005 (2026-08-06): the manifests do not mount the policy bundle
 
