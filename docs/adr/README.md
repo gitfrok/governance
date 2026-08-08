@@ -60,9 +60,15 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0034](0034-image-pins-are-resolvable-patch-tags.md) | Image pins are fully-qualified, resolvable, patch-level tags | Accepted |
 | [ADR-0035](0035-first-party-images-scratch-digest-signed.md) | First-party images: `scratch` base, digest-referenced, cosign-signed | Accepted |
 | [ADR-0036](0036-resolvability-over-vendor-registry.md) | When a vendor registry cannot be verified, prefer the one that can | Accepted |
-| [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Proposed |
+| [ADR-0037](0037-rdf-agent-surface-generation.md) | Agent surfaces are generated from governance (RDF canonical-first), not hand-maintained | Accepted |
+| [ADR-0038](0038-governance-gplv2-vendor-rdf.md) | `governance` is GPL v2 and vendors RDF; the code repos' licence stays open | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
+- **Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0038.** They carry no
+  `LICENSE` today. ADR-0038 licenses **only** `governance` (GPL v2, so RDF can be vendored) and
+  deliberately stops there: GPL v2 *only* is incompatible with the Apache-2.0 dependencies that
+  ADR-0006 (OPA) and ADR-0014 (Zoekt) mandate, inside binaries ADR-0009 distributes to BYO customers.
+  GPL v3 / AGPL v3 / permissive / source-available is an open decision needing its own ADR.
 - CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
   The *image* half is now **ADR-0034 (Accepted 2026-08-06)**: `redpandadata/redpanda:v26.1` was never a published
   tag, because a floor written as a bare minor is not a pullable pin. Still open here: the *toolchain*
