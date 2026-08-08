@@ -20,21 +20,15 @@ report() { echo "DOCS VIOLATION: $1"; fail=1; }
 
 # Collect the Markdown files once, NUL-delimited so a path with a space cannot split.
 #
-# Two trees are pruned, both because their links are not ours to resolve:
-#   tools/rdf/                  vendored upstream (ADR-0038). Its links point into an upstream
-#                               layout we deliberately did not vendor in full — its UPSTREAM file
-#                               lists what was left out. Reporting those as our dead links would be
-#                               noise, and "fixing" them would be a local patch to vendored code.
-#   canonical/agent-surfaces/   templates, not documents. Their links are relative to where the
-#                               generated file lands, not to where the template sits, so resolving
-#                               them from here is the wrong question. The generated output is a real
-#                               file in this repo and is checked below like any other.
+# canonical/agent-surfaces/ is pruned because those files are templates, not documents. Their links
+# are relative to where the generated file lands, not to where the template sits, so resolving them
+# from here is the wrong question. The generated output is a real file in this repo and is checked
+# below like any other.
 docs=()
 while IFS= read -r -d '' f; do
   docs+=("$f")
 done < <(find . -type f -name '*.md' \
   -not -path './.git/*' \
-  -not -path './tools/rdf/*' \
   -not -path './canonical/agent-surfaces/*' \
   -print0)
 

@@ -70,9 +70,19 @@ genuinely per-repo — `AGENTS.md` is where a repo says what *it* owns — and f
 fragments would trade real duplication for fake abstraction. They live here for the gate, not for
 deduplication. When a rule does start repeating, move it into `fragments/` then.
 
-## Method, not runtime
+## The flow (ADR-0039 decision 3)
 
-The canonical-first, adapter-delivered, drift-gated shape is RDF's (`tools/rdf/`, ADR-0038):
-read from canonical, write to output, never modify canonical. We do not run `bin/rdf` — the
-generator here is ours and so is every word it emits. RDF supplies the pattern and the licence
-obligation that comes with deriving from it.
+1. A rule is authored **once**, here, next to the invariant it implements.
+2. Every runtime's surface is **generated** from that source — no file is hand-written twice.
+3. Generation is **byte-deterministic**, so drift is a diff and a diff fails CI.
+4. Generated output is **committed and reviewed** like any other file. Never gitignored, never
+   "working files", never excluded from the record.
+5. Output crossing a repo boundary follows **ADR-0027's ordered workflow**; one commit never spans
+   two submodules (invariant 23).
+
+The generator obeys one contract: read from canonical, write to output, never modify canonical.
+
+Everything here is ours — no third-party code is vendored in this repo (ADR-0039 decision 2), and
+`gen-agent-surfaces.sh` was written from scratch. Points 4 and 5 are worth noticing: published
+frameworks in this space tend to gitignore their generated governance and assume a single repo.
+Neither is available to us, and neither should be.

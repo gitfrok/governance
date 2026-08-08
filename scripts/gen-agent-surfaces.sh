@@ -7,8 +7,9 @@
 # CLAUDE.md files kept whatever they said before. The rule is now written once, in
 # canonical/agent-surfaces/, and every runtime's copy is generated from it.
 #
-# The contract is RDF's (tools/rdf/, ADR-0038): read from canonical, write to output, never modify
-# canonical. What RDF supplies is the method; the content is ours.
+# The contract (ADR-0039 decision 3): read from canonical, write to output, never modify canonical.
+# Generation is byte-deterministic, so drift is a diff and a diff fails CI, and the output is
+# committed and reviewed like any other file rather than gitignored.
 #
 # Usage:
 #   scripts/gen-agent-surfaces.sh [--scratch] <out-root> [repo ...]
