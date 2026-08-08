@@ -72,6 +72,39 @@ case_run "invariant 23 caught even at Ceremony: full" 1 "Ceremony: full" \
 case_run "one submodule is fine" 0 "no declaration here" \
   .gitmodules backend/a -- backend/a
 
+# A pin bump moves several gitlinks at once and is not a span. ADR-0027 rule 5 requires it, and the
+# gate used to reject it — its error message told the author to follow the exact workflow it was
+# blocking. Only files INSIDE a submodule count.
+#
+# Real 160000 index entries, not stand-in files: the whole point is that a gitlink and a path under
+# the same name are different things, so a fixture using ordinary files would prove nothing.
+tmp=$(mktemp -d)
+(
+  cd "$tmp"; git init -q -b main .; git config user.email t@t; git config user.name t
+  printf '[submodule "backend"]\n\tpath = backend\n\turl = ../backend.git\n[submodule "bff"]\n\tpath = bff\n\turl = ../bff.git\n' > .gitmodules
+  sha=$(printf x | git hash-object -w --stdin)
+  tree=$(printf '100644 blob %s\tf\n' "$sha" | git mktree)
+  c1=$(git commit-tree "$tree" -m one); c2=$(git commit-tree "$tree" -m two)
+  git update-index --add --cacheinfo 160000,"$c1",backend
+  git update-index --add --cacheinfo 160000,"$c1",bff
+  git add .gitmodules; git commit -qm base
+  git update-ref refs/remotes/origin/main HEAD
+  # Both pointers move — the ordinary shape of a cross-repo change landing.
+  git update-index --cacheinfo 160000,"$c2",backend
+  git update-index --cacheinfo 160000,"$c2",bff
+  git commit -qm "bump two pins"
+) >/dev/null 2>&1
+mkdir -p "$tmp/scripts"; cp "$GATE" "$PWD/scripts/lib-submodule-scope.sh" "$PWD/scripts/lib-pr-declaration.sh" "$tmp/scripts/"
+got=0
+PR_BODY="an ordinary pin bump" SCOPE_BASE=origin/main bash -c "cd '$tmp' && ./scripts/check-dispatch-scope.sh" >"$tmp/.out" 2>&1 || got=$?
+if [ "$got" -eq 0 ]; then printf '  ok    %s\n' "two gitlink pin bumps are not a span"; pass=$((pass+1));
+else printf '  FAIL  %s — expected rc=0, got rc=%s\n' "two gitlink pin bumps are not a span" "$got"; sed 's/^/          /' "$tmp/.out"; fail=$((fail+1)); fi
+rm -rf "$tmp"
+
+# ...but two files INSIDE two submodules still is one.
+case_run "two files inside two submodules is still a span" 1 "no declaration" \
+  .gitmodules backend/a bff/b -- backend/a bff/b
+
 # Path scope, only when declared.
 case_run "declared scope, in-scope file passes" 0 "Scope: backend modules/**" \
   .gitmodules backend/modules/x.go -- backend/modules/x.go
