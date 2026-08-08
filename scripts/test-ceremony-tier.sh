@@ -33,7 +33,18 @@ case_run() {
     git init -q -b main .
     git config user.email t@t; git config user.name t
     mkdir -p .git/no-hooks; git config core.hooksPath .git/no-hooks
-    for f in "${base[@]}"; do mkdir -p "$(dirname "$f")"; echo base > "$f"; done
+    for f in "${base[@]}"; do
+      mkdir -p "$(dirname "$f")"
+      # .gitmodules must be real config, not filler. It was filler until SPEC-0013's extraction:
+      # `git config -f` exited 1 on it, the inline code died under `set -e`, and AC2 asserted rc=1 —
+      # so the case passed without ever detecting a span. A fixture that makes the code crash is not
+      # a fixture that tests the code.
+      if [ "$f" = ".gitmodules" ]; then
+        printf '[submodule "backend"]\n\tpath = backend\n\turl = ../backend.git\n[submodule "bff"]\n\tpath = bff\n\turl = ../bff.git\n' > "$f"
+      else
+        echo base > "$f"
+      fi
+    done
     echo seed > .seed
     git add -A; git commit -qm base
     # The gate diffs against origin/main; a local ref of that name is indistinguishable to it.
