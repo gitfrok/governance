@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+// Tenant-scoped credential authentication (SPEC-0016, ADR-0041).
+//
+// This is an internal Identity&Access port. Smart-HTTP and SSH use only the two
+// Authenticate methods before they route an operation to GitStorage. Authentication
+// yields a principal, never a repository location or an authorization decision; the
+// Git storage tier still asks the PDP for every operation.
+package gitsaas.identity.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/identity/v1;identityv1";
+
+import "google/protobuf/timestamp.proto";
+
+service CredentialAuthenticator {
+  // AuthenticatePAT verifies a personal-access token. A valid credential returns a
+  // tenant-scoped principal. Invalid, malformed, expired, revoked, unknown and
+  // cross-tenant credentials all return the same empty response; callers must treat
+  // an absent principal as denial and must not derive detail from it.
+  rpc AuthenticatePAT(AuthenticatePATRequest) returns (AuthenticateCredentialResponse);
+
+  // AuthenticateSSHKey resolves an already verified SSH public-key proof to the same
+  // principal shape and has the same coarse-denial behavior as AuthenticatePAT.
+  rpc AuthenticateSSHKey(AuthenticateSSHKeyRequest) returns (AuthenticateCredentialResponse);
+
+  // IssuePAT returns plaintext_token exactly once. The service persists only a keyed
+  // one-way verifier and metadata; callers must neither log nor retain plaintext_token.
+  rpc IssuePAT(IssuePATRequest) returns (IssuePATResponse);
+  rpc ListPATs(ListPATsRequest) returns (ListPATsResponse);
+  rpc RevokePAT(RevokePATRequest) returns (RevokePATResponse);
+}
+
+// Principal is the only authentication result Git front doors may use. It deliberately
+// carries no credential, repository handle, storage path, session material, or policy
+// decision.
+message Principal {
+  string tenant_id = 1;
+  string actor_id = 2;
+  repeated string roles = 3;
+}
+
+message AuthenticatePATRequest {
+  // Request-only secret. It is never copied to a response, event, log, metric, trace,
+  // audit record, or agent message.
+  string personal_access_token = 1;
+}
+
+message AuthenticateSSHKeyRequest {
+  // Public-key proof after the SSH transport has verified possession. It is not a
+  // private key and must not be used as a repository or authorization assertion.
+  bytes verified_public_key = 1;
+}
+
+message AuthenticateCredentialResponse {
+  // Absent is the one coarse denial shape. No bool or reason exists for a caller to
+  // reinterpret as permission, and no credential data is echoed.
+  Principal principal = 1;
+}
+
+message IssuePATRequest {
+  string tenant_id = 1;
+  string actor_id = 2;
+  string label = 3;
+  repeated string scope_labels = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message IssuePATResponse {
+  string pat_id = 1;
+  // The sole raw-credential response in this package. Delivered once at issuance;
+  // it is never present in list, revoke, authenticate, events, or agent messages.
+  string plaintext_token = 2;
+  PATMetadata metadata = 3;
+}
+
+message ListPATsRequest {
+  string tenant_id = 1;
+  string actor_id = 2;
+}
+
+message ListPATsResponse {
+  repeated PATMetadata pats = 1;
+}
+
+message RevokePATRequest {
+  string tenant_id = 1;
+  string actor_id = 2;
+  string pat_id = 3;
+}
+
+message RevokePATResponse {
+  PATMetadata pat = 1;
+}
+
+message PATMetadata {
+  string pat_id = 1;
+  string label = 2;
+  repeated string scope_labels = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  google.protobuf.Timestamp revoked_at = 6;
+}

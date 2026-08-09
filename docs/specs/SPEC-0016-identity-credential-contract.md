@@ -68,7 +68,9 @@ verified principal's IDs through the front door; Policy owns authorization decis
   request. A successful authentication cannot assert authorization; `git-storaged` still asks PDP.
 - [ ] AC4: Revoking a PAT or SSH key denies its next use, and token/identity lookup is tenant-scoped.
 - [ ] AC5: The generated contract exposes no filesystem path, repository ID, authorization result,
-  raw credential in a response, or agent-stream-compatible credential field.
+  raw credential in a response **except `IssuePATResponse.plaintext_token` at issuance exactly
+  once**, or agent-stream-compatible credential field. Authentication, list, revoke, events and
+  agent messages never return raw credentials.
 
 ## Governance mapping (G1–G9)
 
