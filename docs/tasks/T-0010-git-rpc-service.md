@@ -3,7 +3,8 @@
 - **Status:** Todo
 - **Phase / Epic:** 1 / MVP
 - **Repo(s):** backend (git-storaged)
-- **Spec:** docs/specs/SPEC-0004-git-storage-transport.md
+- **Spec:** docs/specs/SPEC-0004-git-storage-transport.md;
+  `SPEC-0015-git-rpc-contract.md` (**Approved when this governance PR merges**)
 - **ADRs:** 0004, 0016
 - **Owner:** unassigned
 
@@ -23,5 +24,6 @@ Serve git object/ref operations over an internal RPC on sharded, replicated stor
 See `../process/definition-of-done.md`.
 
 ## Notes / open questions
-Write the SPEC in `governance/docs/specs/` and get it Approved before RED (AGDD).
+SPEC-0015 records the Git-RPC v1 contract. Its governance PR is the approval gate before RED
+(AGDD).
 Cross-repo changes follow the ADR-0027 order (governance first).

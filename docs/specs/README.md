@@ -20,3 +20,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0012 | Ceremony tiers & session modes | Approved | — |
 | SPEC-0013 | Dispatch scope boundary & worktree isolation | Approved | — |
 | SPEC-0014 | Shell portability gate (macOS lane) | Approved | T-0003 |
+| SPEC-0015 | Git-RPC v1 contract | Approved | T-0010 |
