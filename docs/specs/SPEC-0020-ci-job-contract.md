@@ -1,6 +1,6 @@
 # SPEC-0020: CI v0 job dispatch and isolated-runner contract
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** CI/CD, Repository/Git, Identity&Access, Policy, Audit
 - **ADRs:** 0005, 0006, 0007, 0012, 0022, 0025
