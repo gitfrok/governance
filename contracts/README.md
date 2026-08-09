@@ -28,6 +28,14 @@ needs a direct response.
   (SPEC-0017); authorization remains in Repository/Git
 - `proto/ci/v1/ci.proto` — immutable CI job enqueue/read/cancel commands (SPEC-0020); runners,
   source capabilities, queue rows, and Kubernetes details remain private to CI/CD
+- `proto/codereview/v1/codereview.proto` — merge-request, review, and exact-ref branch-protection
+  commands (SPEC-0019); every authorization-sensitive command receives a PDP decision with
+  server-derived context, and no request carries an approval count, protection result, or allow flag
+- `proto/bff/v1/browser.proto` — proto-JSON shapes for the BFF tree/file/diff browser views
+  (SPEC-0021); tenant and actor are deliberately absent, and the BFF maps only from
+  RepositoryReader results
+- `events/codereview/v1/events.proto` — Code Review opened/reviewed/merged/protection-changed
+  events (SPEC-0019); Repository/Git consumes only `BranchProtectionChanged`
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)

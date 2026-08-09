@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+// Internal Code Review surface for merge requests, reviews, and exact-ref
+// branch protection (SPEC-0019).
+//
+// Code Review owns merge-request state, reviews, branch-protection records,
+// and idempotency keys. Every authorization-sensitive command receives a PDP
+// decision with server-derived context; no request carries an approval count,
+// protection result, or allow flag. Merges move the target ref through
+// Repository/Git's contract boundary, never against its storage.
+package gitsaas.codereview.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/codereview/v1;codereviewv1";
+
+import "google/protobuf/timestamp.proto";
+
+service MergeRequestService {
+  rpc CreateMergeRequest(CreateMergeRequestRequest) returns (CreateMergeRequestResponse);
+  rpc GetMergeRequest(GetMergeRequestRequest) returns (GetMergeRequestResponse);
+  rpc SubmitReview(SubmitReviewRequest) returns (SubmitReviewResponse);
+  rpc MergeMergeRequest(MergeMergeRequestRequest) returns (MergeMergeRequestResponse);
+  rpc SetBranchProtection(SetBranchProtectionRequest) returns (SetBranchProtectionResponse);
+}
+
+// ReviewCommandContext is derived from an authenticated principal by the PEP.
+// The actor ID and roles are verified server-side; a caller cannot assert
+// them. An empty or cross-tenant context is a coarse denial.
+message ReviewCommandContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  repeated string actor_roles = 4;
+  string request_id = 5;
+}
+
+enum MergeRequestState {
+  MERGE_REQUEST_STATE_UNSPECIFIED = 0;
+  MERGE_REQUEST_STATE_OPEN = 1;
+  MERGE_REQUEST_STATE_CLOSED = 2;
+  MERGE_REQUEST_STATE_MERGED = 3;
+}
+
+enum ReviewDisposition {
+  REVIEW_DISPOSITION_UNSPECIFIED = 0;
+  REVIEW_DISPOSITION_APPROVE = 1;
+  REVIEW_DISPOSITION_REQUEST_CHANGES = 2;
+  REVIEW_DISPOSITION_COMMENT = 3;
+}
+
+// MergeRequest is bounded review state. Refs are opaque refs/heads/... names
+// and version is server-assigned and positive. The message deliberately
+// excludes filesystem locations, credentials, Git pack bytes, policy outcomes,
+// approval counts, and audit sequences.
+message MergeRequest {
+  string merge_request_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  string source_ref = 4;
+  string target_ref = 5;
+  string title = 6;
+  string description = 7;
+  string creator_id = 8;
+  MergeRequestState state = 9;
+  string head_revision = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  int64 version = 13;
+}
+
+message CreateMergeRequestRequest {
+  ReviewCommandContext context = 1;
+  string source_ref = 2;
+  string target_ref = 3;
+  string title = 4;
+  string description = 5;
+}
+
+message CreateMergeRequestResponse {
+  MergeRequest merge_request = 1;
+}
+
+message GetMergeRequestRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+}
+
+message GetMergeRequestResponse {
+  MergeRequest merge_request = 1;
+}
+
+// SubmitReview supersedes the submitting actor's current review without
+// mutating prior audit evidence. head_revision pins the revision under
+// review; only an APPROVE against the merge request's current head revision
+// is a valid approval for merge policy input.
+message SubmitReviewRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+  ReviewDisposition disposition = 3;
+  string comment = 4;
+  string head_revision = 5;
+  int64 expected_version = 6;
+}
+
+message SubmitReviewResponse {
+  MergeRequest merge_request = 1;
+}
+
+// MergeMergeRequest accepts only the opaque merge-request ID and expected
+// version. It deliberately has no target ref, commit SHA, approval count,
+// policy result, or force flag: Code Review asks the PDP with server-derived
+// state and then invokes Repository/Git to perform the ref move.
+message MergeMergeRequestRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+  int64 expected_version = 3;
+}
+
+message MergeMergeRequestResponse {
+  MergeRequest merge_request = 1;
+}
+
+// BranchProtection is an exact refs/heads/... rule owned by Code Review and
+// projected by Repository/Git from BranchProtectionChanged events. Zero
+// required approvals still protects the ref from direct pushes while
+// permitting PDP-authorized merges.
+message BranchProtection {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string target_ref = 3;
+  int32 required_approvals = 4;
+  int64 version = 5;
+}
+
+// SetBranchProtection replaces the exact-ref rule for the target ref, guarded
+// by expected version. Branch-pattern syntax is intentionally absent from v1.
+message SetBranchProtectionRequest {
+  ReviewCommandContext context = 1;
+  string target_ref = 2;
+  int32 required_approvals = 3;
+  int64 expected_version = 4;
+}
+
+message SetBranchProtectionResponse {
+  BranchProtection branch_protection = 1;
+}
