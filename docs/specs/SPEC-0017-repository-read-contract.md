@@ -1,6 +1,6 @@
 # SPEC-0017: Repository read RPC contract
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** Repository/Git + BFF
 - **ADRs:** 0022, 0015, 0006, 0003
