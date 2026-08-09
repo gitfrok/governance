@@ -27,6 +27,20 @@ message OperationContext {
   string actor_id = 3;
   string request_id = 4;
   repeated string actor_roles = 5;
+  // Declares the already-authenticated client protocol framing. It is selected
+  // by a trusted front door, never by an external Git payload; unspecified is
+  // denied so storage cannot accidentally choose the wrong Git subprocess mode.
+  GitTransport transport = 6;
+}
+
+// GitTransport distinguishes SSH's stateful exchange from Smart-HTTP's
+// stateless discovery and RPC framing. All modes retain the same verified
+// principal, opaque repository handle, and GitStorage PDP enforcement.
+enum GitTransport {
+  GIT_TRANSPORT_UNSPECIFIED = 0;
+  GIT_TRANSPORT_SSH = 1;
+  GIT_TRANSPORT_SMART_HTTP_DISCOVERY = 2;
+  GIT_TRANSPORT_SMART_HTTP_RPC = 3;
 }
 
 message UploadPackRequest {
