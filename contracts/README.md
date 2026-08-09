@@ -26,6 +26,9 @@ needs a direct response.
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git
+- `proto/ci/v1/ci.proto` — immutable CI job enqueue/read/cancel commands (SPEC-0020); runners,
+  source capabilities, queue rows, and Kubernetes details remain private to CI/CD
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
+- `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)

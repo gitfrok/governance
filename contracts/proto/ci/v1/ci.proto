@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+// Internal CI/CD job commands (SPEC-0020).
+//
+// This is not a runner, Kubernetes, source, credential, or browser API. CI/CD
+// owns the queue and attempts; Repository/Git resolves immutable revisions and
+// Identity&Access issues any runner capability after admission.
+package gitsaas.ci.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/ci/v1;civ1";
+
+import "google/protobuf/timestamp.proto";
+
+service CIJobService {
+  rpc EnqueueJob(EnqueueJobRequest) returns (EnqueueJobResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+}
+
+// JobContext is derived from a verified request or RefUpdated event. It is
+// identity context for the CI PEP, not an authorization result.
+message JobContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  repeated string actor_roles = 4;
+  string request_id = 5;
+}
+
+enum JobTriggerKind {
+  JOB_TRIGGER_KIND_UNSPECIFIED = 0;
+  JOB_TRIGGER_KIND_REF_UPDATED = 1;
+  JOB_TRIGGER_KIND_MANUAL = 2;
+}
+
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_STATE_QUEUED = 1;
+  JOB_STATE_RUNNING = 2;
+  JOB_STATE_SUCCEEDED = 3;
+  JOB_STATE_FAILED = 4;
+  JOB_STATE_CANCELLED = 5;
+}
+
+// EnqueueJob accepts only the candidate ref and immutable revision. CI/CD
+// obtains the configuration digest from that revision and validates a manual
+// ref/SHA pair through Repository/Git before queueing. A RefUpdated trigger
+// copies its opaque event ID into source_event_id for duplicate-delivery
+// idempotency; manual triggers leave it empty and use request_id instead.
+message EnqueueJobRequest {
+  JobContext context = 1;
+  string ref = 2;
+  string commit_sha = 3;
+  JobTriggerKind trigger_kind = 4;
+  string source_event_id = 5;
+}
+
+message EnqueueJobResponse {
+  CIJob job = 1;
+}
+
+message GetJobRequest {
+  JobContext context = 1;
+  string job_id = 2;
+}
+
+message GetJobResponse {
+  CIJob job = 1;
+}
+
+// Cancel is a request, not a terminal-state assertion. The response becomes
+// terminal only after the runner confirms sandbox and capability cleanup.
+message CancelJobRequest {
+  JobContext context = 1;
+  string job_id = 2;
+}
+
+message CancelJobResponse {
+  CIJob job = 1;
+}
+
+// CIJob is bounded operational state. It deliberately excludes source bytes,
+// raw logs, credentials, runner capabilities, Kubernetes names, node names,
+// service-account tokens, and authorization results.
+message CIJob {
+  string job_id = 1;
+  string attempt_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string ref = 5;
+  string commit_sha = 6;
+  JobTriggerKind trigger_kind = 7;
+  JobState state = 8;
+  google.protobuf.Timestamp queued_at = 9;
+  google.protobuf.Timestamp started_at = 10;
+  google.protobuf.Timestamp finished_at = 11;
+  string configuration_digest = 12;
+  string outcome_summary = 13;
+}

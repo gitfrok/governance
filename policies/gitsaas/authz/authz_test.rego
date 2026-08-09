@@ -190,6 +190,39 @@ test_deny_member_pat_lifecycle if {
 	}
 }
 
+# T-0017 / SPEC-0020: members who may write a repository may trigger and
+# cancel its CI jobs. Readers receive neither grant; the CI PEP still binds the
+# tenant, repository/job and verified actor context before it asks the PDP.
+test_allow_member_ci_lifecycle if {
+	every pair in [
+		{"action": "ci.run", "resource_type": "repository", "resource_id": "repo-1"},
+		{"action": "ci.cancel", "resource_type": "ci_job", "resource_id": "job-1"},
+	] {
+		authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-member", "roles": ["member"], "tenant_id": "acme"},
+			"action": pair.action,
+			"resource": {"type": pair.resource_type, "id": pair.resource_id},
+			"context": {},
+		}
+	}
+}
+
+test_deny_reader_ci_lifecycle if {
+	every pair in [
+		{"action": "ci.run", "resource_type": "repository", "resource_id": "repo-1"},
+		{"action": "ci.cancel", "resource_type": "ci_job", "resource_id": "job-1"},
+	] {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-reader", "roles": ["reader"], "tenant_id": "acme"},
+			"action": pair.action,
+			"resource": {"type": pair.resource_type, "id": pair.resource_id},
+			"context": {},
+		}
+	}
+}
+
 # One matching role among several is enough; holding an extra role must not revoke a grant.
 test_allow_when_one_of_several_roles_grants if {
 	authz.allow with input as object.union(

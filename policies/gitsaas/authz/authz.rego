@@ -38,8 +38,9 @@ role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
 		"identity.pat.issue", "identity.pat.list", "identity.pat.revoke",
+		"ci.run", "ci.cancel",
 	},
-	"member": {"repo.read", "repo.write"},
+	"member": {"repo.read", "repo.write", "ci.run", "ci.cancel"},
 	"reader": {"repo.read"},
 }
 
@@ -55,6 +56,8 @@ action_resource := {
 	"identity.pat.issue": "personal_access_token",
 	"identity.pat.list": "personal_access_token",
 	"identity.pat.revoke": "personal_access_token",
+	"ci.run": "repository",
+	"ci.cancel": "ci_job",
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
