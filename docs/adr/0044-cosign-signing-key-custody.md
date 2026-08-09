@@ -1,6 +1,6 @@
 # ADR-0044: Cosign signing-key custody and rotation for first-party images
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-10
 - **Deciders:** platform
 - **Governs:** G3 supply-chain security, G4 change governance, G9 least-privilege footprint
