@@ -23,4 +23,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0015 | Git-RPC v1 contract | Approved | T-0010 |
 | SPEC-0016 | Identity credential authentication contract | Draft | T-0013, T-0011 |
 | SPEC-0017 | Repository read RPC contract | Draft | T-0014, T-0015 |
-| SPEC-0018 | Replica coordination & fencing contract | Draft | T-0012 |
+| SPEC-0018 | Replica coordination & fencing contract | Approved | T-0012 |
