@@ -24,4 +24,5 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0016 | Identity credential authentication contract | Approved | T-0013, T-0011 |
 | SPEC-0017 | Repository read RPC contract | Draft | T-0014, T-0015 |
 | SPEC-0018 | Replica coordination & fencing contract | Approved | T-0012 |
+| SPEC-0020 | CI v0 job dispatch and isolated-runner contract | Draft | T-0017 |
 | SPEC-0022 | SSH verifier-key routing | Approved | T-0013, T-0011 |
