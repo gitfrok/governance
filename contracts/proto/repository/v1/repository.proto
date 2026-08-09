@@ -8,7 +8,15 @@ service RepositoryReader {
   rpc GetFile(GetFileRequest) returns (stream FileChunk);
   rpc GetDiff(GetDiffRequest) returns (stream DiffChunk);
 }
-message ReadContext { string tenant_id = 1; string repository_id = 2; string actor_id = 3; string request_id = 4; }
+// Roles are verified principal attributes supplied to the Repository/Git PDP
+// input. They are not a caller-provided authorization result.
+message ReadContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  string request_id = 4;
+  repeated string actor_roles = 5;
+}
 message GetTreeRequest { ReadContext context = 1; string revision = 2; string page_token = 3; int32 page_size = 4; }
 message GetTreeResponse { repeated TreeEntry entries = 1; string next_page_token = 2; }
 message TreeEntry { string path = 1; EntryKind kind = 2; string object_id = 3; uint32 mode = 4; int64 size_bytes = 5; }
