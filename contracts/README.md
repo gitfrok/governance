@@ -20,6 +20,8 @@ needs a direct response.
 - `proto/policy/v1/policy.proto` — the Policy Decision Point (ADR-0006, SPEC-0002). Synchronous
   against the usual preference for events, because a PEP cannot proceed without the answer; the
   rules themselves live in `../policies/` and never travel over this wire
+- `proto/git/v1/git.proto` — internal packet-stream transport between the smart-HTTP/SSH front
+  doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
