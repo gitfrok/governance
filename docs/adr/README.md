@@ -65,6 +65,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0039](0039-no-vendored-third-party-code.md) | Vendor no third-party code; the surface pipeline is ours and `governance` keeps GPL v2 by choice | Accepted |
 | [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Accepted |
 | [ADR-0041](0041-git-http-ssh-front-doors.md) | Git HTTP and SSH front doors terminate in the data plane | Accepted |
+| [ADR-0042](0042-replica-promotion-fencing.md) | Replica promotion uses monotonic fencing terms | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
@@ -100,7 +101,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   no amendment. SeaweedFS-FUSE fails `rename()` atomicity, which git requires for every ref update —
   36 of 428 concurrent ref reads missed a ref that always existed, with zero rename errors. Evidence:
   `../bench/T-0007/README.md`.
-- Replica selection + fencing; force-promote runbook/authz + tenant self-service? — ADR-0018/0016
+- Replica promotion fencing and operator-only force-promote — **ADR-0042 Proposed**; awaiting decision review before T-0012 RED.
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
 - Unit-economics model per pricing tier — ADR-0008
 - Merge enforcement — ADR-0031. Two follow-ups are **closed** (both 2026-08-05): the
