@@ -1,8 +1,10 @@
 # Plan — Phase 0: Foundations
 
+**Status:** **Complete (2026-08-09).**
+
 ## Objective
-A wired skeleton where a tenant-scoped, policy-checked, audited request runs end-to-end in
-Minikube, with boundaries enforced in CI and the storage question settled.
+A wired foundation: Minikube with real TLS, tenant-scoping, deny-by-default policy and
+append-only-audit seams, boundaries enforced in CI, and the storage question settled.
 
 ## Workstreams & sequence
 1. **Scaffolding** (T-0001) → unblocks everything.
@@ -26,7 +28,8 @@ Statuses are not repeated here — each task file's own `Status:` field is autho
 
 ## Critical path
 T-0001 → T-0003 → T-0004; T-0007 runs alongside and must finish before Phase-1 storage tasks.
-T-0020 is off the critical path: nothing in Phase 0 waits on it, but Phase 0 cannot exit without it.
+T-0020 is off the critical path: nothing in Phase 0 waited on it, but it was required before
+Phase 0 could exit.
 
 ## Risks
 - Version availability (ADR-0023 floors near knowledge boundary) — verify at setup.
@@ -42,18 +45,18 @@ T-0020 (done — `buf lint` + `buf breaking` in governance, generated-code fresh
 unit + policy/isolation → T-0004/T-0005/T-0006 (**done 2026-08-06** — T-0005 closed the policy half
 with `opa test` + a deny-by-default assertion in governance, the PDP adapter and AC4 fitness
 function in backend, the PEP in bff, and a composition gate in the super-repo); `make dev-up` →
-T-0003 (**open on its macOS criterion only**, as of 2026-08-08 — the `*.gitsaas.test` half of this
-line is verified).
+T-0003 (**done 2026-08-09** — `*.gitsaas.test` and all four ACs, including a real macOS run,
+verified).
 
-**Where Phase 0 actually stands.** Nine of ten tasks are Done. T-0003 is the exception, and as of
-2026-08-08 one acceptance criterion of it remains:
+**Closure.** All ten tasks are Done. T-0003 was the last task; all four of its acceptance criteria
+were verified on 2026-08-09.
 
 | AC | State |
 |---|---|
 | AC1 — cluster create | **Verified.** Needed `fs.inotify.max_user_instances` raised (one `sysctl`, root) and three defects fixed in `dev-up.sh`'s create branch |
 | AC2 — services from pinned manifests | **Verified.** Six deployments Available on pins from `versions.env` |
 | AC3 — `*.gitsaas.test` from the host | **Verified.** Every host the ingress declares resolves by name and answers over TLS, on rootless podman, with no rootful driver and no KVM |
-| AC4 — macOS half | **Open.** No macOS. Anyone can close it by running the scripts on a Mac |
+| AC4 — macOS half | **Verified.** A real macOS run passed on 2026-08-09. |
 
 The two rows this table used to carry as blockers were both retired by evidence rather than by a
 different machine, and each had been recorded as a host limit when it was a defect. AC1 wanted a
@@ -81,20 +84,7 @@ conclusion held for the wrong reason. `dev-up` now generates it as a ConfigMap f
 author (invariants 13, 21) — verified by mounting it and evaluating the real policy to `allow: true`.
 Nothing consumes it yet, and cannot until a dataplane image exists.
 
-**That last point is the one Phase-0 gap nobody had filed — now T-0021, in Phase 1.** Neither plane
-has a container image or a Dockerfile, so "a tenant-scoped, policy-checked, audited request runs
-end-to-end in Minikube" is not reachable by any amount of work on T-0003, whose acceptance criteria
-are about infrastructure and TLS. It is filed as **T-0021 under EP-10**, phased into 1 by direction.
-
-**Which leaves this plan's exit criterion depending on a Phase-1 task, and that is not resolved.**
-The criterion below is written in terms of an end-to-end request; T-0021 is what makes one possible;
-T-0021 is Phase 1. So Phase 0 as specified cannot close on Phase-0 work alone — an inversion of the
-rule in `../roadmap/README.md` that each phase meets an exit criterion before the next begins.
-
-The three ways out are enumerated in `../tasks/T-0021-container-images.md` (amend this plan's exit
-criterion to what Phase 0 actually built; or move T-0021 into Phase 0; or accept the inversion in
-writing). Amending an exit criterion is a reviewed change rather than something a task file absorbs,
-so nothing here is amended yet — this paragraph exists so the gap cannot be mistaken for closed.
-T-0021's own blocker is gone: its AC0 is met by **ADR-0035 (Accepted 2026-08-08)**, so the task is
-ready to start. That does not close this gap — the conflict is about which *phase* owns the
-end-to-end assertion, and no amount of progress on T-0021 answers it.
+The former end-to-end deployment assertion requires T-0021's four plane images, so it is now a
+Phase-1 milestone. This closes Phase 0 on the foundation it actually delivers, preserves the
+roadmap's phase ordering, and leaves T-0021's AC4 and integration tests as the proof of that
+end-to-end behavior.

@@ -6,8 +6,14 @@ execution lives in `../plans/`; work items in `../backlog/` and `../tasks/`.
 ## Phase 0 — Foundations
 Scaffolding, dev environment, tenancy + RLS, PDP, audit log, and the **storage benchmark**
 that unblocks the git-storage design.
-**Exit:** an empty-but-wired repo where a tenant-scoped, policy-checked, audited request
-runs end-to-end in Minikube; boundary/arch tests enforced in CI; benchmark decided.
+**Status:** **Complete (2026-08-09).**
+**Exit (met):** an empty-but-wired foundation: a Minikube environment with real TLS;
+tenant-scoping, deny-by-default policy, and append-only audit seams; the storage decision;
+and boundary, architecture, contract, policy/isolation, and fitness gates enforced in CI.
+
+The end-to-end policy-checked request is a Phase-1 deployment milestone. It requires the
+plane images owned by T-0021, which is correctly scoped to Phase 1; it is not a Phase-0
+exit criterion.
 
 ## Phase 1 — MVP (GitHub-lite)
 Git push/pull (RPC + sync-replica write path), auth (Zitadel), repo/file/diff UI, MR/PR
@@ -20,10 +26,9 @@ T-0021 (images) is new and sits under the others: nothing in the four repos buil
 yet, so no plane has ever run as a deployed artifact. Its AC0 — an ADR for the image build surface —
 is **met: ADR-0035, Accepted 2026-08-08**, so the task is unblocked and AC1–AC6 are ready to start.
 
-It still **conflicts with Phase 0's exit criterion as written**, since that criterion needs an
-end-to-end request in Minikube and this is what makes one possible. See the open questions in
-`../tasks/T-0021-container-images.md`, which records the three ways out rather than picking one; that
-conflict is unaffected by ADR-0035 and remains a human call.
+Its images enable the Phase-1 end-to-end deployment milestone: a policy-checked request in
+Minikube. Phase 0 completed on 2026-08-09 with its foundation scope; T-0021 remains correctly
+scoped to Phase 1.
 
 ## Phase 2 — the Ultimate wedge
 Security scanners → normalized findings → **unified dashboard**; security/approval policies

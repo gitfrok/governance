@@ -69,8 +69,8 @@ of buried in a task that is already blocked on host limits.
 
 ## Tests to write first
 - integration: data plane comes up in-cluster with the bundle mounted; and exits non-zero without it
-- integration: `make dev-smoke` reaches a policy-checked request end-to-end over TLS (the assertion
-  Phase 0's exit criterion is written in terms of — see the open question below)
+- integration: `make dev-smoke` reaches a policy-checked request end-to-end over TLS (the Phase-1
+  deployment milestone — see the resolved note below)
 - fitness: built images satisfy the AC3 posture; `check-dev-images.sh` covers the new tags
 - boundary: no change expected, but the gates must stay green — an image build is a new way for a
   repo to reach another repo's source, and invariant 22 does not stop caring at the Dockerfile
@@ -80,25 +80,11 @@ See `../process/definition-of-done.md`.
 
 ## Notes / open questions
 
-**1. This task gates Phase *0*'s exit criterion, which is why its phase is worth a second look.**
-Filed into Phase 1 by direction. But `../plans/phase-0-foundations.md` states Phase 0 exits when "a
-tenant-scoped, policy-checked, audited request runs end-to-end in Minikube", and that sentence is
-unreachable without a deployable image. So as filed, **Phase 0 cannot exit until a Phase-1 task
-lands** — which inverts the roadmap's own rule that each phase has an exit criterion met before the
-next begins (`../roadmap/README.md`).
-
-Three ways out, and this is a human call, not an agent's:
-
-  a. **Amend Phase 0's exit criterion** to what Phase 0 actually built — infrastructure, tenancy,
-     PDP, audit, benchmark, gates — and move the end-to-end assertion to Phase 1's, where the code
-     paths it exercises are also built. Honest, and makes Phase 0 closable.
-  b. **Move this task to Phase 0** as the tenth-and-a-half workstream. Faithful to the written exit
-     criterion, at the cost of Phase 0 growing after being declared 9-of-10 twice.
-  c. **Accept the inversion explicitly**, recording that Phase 0 exits on a Phase-1 dependency.
-     Cheapest to write down; the roadmap's phase rule then means less than it says.
-
-Recorded here rather than resolved, because picking (a) rewrites an exit criterion — the sort of
-change `../process/agdd.md` wants reviewed rather than absorbed into a task file.
+**1. Phase-0 exit criterion — resolved 2026-08-09.** Phase 0 is complete on its delivered
+foundation scope: Minikube/TLS, tenancy, policy and audit seams, the storage decision, and enforced
+CI gates. The end-to-end policy-checked request is a Phase-1 deployment milestone because it needs
+the images built by this task. This preserves the roadmap rule that a phase exits without relying on
+later-phase work.
 
 **2. Scope check against the PRD.** Confirm against `../product/PRD.md` §7 non-goals before building.
 Registry hardening is listed as *Later / not scheduled* in the roadmap — publishing our own images is

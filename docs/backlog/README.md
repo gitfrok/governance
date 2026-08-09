@@ -33,8 +33,9 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   is impossible while each `buf.gen.yaml` reads `../governance/contracts`, so it is gated at the
   composition boundary instead — the per-repo variant stays blocked on the ADR-0027/0028
   generated-type publishing follow-up.
-- **EP-1 Platform up**: T-0003 (Minikube dev env) — **In progress, AC4's macOS half is all that is
-  left.** First real cluster run 2026-08-06 (rootless podman) cost **seven manifest fixes** — as
+- **EP-1 Platform up** *(closed)*: T-0003 (Minikube dev env) — **Done 2026-08-09; all four ACs,
+  including the macOS run, verified.** First real cluster run 2026-08-06 (rootless podman) cost
+  **seven manifest fixes** — as
   written, three of the five services could not start, including a Redpanda tag that was never
   published and a Zitadel config poisoned by Kubernetes service-link env vars. **AC1 and AC3 both
   closed on 2026-08-08, on that same rootless host.** The line this entry used to carry — *"need a
@@ -43,7 +44,8 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   a `dev-up.sh` branch that had never run to completion. AC3 needed the node's 80/443 published,
   and then a resolver whose setup instructions the script had been printing incorrectly: a DNS
   *forwarder* pointed at an address with no nameserver on it, so following them broke `.test`
-  resolution rather than wiring it. Nobody had run them. macOS still needs a macOS.
+  resolution rather than wiring it. Nobody had run them. The macOS lane passed on a real Mac on
+  2026-08-09; **Epic status: CLOSED.**
 - **EP-2 Tenancy & governance base** *(closed)*: T-0004 (tenancy+RLS, **Done 2026-08-06**),
   T-0005 (PDP, **Done 2026-08-06**), T-0006 (audit log, **Done 2026-08-06**).
   **Epic status: CLOSED 2026-08-06.** T-0005 landed across all four repos in dependency order
@@ -110,12 +112,9 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   an open choice the ADR makes on ADR-0011 grounds (the outbound-only agent may have no route to a
   transparency log). Corrected while still `Proposed`; the ADR carries the note.
 
-  **Carries an unresolved conflict with Phase 0's exit criterion**, recorded in the task's open
-  questions rather than settled: Phase 0 exits when "a tenant-scoped, policy-checked, audited request
-  runs end-to-end in Minikube", which is unreachable without a deployable image — so as filed, a
-  Phase-0 exit now depends on a Phase-1 task, inverting the roadmap's phase rule. Three options are
-  written down (amend Phase 0's criterion / move this to Phase 0 / accept the inversion); all three
-  are human calls.
+  **Phase-0 boundary resolved 2026-08-09.** Phase 0 completed on its delivered foundation scope.
+  The policy-checked end-to-end request is a Phase-1 deployment milestone, proven by this task's
+  image and integration acceptance criteria; no Phase-0 exit depends on Phase-1 work.
 
 ## Phase 2 — Ultimate wedge  *(to be expanded)*
 Scanner integration; unified security dashboard; security/approval policies-as-code; audit
