@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+// CI/CD domain events (SPEC-0020). Queue records and runner capabilities are
+// CI-owned implementation details and never cross this boundary.
+package gitsaas.events.ci.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/ci/v1;cieventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+enum TerminalJobState {
+  TERMINAL_JOB_STATE_UNSPECIFIED = 0;
+  TERMINAL_JOB_STATE_SUCCEEDED = 1;
+  TERMINAL_JOB_STATE_FAILED = 2;
+  TERMINAL_JOB_STATE_CANCELLED = 3;
+}
+
+message CIJobQueued {
+  string event_id = 1;
+  string job_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string ref = 5;
+  string commit_sha = 6;
+  string configuration_digest = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message CIJobStarted {
+  string event_id = 1;
+  string job_id = 2;
+  string attempt_id = 3;
+  string tenant_id = 4;
+  string repository_id = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+message CIJobFinished {
+  string event_id = 1;
+  string job_id = 2;
+  string attempt_id = 3;
+  string tenant_id = 4;
+  string repository_id = 5;
+  TerminalJobState terminal_state = 6;
+  string outcome_summary = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}

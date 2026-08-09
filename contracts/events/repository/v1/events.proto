@@ -19,6 +19,9 @@ message RefUpdated {
   string new_sha    = 6;
   string actor_id   = 7;
   google.protobuf.Timestamp occurred_at = 8;
+  // Verified actor roles at the time Repository/Git admitted the ref update.
+  // CI/CD retains them only as PDP input; this is never an allow assertion.
+  repeated string actor_roles = 9;
 }
 
 message RepositoryCreated {
