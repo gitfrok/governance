@@ -49,6 +49,10 @@ message AuthenticateSSHKeyRequest {
   // Public-key proof after the SSH transport has verified possession. It is not a
   // private key and must not be used as a repository or authorization assertion.
   bytes verified_public_key = 1;
+  // Public verifier-key-ring selector configured by the SSH front door. It has no
+  // tenant or authorization meaning and is never copied to a response or event.
+  // Missing, unknown, or retired values use the same coarse denial as an invalid key.
+  string verifier_key_id = 2;
 }
 
 message AuthenticateCredentialResponse {
