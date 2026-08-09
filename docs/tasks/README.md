@@ -18,7 +18,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0011 | Smart-HTTP + SSH front doors | 1 | Todo |
 | T-0012 | Sync-replica write path + failover | 1 | Todo |
 | T-0013 | Identity & access: Zitadel + PATs | 1 | Todo |
-| T-0014 | Repository read APIs + BFF aggregation | 1 | Todo |
+| T-0014 | Repository read APIs + BFF aggregation | 1 | Done |
 | T-0015 | Web: repo browser + file/diff + palette | 1 | Todo |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Todo |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Todo |
