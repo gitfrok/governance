@@ -1,6 +1,6 @@
 # SPEC-0018: Replica coordination and fencing contract
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** Repository/Git, Policy, Audit
 - **ADRs:** 0006, 0007, 0016, 0018, 0042
