@@ -1,6 +1,6 @@
 # SPEC-0016: Identity credential authentication contract
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** Identity&Access
 - **ADRs:** 0003, 0006, 0022, 0041
