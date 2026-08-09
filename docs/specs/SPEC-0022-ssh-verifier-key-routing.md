@@ -1,6 +1,6 @@
 # SPEC-0022: SSH verifier-key routing
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** Identity&Access + Repository/Git front doors
 - **ADRs:** 0003, 0006, 0022, 0041, 0043
