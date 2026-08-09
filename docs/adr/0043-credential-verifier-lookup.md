@@ -1,6 +1,6 @@
 # ADR-0043: Resolve opaque credential verifiers through a narrow RLS gateway
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-09
 - **Deciders:** platform
 - **Governs:** G1 tenant isolation, G2 least privilege, G5 auditability, G9 least-privilege footprint

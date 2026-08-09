@@ -66,7 +66,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Accepted |
 | [ADR-0041](0041-git-http-ssh-front-doors.md) | Git HTTP and SSH front doors terminate in the data plane | Accepted |
 | [ADR-0042](0042-replica-promotion-fencing.md) | Replica promotion uses monotonic fencing terms | Accepted |
-| [ADR-0043](0043-credential-verifier-lookup.md) | Resolve opaque credential verifiers through a narrow RLS gateway | Proposed |
+| [ADR-0043](0043-credential-verifier-lookup.md) | Resolve opaque credential verifiers through a narrow RLS gateway | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
