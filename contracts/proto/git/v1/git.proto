@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+// Internal Git storage transport (ADR-0004, SPEC-0015).
+//
+// This is never a browser-facing or untrusted-client API. Smart-HTTP and SSH front doors
+// authenticate callers and translate the Git protocol into these streams (T-0011); git-storaged
+// independently resolves the tenant-scoped handle and asks the PDP before it starts Git.
+package gitsaas.git.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/git/v1;gitv1";
+
+service GitStorage {
+  // UploadPack carries an unmodified git-upload-pack exchange for clone and fetch.
+  rpc UploadPack(stream UploadPackRequest) returns (stream UploadPackResponse);
+
+  // ReceivePack carries an unmodified git-receive-pack exchange for push.
+  rpc ReceivePack(stream ReceivePackRequest) returns (stream ReceivePackResponse);
+}
+
+// OperationContext identifies one Git operation. It is sent as the first client-stream message;
+// later messages contain only protocol bytes or close. No path, credential, or authorization result
+// crosses this boundary: those would let a caller choose storage or bypass the PDP.
+message OperationContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  string request_id = 4;
+}
+
+message UploadPackRequest {
+  oneof payload {
+    OperationContext context = 1;
+    bytes data = 2;
+    bool close = 3;
+  }
+}
+
+message UploadPackResponse {
+  bytes data = 1;
+}
+
+message ReceivePackRequest {
+  oneof payload {
+    OperationContext context = 1;
+    bytes data = 2;
+    bool close = 3;
+  }
+}
+
+message ReceivePackResponse {
+  bytes data = 1;
+}
