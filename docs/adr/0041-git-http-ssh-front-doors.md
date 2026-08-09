@@ -1,6 +1,6 @@
 # ADR-0041: Git HTTP and SSH front doors terminate in the data plane
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-09
 - **Deciders:** platform
 - **Governs:** G1 tenant isolation, G2 least privilege, G9 least-privilege footprint
