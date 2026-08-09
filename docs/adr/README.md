@@ -69,6 +69,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Proposed |
 | [ADR-0043](0043-credential-verifier-lookup.md) | Resolve opaque credential verifiers through a narrow RLS gateway | Accepted |
 | [ADR-0044](0044-cosign-signing-key-custody.md) | Cosign signing-key custody and rotation for first-party images | Accepted |
+| [ADR-0045](0045-zitadel-tenant-principal-mapping.md) | Zitadel verified claims map to tenant-scoped principals | Proposed |
 | [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
