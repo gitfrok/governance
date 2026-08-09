@@ -82,7 +82,8 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-4 Git plane**: T-0010 (Git-RPC, **Done** — backend #20), T-0011 (smart-HTTP+SSH),
   T-0012 (sync-replica+failover).
 - **EP-5 Identity**: T-0013 (Zitadel + PATs, tenant scoping).
-- **EP-6 Code UX**: T-0014 (repo read APIs + BFF), T-0015 (web browser/diff/palette).
+- **EP-6 Code UX**: T-0014 (repo read APIs + BFF, **Done** — backend #22/#24; bff #18),
+  T-0015 (web browser/diff/palette).
 - **EP-7 Review & CI**: T-0016 (MR + protected branches + approval policy), T-0017 (CI v0 gVisor+KEDA).
 - **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
   with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
