@@ -164,6 +164,32 @@ test_allow_owner_repo_admin if {
 	)
 }
 
+# T-0013 / SPEC-0006 AC3: PAT lifecycle grants exist only through this PDP.
+# Only tenant owners may administer credentials in this MVP policy vocabulary.
+test_allow_owner_pat_lifecycle if {
+	every action in {"identity.pat.issue", "identity.pat.list", "identity.pat.revoke"} {
+		authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-owner", "roles": ["owner"], "tenant_id": "acme"},
+			"action": action,
+			"resource": {"type": "personal_access_token", "id": "u-target"},
+			"context": {},
+		}
+	}
+}
+
+test_deny_member_pat_lifecycle if {
+	every action in {"identity.pat.issue", "identity.pat.list", "identity.pat.revoke"} {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-member", "roles": ["member"], "tenant_id": "acme"},
+			"action": action,
+			"resource": {"type": "personal_access_token", "id": "u-target"},
+			"context": {},
+		}
+	}
+}
+
 # One matching role among several is enough; holding an extra role must not revoke a grant.
 test_allow_when_one_of_several_roles_grants if {
 	authz.allow with input as object.union(

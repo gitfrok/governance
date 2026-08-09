@@ -35,7 +35,10 @@ default allow := false
 # extending it; a resource kind with no entry here is denied, which is the correct state for a
 # feature that does not exist yet.
 role_actions := {
-	"owner": {"repo.read", "repo.write", "repo.admin"},
+	"owner": {
+		"repo.read", "repo.write", "repo.admin",
+		"identity.pat.issue", "identity.pat.list", "identity.pat.revoke",
+	},
 	"member": {"repo.read", "repo.write"},
 	"reader": {"repo.read"},
 }
@@ -49,6 +52,9 @@ action_resource := {
 	"repo.read": "repository",
 	"repo.write": "repository",
 	"repo.admin": "repository",
+	"identity.pat.issue": "personal_access_token",
+	"identity.pat.list": "personal_access_token",
+	"identity.pat.revoke": "personal_access_token",
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
