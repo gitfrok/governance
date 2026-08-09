@@ -24,6 +24,8 @@ needs a direct response.
   doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side
 - `proto/identity/v1/identity.proto` — credential authentication and PAT lifecycle port for
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
+- `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
+  (SPEC-0017); authorization remains in Repository/Git
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
