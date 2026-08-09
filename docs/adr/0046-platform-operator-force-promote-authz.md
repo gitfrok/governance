@@ -1,6 +1,6 @@
 # ADR-0046: Platform-operator principals authorize replica force-promotion
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-10
 - **Deciders:** platform
 - **Governs:** G1 tenant isolation, G2 least privilege, G5 auditability
