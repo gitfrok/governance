@@ -19,10 +19,10 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0012 | Sync-replica write path + failover | 1 | **Done** — backend #30 |
 | T-0013 | Identity & access: Zitadel + PATs | 1 | Done — backend #37 (OIDC login), #21 (PAT/SSH) |
 | T-0014 | Repository read APIs + BFF aggregation | 1 | Done |
-| T-0015 | Web: repo browser + file/diff + palette | 1 | In review — bff #22, webfrontend #20 (code merged on branch; awaiting review) |
+| T-0015 | Web: repo browser + file/diff + palette | 1 | **Done** — bff #22, webfrontend #20, super-repo #77 merged; `make dev-up` + `make dev-smoke` green with the full stack on minikube, `app.gitsaas.test` serving |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Done — backend #31/#33/#34/#35 (MR lifecycle, protection, merge ref move) |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Done — backend #29/#32, deploy PR #76 (ScaledObject); dev cluster limit: no gVisor RuntimeClass under rootless podman |
-| T-0018 | Repository & review-history import | 1 | In review — governance #110 (contracts), backend #39 (provenance boundary + git phase + import service) |
+| T-0018 | Repository & review-history import | 1 | In progress — governance #110 + backend #39 merged: contracts, audit FIRST_PARTY boundary (AC11/AC24), ImportRefs git phase (AC1-AC3), import service (AC6/AC7/AC10/AC16/AC17). History phase + web rendering remain |
 | T-0020 | Contract schema gate (`buf lint` + `buf breaking` + codegen freshness) | 0 | Done |
 | T-0021 | Container images for both planes | 1 | **Done** — backend #19/#25, bff #16/#19, webfrontend #16/#18 |
 
