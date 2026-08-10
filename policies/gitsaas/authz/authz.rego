@@ -33,7 +33,13 @@ default allow := false
 #
 # T-0005 ships the skeleton vocabulary. T-0013 (identity) extended it with
 # personal_access_token actions; T-0016 (merge requests) adds merge_request.* and
-# branch-protection actions below.
+# branch-protection actions below; T-0018 (import) adds repository.import.*.
+#
+# The import actions are owner-only, and that is the decision, not an omission.
+# An import writes history the platform did not witness, and mapping a foreign
+# handle to a platform identity is the one act that can make imported history
+# read as ours (SPEC-0011 AC10). Both belong to whoever is accountable for the
+# tenant, not to everyone who can push.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -41,10 +47,15 @@ role_actions := {
 		"ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
 		"repository.branch_protection.manage",
+		"repository.import", "repository.import.read", "repository.import.revoke",
+		"repository.import.map_actor",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
+		# A member may read imported history — it is repository content — but may
+		# neither start an import, revoke one, nor assert who a foreign handle is.
+		"repository.import.read",
 	},
 	"reader": {"repo.read"},
 }
@@ -67,6 +78,10 @@ action_resource := {
 	"merge_request.review": "merge_request",
 	"merge_request.merge": "merge_request",
 	"repository.branch_protection.manage": "repository",
+	"repository.import": "repository",
+	"repository.import.read": "import",
+	"repository.import.revoke": "import",
+	"repository.import.map_actor": "import",
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the

@@ -65,6 +65,16 @@ denied_pairs := [
 	{"role": "reader", "action": "merge_request.open"},
 	{"role": "reader", "action": "repository.branch_protection.manage"},
 	{"role": "member", "action": "repository.branch_protection.manage"},
+	# An import writes history the platform did not witness, and mapping a foreign
+	# handle is what could make that history read as ours (SPEC-0011 AC10). Neither
+	# belongs to a role that merely pushes code.
+	{"role": "member", "action": "repository.import"},
+	{"role": "member", "action": "repository.import.revoke"},
+	{"role": "member", "action": "repository.import.map_actor"},
+	{"role": "reader", "action": "repository.import"},
+	{"role": "reader", "action": "repository.import.read"},
+	{"role": "reader", "action": "repository.import.revoke"},
+	{"role": "reader", "action": "repository.import.map_actor"},
 ]
 
 test_role_matrix_denies_everything_not_granted if {
@@ -85,6 +95,7 @@ granted_pairs := [
 	{"role": "owner", "action": "repo.admin"},
 	{"role": "owner", "action": "merge_request.open"},
 	{"role": "owner", "action": "repository.branch_protection.manage"},
+	{"role": "owner", "action": "repository.import"},
 ]
 
 test_role_matrix_grants_what_the_table_says if {
@@ -369,4 +380,60 @@ test_deny_direct_push_does_not_block_merge_action if {
 		"resource": {"type": "repository", "id": "repo-1"},
 		"context": {"operation": "merge", "protected": "true"},
 	}
+}
+
+# --- SPEC-0011 AC10/AC15: import authorization ---------------------------------------------------
+
+# An import is asked about a repository; the import-scoped actions are asked about
+# an import. Pinning each action to one resource kind is what keeps "read this
+# import" from being answered by a grant meant for something else.
+import_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-imp", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "import-1"},
+	"context": {},
+}
+
+test_allow_owner_starts_an_import if {
+	authz.allow with input as import_request("owner", "repository.import", "repository")
+}
+
+test_allow_owner_maps_a_declared_actor if {
+	authz.allow with input as import_request("owner", "repository.import.map_actor", "import")
+}
+
+test_allow_owner_revokes_an_import if {
+	authz.allow with input as import_request("owner", "repository.import.revoke", "import")
+}
+
+# A member reads imported history — it is repository content — and does nothing else with it.
+test_allow_member_reads_imported_history if {
+	authz.allow with input as import_request("member", "repository.import.read", "import")
+}
+
+test_deny_member_maps_a_declared_actor if {
+	not authz.allow with input as import_request("member", "repository.import.map_actor", "import")
+}
+
+test_deny_member_starts_an_import if {
+	not authz.allow with input as import_request("member", "repository.import", "repository")
+}
+
+# The resource kind is load-bearing: an import action asked about a repository is
+# not the same question, and must not be answered by the repository grant.
+test_deny_import_action_asked_about_the_wrong_resource if {
+	not authz.allow with input as import_request("owner", "repository.import.map_actor", "repository")
+}
+
+test_deny_import_start_asked_about_an_import if {
+	not authz.allow with input as import_request("owner", "repository.import", "import")
+}
+
+# Holding owner in another tenant does not authorize an import here (invariant 1).
+test_deny_import_from_another_tenant if {
+	not authz.allow with input as object.union(
+		import_request("owner", "repository.import", "repository"),
+		{"subject": {"id": "u-imp", "roles": ["owner"], "tenant_id": "globex"}},
+	)
 }

@@ -139,6 +139,22 @@ to shipping.)
       tenant is refused, a read without import-read permission is denied at the PDP, and a revoked
       import returns nothing (which is AC12 observed on the read path, not a second rule).
 
+**Actor mapping** (added 2026-08-10; AC10 named the rule but no criterion said what the surface
+must refuse, and a mapping surface that is merely "PDP-authorized" can still quietly upgrade an
+imported approval into a platform one.)
+- [ ] AC22: Mapping is an assertion, not an inference. `MapDeclaredActor` records a named tenant
+      admin's claim that a `(declared_actor, source_instance)` pair is a platform `actor_id`; the
+      pair is scoped to its instance, because the same handle on two source instances is two people.
+      No email comparison, string similarity, or bulk heuristic may produce a mapping, and there is
+      no path that creates one without an admin's identity attached.
+- [ ] AC23: A mapping never changes provenance. After a mapping, the imported record still reads as
+      `ATTESTED_IMPORT`, an imported approval still satisfies no merge policy, and no read surface
+      presents a mapped handle as an actor this platform witnessed. A mapping changes the label a
+      reader sees, never the class of the record.
+- [ ] AC24: The mapping is stored beside the imported records, never inside them: an imported record
+      is immutable (AC13), so a mapping is a later first-party claim *about* it, and revoking the
+      import drops the mapping from reads with the records it describes.
+
 **Import cost** (added 2026-08-10; the NFR "imports … count against the tenant's fair-use storage
 dimension" had no criterion, so nothing could fail if imports were free.)
 - [ ] AC21: The bytes an import writes for a tenant are reported by the storage tier that wrote them

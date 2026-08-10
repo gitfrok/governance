@@ -221,6 +221,20 @@ service ImportService {
   // Every record carries its provenance block; a revoked import returns nothing
   // (AC12 on the read path).
   rpc ListImportedHistory(ListImportedHistoryRequest) returns (ListImportedHistoryResponse);
+  // MapDeclaredActor asserts that a foreign handle from an import is a given
+  // platform identity (SPEC-0011 AC10). It is an assertion by a named tenant
+  // admin, PDP-authorized, and it emits a first-party audit event naming the
+  // admin who asserted it — never an inference. Email equality alone never
+  // produces a mapping (ADR-0029 §4).
+  //
+  // A mapping changes how a handle is *labelled*, never what it means: an
+  // imported approval stays an imported approval, and a mapped actor still
+  // satisfies no merge policy. There is no unmapped-to-mapped upgrade of
+  // provenance.
+  rpc MapDeclaredActor(MapDeclaredActorRequest) returns (MapDeclaredActorResponse);
+  // ListDeclaredActorMappings returns the mappings asserted for one import, so a
+  // reader can see who asserted what.
+  rpc ListDeclaredActorMappings(ListDeclaredActorMappingsRequest) returns (ListDeclaredActorMappingsResponse);
 }
 
 // ImportState is the coarse lifecycle of an import job.
@@ -339,4 +353,51 @@ message ListImportedHistoryResponse {
   repeated ImportedMergeRequest merge_requests = 1;
   // Empty when this is the last page.
   string next_page_token = 2;
+}
+
+// DeclaredActorMapping is one tenant admin's assertion that a foreign handle is
+// a platform identity (SPEC-0011 AC10).
+//
+// It is stored beside the imported records, never inside them: an imported record
+// is immutable (AC13), and a mapping is a later, first-party claim *about* it. A
+// reader that renders a mapped name must still render the record as imported —
+// the mapping tells you who the platform believes the handle belongs to, not that
+// the platform witnessed what the handle did.
+message DeclaredActorMapping {
+  string mapping_id = 1;
+  string tenant_id = 2;
+  string import_id = 3;
+  // The foreign handle as the source declared it, plus the instance it came from.
+  // A handle is only meaningful within its instance: "jdoe" on two GitLab servers
+  // is two people.
+  string declared_actor = 4;
+  string source_instance = 5;
+  // The platform identity the admin asserts this handle belongs to.
+  string actor_id = 6;
+  // The tenant admin who asserted it. Recorded here as well as in the audit
+  // event, so a reader of the mapping never has to join to the trail to see who
+  // is accountable for it.
+  string asserted_by = 7;
+  google.protobuf.Timestamp asserted_at = 8;
+}
+
+message MapDeclaredActorRequest {
+  ReviewCommandContext context = 1;
+  string import_id = 2;
+  string declared_actor = 3;
+  string source_instance = 4;
+  string actor_id = 5;
+}
+
+message MapDeclaredActorResponse {
+  DeclaredActorMapping mapping = 1;
+}
+
+message ListDeclaredActorMappingsRequest {
+  ReviewCommandContext context = 1;
+  string import_id = 2;
+}
+
+message ListDeclaredActorMappingsResponse {
+  repeated DeclaredActorMapping mappings = 1;
 }
