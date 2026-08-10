@@ -75,20 +75,25 @@ the web session for both T-0015 and T-0016 UI; T-0018 is terminal behind T-0016 
 | 3 | CI gates green per `ci-gates.md` | **met on every merged PR**, with the two standing gaps `ci-gates.md` already records: backend integration tests skip without `TEST_DATABASE_URL`, and the live-infrastructure suites skip without their endpoints |
 
 Criterion 2 is the whole of what is left, and it is **not blocked on code** — every step of the
-scenario is implemented and tested. Four things block it in a cluster, three of them environmental:
+scenario is implemented and tested. Three things block it in a cluster, all of them environmental:
 
-1. **No object tier is wired into any deployment.** `deploy/dev/` sets neither
-   `GITFROK_SEAWEEDFS_MOUNT` nor the five `GITFROK_SEAWEEDFS_S3_*` variables, so the dev cluster
-   serves no LFS at all — the tier is configured-or-absent by design, and it is absent. Wiring the
-   mount per ADR-0050 is a super-repo change and the shortest path to closing the storage half.
-2. **No gVisor RuntimeClass under rootless podman**, so CI dispatch is unconfigured in the dev
+1. **No gVisor RuntimeClass under rootless podman**, so CI dispatch is unconfigured in the dev
    cluster (recorded against T-0017). The sandbox model and the K8s Job path are implemented.
-3. **One git node**, so the durability quorum and the failover promotion cannot be *demonstrated*
+2. **One git node**, so the durability quorum and the failover promotion cannot be *demonstrated*
    there. Both are proved by T-0012's tests and by T-0018's two-node integration suite; what the
    cluster cannot supply is a second physical node — T-0003's lane.
-4. **Host DNS for `*.gitsaas.test` is still a manual root step.** `dev-up.sh` prints the snippet and
+3. **Host DNS for `*.gitsaas.test` is still a manual root step.** `dev-up.sh` prints the snippet and
    does not apply it; the smoke test reports this as its own distinct failure rather than a generic
    red.
+
+**The object tier was the fourth and is now closed** (super-repo #86). `deploy/dev/` sets the five
+`GITFROK_SEAWEEDFS_S3_*` variables on `git-storaged` and the data plane, `dev-up.sh` creates the
+bucket before anything can write, and backend's live SeaweedFS suite passes against the cluster — so
+it serves LFS. It is the **S3 adapter**, which is what ADR-0050 decision 6 keeps for a deployment
+without a mount: ADR-0051's DaemonSet was built and its mount does not propagate to the node on this
+driver, measured rather than assumed (`deploy/dev/README.md`). Wiring it also found that the S3
+gateway was serving every object to unsigned requests, because the credentials sat on SeaweedFS's
+`anonymous` identity.
 
 The MVP deploy runbook in the super-repo (`deploy/MVP-RUNBOOK.md`) is the operational counterpart to
 this section: same facts, ordered as steps rather than as criteria.
