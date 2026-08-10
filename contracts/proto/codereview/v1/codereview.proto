@@ -71,18 +71,20 @@ message MergeRequest {
   gitsaas.contracts.v1.Provenance provenance = 14;
 }
 
-// ImportedThread is one imported review thread (SPEC-0011 AC4). It is
+// ImportedThread is one imported review thread (SPEC-0011 AC3). It is
 // display-only history: declared_actor stays an opaque foreign handle until a
-// tenant admin asserts a verified mapping (ADR-0029 §4), and the anchor
+// tenant admin asserts a verified mapping (ADR-0029 §4, AC9), and the anchor
 // degrades from diff-position to file-level to MR-level rather than dropping a
-// comment (AC5).
+// comment (AC19).
 message ImportedThread {
   string thread_id = 1;
   string merge_request_id = 2;
   string path = 3;
   // Anchor precision: DIFF when the diff position resolves, FILE when only the
-  // file remains, MERGE when the file is also gone. An approximate anchor is
-  // marked in the API response so the UI can render it as such (AC5).
+  // file remains, MERGE when the file is also gone. Anything but DIFF is
+  // approximate, which is how the API marks it so the UI can render it as such
+  // (AC19). DIFF asserts the position still resolves against the imported refs,
+  // so an importer that has not checked that must not claim it.
   Anchor anchor = 4;
   repeated ImportedComment comments = 5;
   gitsaas.contracts.v1.Provenance provenance = 6;
@@ -103,9 +105,9 @@ message ImportedComment {
   gitsaas.contracts.v1.Provenance provenance = 5;
 }
 
-// ImportedApproval is one imported approval (SPEC-0011 AC4). It never
+// ImportedApproval is one imported approval (SPEC-0011 AC3). It never
 // satisfies a required-reviewer approval policy: an MR whose only approvals are
-// imported is blocked from merge by the PDP (AC13, ADR-0029 §4).
+// imported is blocked from merge by the PDP (AC8, ADR-0029 §4).
 message ImportedApproval {
   string approval_id = 1;
   string merge_request_id = 2;
@@ -213,6 +215,12 @@ service ImportService {
   // HistoryImportRevoked. The original HistoryImported chain entry is
   // unaltered.
   rpc RevokeImport(RevokeImportRequest) returns (RevokeImportResponse);
+  // ListImportedHistory returns the imported merge requests of one import, so a
+  // reader can render them beside first-party history while telling the two
+  // apart (SPEC-0011 AC20, which AC18's rendering depends on; ADR-0029 §4).
+  // Every record carries its provenance block; a revoked import returns nothing
+  // (AC12 on the read path).
+  rpc ListImportedHistory(ListImportedHistoryRequest) returns (ListImportedHistoryResponse);
 }
 
 // ImportState is the coarse lifecycle of an import job.
@@ -288,4 +296,47 @@ message RevokeImportRequest {
 
 message RevokeImportResponse {
   Import import = 1;
+}
+
+// ImportedMergeRequest is one merge request as the source declared it. It is
+// display-only history: its state is the source's word, its actors are opaque
+// foreign handles until a tenant admin asserts a mapping, and its approvals
+// never satisfy a merge policy (ADR-0029 §4, SPEC-0011 AC3/AC8/AC9).
+message ImportedMergeRequest {
+  string merge_request_id = 1;
+  string source_ref = 2;
+  string target_ref = 3;
+  string title = 4;
+  string description = 5;
+  // The source's own state string ("open", "merged", "closed", …), not this
+  // platform's MergeRequestState: an imported MR never enters our lifecycle.
+  string state = 6;
+  // The declared author, as an opaque foreign handle. It is deliberately not
+  // named creator_id: MergeRequest.creator_id is a resolvable platform actor,
+  // and a field of the same name here would invite a reader to resolve a foreign
+  // handle as a platform user (ADR-0029 §4, AC9).
+  string declared_creator = 7;
+  repeated ImportedThread threads = 8;
+  repeated ImportedApproval approvals = 9;
+  gitsaas.contracts.v1.Provenance provenance = 10;
+}
+
+message ListImportedHistoryRequest {
+  ReviewCommandContext context = 1;
+  string import_id = 2;
+  // One page of imported merge requests. An import may hold tens of thousands of
+  // records (SPEC-0011 volume assumption), so the read surface pages from the
+  // start rather than growing a cursor onto a shipped shape later. Zero means the
+  // server's default page size.
+  int32 page_size = 3;
+  // The token a previous response returned. Empty starts at the first page.
+  string page_token = 4;
+}
+
+message ListImportedHistoryResponse {
+  // Empty for a revoked import: its records are dropped from all reads
+  // (SPEC-0011 AC12).
+  repeated ImportedMergeRequest merge_requests = 1;
+  // Empty when this is the last page.
+  string next_page_token = 2;
 }
