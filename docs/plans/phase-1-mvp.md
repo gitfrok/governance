@@ -3,10 +3,11 @@
 **Status:** In progress
 **Objective:** A team can host a repo, open/review/merge an MR, and run a pipeline. (PRD §5, roadmap §Phase 1.)
 
-## Current state (verified 2026-08-10)
+## Current state (verified 2026-08-11)
 
 Phase 0 is **Closed**. Enablers landed: T-0001…T-0009, T-0020, T-0021 (container images for both
-planes, 2026-08-10). Phase-1 tasks with real code already merged:
+planes, 2026-08-10). **Every Phase-1 task is now Done**, which satisfies the first of the three exit
+criteria below and none of the other two — see [Exit criteria](#exit-criteria) for what that leaves.
 
 | Task | Status | Reality on disk |
 |---|---|---|
@@ -18,13 +19,27 @@ planes, 2026-08-10). Phase-1 tasks with real code already merged:
 | T-0012 sync-replica + failover | Done | `modules/repository/internal/replica` coordinator + `git-storaged` quorum ack (backend #30) |
 | T-0017 CI v0 | Done | `modules/ci` sandbox model + K8s Jobs (#32) + KEDA `ScaledObject` (super-repo #76). Dev-cluster limit: no gVisor RuntimeClass under rootless podman, so dispatch is unconfigured there |
 | T-0016 merge requests | Done | `modules/codereview` lifecycle + PDP gate + audit + protection projection (#31) + authorized merge ref move (#33/#34) + direct-push denial (#35) |
+| T-0015 web repo browser + palette | Done | bff #22, webfrontend #20, super-repo #77; `app.gitsaas.test` serving on minikube |
+| T-0018 repo + history import | Done | contracts (governance #110/#114/#116), git phase + import service + GitHub history (backend #39/#40), actor mapping + LFS transport (#45), FUSE object tier (#46), imported-history read surface (bff #25), provenance rendering (webfrontend #23) |
 
-Phase-1 tasks **in review** (code complete, awaiting PR review to merge):
+### What T-0018 changed about storage, and what it did not
 
-| Task | PRs | What's there |
-|---|---|---|
-| T-0015 web repo browser + palette | bff #22, webfrontend #20, super-repo #77 | BFF session + OIDC login flow + `/v1/repositories/*` browser surface; webfrontend tree/file/diff/raw SSR routes + Ctrl+K palette; deploy manifests + ingress `app.gitsaas.test` |
-| T-0018 repo + history import | governance #110, backend #39 | Contracts (Provenance, ImportService, HistoryImported/Revoked, ImportRefs); audit-writer FIRST_PARTY boundary (AC11/AC24); ImportRefs git phase (AC1-AC3); import service state machine (AC6/AC7/AC10/AC16/AC17). History phase + web rendering remain |
+**ADR-0050 (Accepted 2026-08-11)** narrows ADR-0020: LFS objects, CI artifacts and container-image
+blobs are served from a **SeaweedFS FUSE mount**, not the S3 gateway. ADR-0033 is untouched — live
+bare repositories stay on block volumes, and `git-storaged` still refuses a FUSE repository root
+(invariant 7). Because a mount has no signed URLs, SPEC-0023's pre-signed decision is superseded for
+that tier: transfers proxy through the plane under `repo.lfs.read` / `repo.lfs.write`, and every read
+is verified against the digest in the object's name before a byte reaches a client.
+
+Three defects were found by proving AC1 and AC2 on real infrastructure rather than against fakes, and
+all three would have shipped:
+
+1. `git fetch` with no refspec landed objects and tags but **no branches** — imports reported success
+   and produced repositories nothing could reach.
+2. `authz.rego` granted `repository.import` to **no role**, so every import in a real deployment was
+   denied. AC20 had "passed" only because nobody could import.
+3. SeaweedFS answers **200 to a PUT into a bucket that does not exist**. The object tier now reads an
+   object back before acknowledging a write.
 
 ## Workstreams & sequence (ADR-0027 order: governance → backend → bff → webfrontend → super-repo)
 
@@ -33,17 +48,18 @@ Phase-1 tasks **in review** (code complete, awaiting PR review to merge):
 2. **Git plane (backend):** DONE — T-0012 coordinator + quorum ack, auto-promote, dual-loss read-only,
    audited force-promote; ImportRefs git phase.
 3. **Identity (backend + bff):** DONE — T-0013 OIDC adapter + BFF session middleware (ADR-0049).
-4. **Code review (backend + bff + webfrontend):** backend DONE (#31/#33/#34/#35); the BFF MR
-   aggregation client exists (bff #22); minimal MR web route remains.
+4. **Code review (backend + bff + webfrontend):** DONE — backend (#31/#33/#34/#35), the BFF MR
+   aggregation client (bff #22) and the minimal MR web surface (webfrontend, super-repo #81).
 5. **CI (backend):** DONE — `modules/ci` wired to the dataplane app, KEDA ScaledObject on the job
    queue, ephemeral gVisor sandbox per job. Dev cluster limit recorded.
-6. **Code UX (webfrontend + bff):** code complete (bff #22 + webfrontend #20), in review.
-7. **Migration (governance → backend → webfrontend):** contracts + audit boundary + git phase +
-   import service done (governance #110, backend #39); history phase (source API client) and web
-   provenance rendering remain.
+6. **Code UX (webfrontend + bff):** DONE — bff #22 + webfrontend #20, merged and serving.
+7. **Migration (governance → backend → bff → webfrontend):** DONE — contracts, audit boundary, git
+   phase, import service, GitHub history phase, declared-actor mapping, the LFS transport and its
+   FUSE object tier (ADR-0050), the imported-history read surface and provenance rendering.
 8. **Exit proof:** a single end-to-end scenario in Minikube (`make dev-up`) — OIDC login → clone →
    durable push (primary+sync) → open MR → direct push to protected ref denied → approve+merge →
    CI job runs + green gates merge → audit trail + git-node failover promotes in-sync replica.
+   **This is the workstream that remains**, and it is the only one.
 
 ## Critical path
 T-0012 (durability/ack path) ⟷ T-0016 (MR gate) ⟷ T-0017 (CI gate). The exit bar needs all three:
@@ -51,13 +67,38 @@ a durable push, an MR gated by policy, and a pipeline whose status gates merge. 
 the web session for both T-0015 and T-0016 UI; T-0018 is terminal behind T-0016 + T-0013.
 
 ## Exit criteria
-All eight Phase-1 tasks T-0010–T-0018 + T-0021 marked **Done** in `tasks/README.md`; the end-to-end
-Minikube scenario above passes; CI gates green per `ci-gates.md` (unit + contract + integration +
-boundary/arch + policy/tenant-isolation + version-floor + lint).
+
+| # | Criterion | State (2026-08-11) |
+|---|---|---|
+| 1 | T-0010–T-0018 + T-0021 marked **Done** in `tasks/README.md` | **met** — T-0018 was the last, closed 2026-08-11 |
+| 2 | the end-to-end Minikube scenario above passes | **not met** — see below |
+| 3 | CI gates green per `ci-gates.md` | **met on every merged PR**, with the two standing gaps `ci-gates.md` already records: backend integration tests skip without `TEST_DATABASE_URL`, and the live-infrastructure suites skip without their endpoints |
+
+Criterion 2 is the whole of what is left, and it is **not blocked on code** — every step of the
+scenario is implemented and tested. Four things block it in a cluster, three of them environmental:
+
+1. **No object tier is wired into any deployment.** `deploy/dev/` sets neither
+   `GITFROK_SEAWEEDFS_MOUNT` nor the five `GITFROK_SEAWEEDFS_S3_*` variables, so the dev cluster
+   serves no LFS at all — the tier is configured-or-absent by design, and it is absent. Wiring the
+   mount per ADR-0050 is a super-repo change and the shortest path to closing the storage half.
+2. **No gVisor RuntimeClass under rootless podman**, so CI dispatch is unconfigured in the dev
+   cluster (recorded against T-0017). The sandbox model and the K8s Job path are implemented.
+3. **One git node**, so the durability quorum and the failover promotion cannot be *demonstrated*
+   there. Both are proved by T-0012's tests and by T-0018's two-node integration suite; what the
+   cluster cannot supply is a second physical node — T-0003's lane.
+4. **Host DNS for `*.gitsaas.test` is still a manual root step.** `dev-up.sh` prints the snippet and
+   does not apply it; the smoke test reports this as its own distinct failure rather than a generic
+   red.
+
+The MVP deploy runbook in the super-repo (`deploy/MVP-RUNBOOK.md`) is the operational counterpart to
+this section: same facts, ordered as steps rather than as criteria.
 
 ## Risks / decisions needed
 - **CI as merge-gate vs observable run:** ship CI non-blocking to the bar, gate merge in a Phase-1 follow-up.
-- **MR UI scope for the bar:** minimal MR page is sufficient; defer rich review threads.
+- **MR UI scope for the bar:** **resolved** — the minimal MR page shipped (super-repo #81); rich
+  review threads stay deferred.
+- **AC19 of T-0018 (bidirectional sync back to the source) moved to Phase 2** with the user's
+  agreement, rather than being left open against a Phase-1 task.
 - **T-0013 session encoding:** **resolved** — opaque server-side cookie per ADR-0049; the BFF session
   middleware implements it (bff #22).
 - **T-0017 runtime** is the riskiest step (agent/subprocess boundary, ADR-0011) — the sandbox model
