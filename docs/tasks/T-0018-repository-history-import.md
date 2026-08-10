@@ -29,6 +29,7 @@ gap to the migrating customer.
 Numbering in parentheses maps to SPEC-0011.
 
 **Git data**
+
 - [x] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
       commit SHAs byte-identical to the source. **Proved against a real source repository, not in a
       cluster:** the test builds a source with two branches, a lightweight tag and an annotated tag,
@@ -40,7 +41,11 @@ Numbering in parentheses maps to SPEC-0011.
       `git fetch` with no refspec landed objects and tags but no branches, so an import reported
       success and left a repository nothing could reach (backend `feat/t0018-actor-mapping`,
       `4072b42`).
-- [ ] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
+- [x] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
+      (`SPEC-0023` Approved, then implemented on backend `feat/t0018-actor-mapping`: the SeaweedFS-S3
+      tier, the LFS batch endpoint on the Git front door, `repo.lfs.read`/`repo.lfs.write` as their
+      own grants, and an import that fetches every object its refs reference — failing rather than
+      landing a repository whose large files are absent.)
 - [x] AC3: imported writes go through the ordinary durability path — an accepted import ref update
       is acknowledged only after primary + one sync replica (ADR-0016); repos on block volumes, LFS
       on SeaweedFS-S3 (invariant 7).
