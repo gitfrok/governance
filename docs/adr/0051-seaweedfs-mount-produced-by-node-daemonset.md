@@ -1,7 +1,7 @@
 # ADR-0051: The SeaweedFS FUSE mount is produced by one privileged node DaemonSet, not by a sidecar in each pod
 
-- **Status:** Proposed
-- **Date:** 2026-08-11
+- **Status:** Accepted
+- **Date:** 2026-08-11 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G9 least-privilege footprint, G4 durability, G3 supply chain
 - **Refines:** ADR-0050 (large objects over a SeaweedFS FUSE mount — this decides *how the mount is
