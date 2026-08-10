@@ -112,7 +112,7 @@ Numbering in parentheses maps to SPEC-0011.
       admitting `HistoryImported` event. **Moved to Phase 2 (decided 2026-08-10).** No evidence-pack
       surface exists anywhere in the platform, and the PRD places it in Phase 2 (PR-17). The rule this
       criterion states is not lost: whoever builds that surface inherits it, and ADR-0029 §4 binds
-      them regardless of where the criterion is written down. Recorded in the backlog under EP-9 so it
+      them regardless of where the criterion is written down. Recorded in the backlog under EP-8 so it
       cannot be quietly dropped with this task.
 
 **Isolation & authorization**

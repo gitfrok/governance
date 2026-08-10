@@ -97,8 +97,11 @@ this section: same facts, ordered as steps rather than as criteria.
 - **CI as merge-gate vs observable run:** ship CI non-blocking to the bar, gate merge in a Phase-1 follow-up.
 - **MR UI scope for the bar:** **resolved** — the minimal MR page shipped (super-repo #81); rich
   review threads stay deferred.
-- **AC19 of T-0018 (bidirectional sync back to the source) moved to Phase 2** with the user's
-  agreement, rather than being left open against a Phase-1 task.
+- **AC19 of T-0018 — the evidence-pack criterion — moved to Phase 2** (decided 2026-08-10, recorded
+  in the backlog under EP-8). It asks that an evidence pack spanning an import carry zero attested
+  records in its control sections, with attested history confined to a labelled appendix (SPEC-0011
+  AC14, bound by ADR-0029 §4). **No evidence-pack surface exists yet to satisfy it**, which is why it
+  moved rather than staying open against a task whose other 23 criteria are met.
 - **T-0013 session encoding:** **resolved** — opaque server-side cookie per ADR-0049; the BFF session
   middleware implements it (bff #22).
 - **T-0017 runtime** is the riskiest step (agent/subprocess boundary, ADR-0011) — the sandbox model
