@@ -1,6 +1,7 @@
 # SPEC-0023: Git LFS transport and object store
 
-- **Status:** Approved (spec review 2026-08-10 — open questions 1 and 2 decided; see below)
+- **Status:** Approved (spec review 2026-08-10; **amended 2026-08-11 for ADR-0050** — the object tier
+  is a SeaweedFS FUSE mount and transfers proxy, superseding the pre-signed decision below)
 - **Owner:** unassigned
 - **Context(s):** Repository/Git (git-storaged, transport), with objects on the SeaweedFS-S3 tier
 - **ADRs:** 0004 (git storage tier — large objects on SeaweedFS-S3), 0033 (repos on block volumes,
@@ -100,6 +101,22 @@ No other context reads either.
 - [ ] AC10: A browser file view of a path whose content is an LFS pointer says so, with the object's
       size, rather than rendering the pointer file's text as the file's content.
 
+**Mount-backed tier** (added 2026-08-11 with ADR-0050. The first three restate on the mount what the
+S3 path already had to satisfy; AC14 is new, and is the criterion the whole decision rests on.)
+- [ ] AC11: An object written through the mount is staged under a temporary name in the same
+      directory, fsynced, and renamed onto its content-addressed name. A crash mid-write leaves a
+      temporary file and no object, never a short object under a name that claims to describe it.
+- [ ] AC12: An object is acknowledged only once it is readable back from the mount at its final name
+      and full length — the same rule AC2 states for S3, and for the same reason: a write the tier
+      accepted is not yet a write the tier has.
+- [ ] AC13: Objects remain tenant-scoped as directories: the same OID under two tenants is two files,
+      and no traversal in an OID can escape its tenant's prefix.
+- [ ] AC14: **Every read verifies content against the digest in the object's name before any byte is
+      served.** Rename is not atomic on this backend (ADR-0033), so a concurrent reader can observe a
+      torn result; verification is what turns that into a detected absence instead of a silently
+      corrupted object served to a client. An object failing verification is treated as absent —
+      never returned, never repaired in place.
+
 ## Governance mapping (G1–G9)
 | Objective | How this spec satisfies it |
 |---|---|
@@ -127,11 +144,16 @@ ADR-0020's choice is for.
   not starve interactive git.
 
 ## Decisions taken at spec review (2026-08-10)
-1. **Transfers go direct to the object tier.** A batch response hands the client a pre-signed,
-   scoped, expiring SeaweedFS-S3 URL; object bytes never traverse the application path. The cost
-   accepted with this: a pre-signed URL cannot be revoked mid-transfer, so its lifetime is the
-   revocation window. It is therefore short, per-object, and per-operation — a download credential
-   must not be usable to upload, and must not name a second object.
+1. ~~**Transfers go direct to the object tier.** A batch response hands the client a pre-signed,
+   scoped, expiring SeaweedFS-S3 URL; object bytes never traverse the application path.~~
+   **Superseded by ADR-0050 (2026-08-11).** A FUSE mount has no signed URLs, so transfers **proxy**:
+   object bytes flow through the data plane, which authorizes each one per object under
+   `repo.lfs.read` / `repo.lfs.write`. What that buys and costs is stated in ADR-0050 rather than
+   restated here — briefly, the unrevokable capability disappears and the plane's egress pays for it,
+   so LFS traffic must be paced against interactive git the way import work is.
+
+   The S3 path is not deleted. It stays implemented and tested as the deployment posture for a plane
+   with no mount, and as the reference the mount-backed adapter is compared against.
 2. **An import speaks the source's LFS batch API directly.** No shelling out to `git lfs`: the
    source token stays under the same rule `ImportRefs` already enforces — it travels in the request
    the platform makes and never into a child process's configuration — and the platform keeps
