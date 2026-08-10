@@ -1,7 +1,7 @@
 # ADR-0050: Large objects (LFS, CI artifacts, container images) are served from a SeaweedFS FUSE mount
 
-- **Status:** Proposed
-- **Date:** 2026-08-11
+- **Status:** Accepted
+- **Date:** 2026-08-11 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G3 supply chain, G4 durability, G8 cost governance
 - **Relates to:** ADR-0020 (SeaweedFS-S3 for blobs — this narrows it), ADR-0033 (live repos on block
