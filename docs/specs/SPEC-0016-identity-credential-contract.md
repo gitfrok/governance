@@ -67,6 +67,10 @@ verified principal's IDs through the front door; Policy owns authorization decis
 - [ ] AC3: Missing or failed authentication opens no GitStorage stream and makes no repository PDP
   request. A successful authentication cannot assert authorization; `git-storaged` still asks PDP.
 - [ ] AC4: Revoking a PAT or SSH key denies its next use, and token/identity lookup is tenant-scoped.
+- [ ] AC6: Roles granted at issuance (`IssuePATRequest.roles`) are returned by the principal each
+  time the PAT authenticates; an absent `roles` field issues a PAT whose principal carries no roles.
+  Roles are never the caller's evidence of anything — the PDP still decides with them in the
+  subject input, and `git-storaged` still asks the PDP.
 - [ ] AC5: The generated contract exposes no filesystem path, repository ID, authorization result,
   raw credential in a response **except `IssuePATResponse.plaintext_token` at issuance exactly
   once**, or agent-stream-compatible credential field. Authentication, list, revoke, events and
