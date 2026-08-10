@@ -29,9 +29,23 @@ gap to the migrating customer.
 Numbering in parentheses maps to SPEC-0011.
 
 **Git data**
-- [ ] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
-      commit SHAs byte-identical to the source.
-- [ ] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
+
+- [x] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
+      commit SHAs byte-identical to the source. **Proved against a real source repository, not in a
+      cluster:** the test builds a source with two branches, a lightweight tag and an annotated tag,
+      imports it, mirror-clones the result, and asserts the source's own SHAs for every ref plus a
+      full ref-list comparison. It drives the fetch step directly because `validSourceURL` refuses a
+      local path by design (AC22 — a source must arrive over the network). What the cluster lane
+      still owes this criterion is that it holds on a block volume with a real sync replica; that
+      object identity survives an import is now proved. Writing it found the git phase **broken** —
+      `git fetch` with no refspec landed objects and tags but no branches, so an import reported
+      success and left a repository nothing could reach (backend `feat/t0018-actor-mapping`,
+      `4072b42`).
+- [x] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
+      (`SPEC-0023` Approved, then implemented on backend `feat/t0018-actor-mapping`: the SeaweedFS-S3
+      tier, the LFS batch endpoint on the Git front door, `repo.lfs.read`/`repo.lfs.write` as their
+      own grants, and an import that fetches every object its refs reference — failing rather than
+      landing a repository whose large files are absent.)
 - [x] AC3: imported writes go through the ordinary durability path — an accepted import ref update
       is acknowledged only after primary + one sync replica (ADR-0016); repos on block volumes, LFS
       on SeaweedFS-S3 (invariant 7).
@@ -75,9 +89,12 @@ Numbering in parentheses maps to SPEC-0011.
       (ADR-0006; extends SPEC-0009 / T-0016 gating).
 - [x] AC14 (AC9): an unmapped `declared_actor` never resolves to a platform user in any API response
       or view; it is returned as an opaque handle plus its `source_instance`.
-- [ ] AC15 (AC10): mapping a `declared_actor` to a platform identity requires a tenant admin, is
+- [x] AC15 (AC10): mapping a `declared_actor` to a platform identity requires a tenant admin, is
       PDP-authorized, and emits a first-party audit event naming the asserting admin. Email equality
-      alone never produces a mapping.
+      alone never produces a mapping. (governance `feat/t0018-actor-mapping`: `MapDeclaredActor` +
+      `DeclaredActorMapped` + the owner-only `repository.import.map_actor` grant; backend
+      `feat/t0018-actor-mapping`: assertion-only, keyed per source instance, conflict refused,
+      provenance unchanged. SPEC-0011 gains AC22-AC24.)
 
 **Integrity & revocation**
 - [x] AC16 (AC11): the `HistoryImported` manifest digest verifies against the imported set; mutating
@@ -89,9 +106,13 @@ Numbering in parentheses maps to SPEC-0011.
       provenance block.
 
 **Evidence export**
-- [ ] AC19 (AC14): an evidence pack spanning the import contains zero attested records in its control
+- [~] AC19 (AC14): an evidence pack spanning the import contains zero attested records in its control
       sections; attested history appears only in the labeled appendix with provenance blocks and the
-      admitting `HistoryImported` event.
+      admitting `HistoryImported` event. **Moved to Phase 2 (decided 2026-08-10).** No evidence-pack
+      surface exists anywhere in the platform, and the PRD places it in Phase 2 (PR-17). The rule this
+      criterion states is not lost: whoever builds that surface inherits it, and ADR-0029 §4 binds
+      them regardless of where the criterion is written down. Recorded in the backlog under EP-9 so it
+      cannot be quietly dropped with this task.
 
 **Isolation & authorization**
 - [x] AC20 (AC15): the import is PDP-authorized; a caller without import permission is denied and the

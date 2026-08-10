@@ -100,3 +100,30 @@ message HistoryImportRevoked {
   string import_id = 5;
   google.protobuf.Timestamp occurred_at = 6;
 }
+
+// DeclaredActorMapped records a tenant admin asserting that a foreign handle
+// from an import belongs to a platform identity (SPEC-0011 AC10, ADR-0029 §4).
+//
+// It is FIRST_PARTY, and it must be: the assertion is ours, made by an
+// authenticated admin our PDP authorized, timestamped by our clock. The imported
+// record it refers to stays ATTESTED_IMPORT and stays out of the log.
+//
+// The event names the asserting admin because that is the whole accountability
+// story. An identity mapping is how imported history could be made to look like
+// platform history, so who claimed it has to be recoverable years later — email
+// equality, a heuristic, or a bulk guess must never be able to produce one of
+// these without a name attached.
+message DeclaredActorMapped {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The tenant admin who asserted the mapping, authenticated and PDP-authorized.
+  string actor_id = 3;
+  string import_id = 4;
+  // The foreign handle and the instance it came from. A handle is only meaningful
+  // within its instance.
+  string declared_actor = 5;
+  string source_instance = 6;
+  // The platform identity the admin asserted the handle belongs to.
+  string mapped_actor_id = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}

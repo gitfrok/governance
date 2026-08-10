@@ -28,3 +28,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0020 | CI v0 job dispatch and isolated-runner contract | Approved | T-0017 |
 | SPEC-0021 | Browser repository-view HTTP contract | Approved | T-0015 |
 | SPEC-0022 | SSH verifier-key routing | Approved | T-0013, T-0011 |
+| SPEC-0023 | Git LFS transport and object store | Approved | T-0010, T-0018 |
