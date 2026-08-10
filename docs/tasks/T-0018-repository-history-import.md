@@ -75,9 +75,12 @@ Numbering in parentheses maps to SPEC-0011.
       (ADR-0006; extends SPEC-0009 / T-0016 gating).
 - [x] AC14 (AC9): an unmapped `declared_actor` never resolves to a platform user in any API response
       or view; it is returned as an opaque handle plus its `source_instance`.
-- [ ] AC15 (AC10): mapping a `declared_actor` to a platform identity requires a tenant admin, is
+- [x] AC15 (AC10): mapping a `declared_actor` to a platform identity requires a tenant admin, is
       PDP-authorized, and emits a first-party audit event naming the asserting admin. Email equality
-      alone never produces a mapping.
+      alone never produces a mapping. (governance `feat/t0018-actor-mapping`: `MapDeclaredActor` +
+      `DeclaredActorMapped` + the owner-only `repository.import.map_actor` grant; backend
+      `feat/t0018-actor-mapping`: assertion-only, keyed per source instance, conflict refused,
+      provenance unchanged. SPEC-0011 gains AC22-AC24.)
 
 **Integrity & revocation**
 - [x] AC16 (AC11): the `HistoryImported` manifest digest verifies against the imported set; mutating
