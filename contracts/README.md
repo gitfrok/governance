@@ -21,7 +21,9 @@ needs a direct response.
   against the usual preference for events, because a PEP cannot proceed without the answer; the
   rules themselves live in `../policies/` and never travel over this wire
 - `proto/git/v1/git.proto` — internal packet-stream transport between the smart-HTTP/SSH front
-  doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side
+  doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side.
+  It also carries `MergeRef`, the single-ref compare-and-swap move Code Review uses to complete an
+  authorized merge (SPEC-0019) — storage asks the PDP for it exactly as it does for a push
 - `proto/identity/v1/identity.proto` — credential authentication and PAT lifecycle port for
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF

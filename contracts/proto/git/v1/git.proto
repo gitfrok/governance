@@ -15,6 +15,18 @@ service GitStorage {
 
   // ReceivePack carries an unmodified git-receive-pack exchange for push.
   rpc ReceivePack(stream ReceivePackRequest) returns (stream ReceivePackResponse);
+
+  // MergeRef moves one exact branch ref to an existing revision on behalf of an
+  // authorized merge (SPEC-0019). It is the only route by which a ref changes
+  // without a Git protocol exchange, and it exists so Code Review can complete a
+  // merge through a contract boundary instead of against Git storage.
+  //
+  // It is not a general ref-write API: it moves one ref, it names no source
+  // repository or path, it carries no pack bytes, and it cannot create or delete
+  // a repository. git-storaged asks the PDP itself before applying it, exactly as
+  // it does for a push — a caller that has already been allowed by its own PEP is
+  // still not trusted to assert that here.
+  rpc MergeRef(MergeRefRequest) returns (MergeRefResponse);
 }
 
 // OperationContext identifies one Git operation. It is sent as the first client-stream message;
@@ -65,4 +77,43 @@ message ReceivePackRequest {
 
 message ReceivePackResponse {
   bytes data = 1;
+}
+
+// RefUpdateContext identifies one authorized ref move. It is the OperationContext
+// fields that still mean something without a Git protocol exchange: there is no
+// transport, because no client framing is involved. Like OperationContext it
+// carries no path, credential, or authorization result, and its roles are a
+// verified principal attribute the storage PDP evaluates, never an assertion.
+message RefUpdateContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  string request_id = 4;
+  repeated string actor_roles = 5;
+}
+
+// MergeRefRequest moves target_ref to revision.
+//
+// expected_current_revision makes the move a compare-and-swap: storage applies it
+// only if the ref is still where the caller last saw it, so a merge decided
+// against one state cannot land on a different one. An empty value means the ref
+// is expected not to exist yet.
+//
+// Deliberately absent: a force flag, a delete, a pattern, an approval count, a
+// protection result, and an allow flag. None of them can be expressed here, which
+// is what keeps this narrower than a ref-write API.
+message MergeRefRequest {
+  RefUpdateContext context = 1;
+  // An exact refs/heads/... name. Pattern syntax is not accepted.
+  string target_ref = 2;
+  // An existing revision in this repository; storage refuses an unknown one.
+  string revision = 3;
+  string expected_current_revision = 4;
+}
+
+// MergeRefResponse reports the ref's new revision. A refused move returns a coarse
+// error and no partial state, in the same shape as any other storage refusal.
+message MergeRefResponse {
+  string target_ref = 1;
+  string revision = 2;
 }
