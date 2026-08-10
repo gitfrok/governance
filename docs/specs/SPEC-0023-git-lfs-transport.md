@@ -31,8 +31,11 @@ before the code does.
 - The **Git LFS batch API** (`POST /{repo}.git/info/lfs/objects/batch`) for `upload` and `download`,
   and the object transfer endpoints those operations point at, served by the Git front door that
   already terminates Smart-HTTP.
-- **Object storage** on the SeaweedFS-S3 tier, keyed so that no two tenants can name the same
-  object, and so that an object's key discloses nothing about another tenant.
+- **Object storage on SeaweedFS-S3, and only there.** SeaweedFS is the object store (ADR-0020,
+  ADR-0033 decision 4), not one S3-compatible option among several: the platform is configured with
+  a SeaweedFS gateway address, its variables name SeaweedFS, and there is no credential chain, no
+  region resolution, and no fallback that could put objects anywhere else. Keys are laid out so no
+  two tenants can name the same object, and so a key discloses nothing about another tenant.
 - **Authorization** of every LFS operation through the PDP, as its own action vocabulary
   (`repo.lfs.read`, `repo.lfs.write`) rather than by reusing `repo.read`/`repo.write` — a large-file
   read is a distinct, expensive permission and should be grantable and deniable on its own.
@@ -106,6 +109,15 @@ No other context reads either.
 | G5 auditability | LFS denials are audited; credentials never reach the trail (AC3, AC8) |
 | G8 cost governance | LFS bytes are measured at the tier that wrote them (AC9) |
 
+## Why not an S3 SDK
+The platform speaks S3 because that is SeaweedFS's own API — the protocol is the dialect, SeaweedFS
+is the store. It does so over `net/http` with SigV4 signed in-tree rather than through a vendor SDK:
+the surface is three verbs (put, read, presign), both planes ship from `scratch`, and an SDK carries
+a credential chain, a region resolver, a retry policy and a plugin system aimed at a service this
+platform does not use. A dependency that can discover credentials from an ambient environment is
+also a dependency that can reach an endpoint nobody configured, which is the opposite of what
+ADR-0020's choice is for.
+
 ## Non-functional
 - A `download` batch response must not require the platform to stream the object through the
   control path when the object tier can serve it directly under a scoped, expiring credential.
@@ -130,6 +142,6 @@ No other context reads either.
    everything is simpler and can be enormous; fetching reachable-only is what a migrating customer
    expects but requires walking the imported history. Assumption for now: reachable from imported
    refs, because AC7 must be checkable.
-2. This spec assumes the SeaweedFS-S3 tier is reachable from the data plane in every environment it
-   is expected to serve. T-0003's dev environment currently has no S3 lane; if that stays true, AC1
+2. This spec assumes the SeaweedFS-S3 gateway is reachable from the data plane in every environment
+   it is expected to serve. T-0003's dev environment currently has no S3 lane; if that stays true, AC1
    is provable only in the cluster lane, exactly as `SPEC-0011` AC1 is.
