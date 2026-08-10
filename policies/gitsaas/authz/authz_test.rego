@@ -75,6 +75,9 @@ denied_pairs := [
 	{"role": "reader", "action": "repository.import.read"},
 	{"role": "reader", "action": "repository.import.revoke"},
 	{"role": "reader", "action": "repository.import.map_actor"},
+	# A reader reads text, not every large object the repository references.
+	{"role": "reader", "action": "repo.lfs.read"},
+	{"role": "reader", "action": "repo.lfs.write"},
 ]
 
 test_role_matrix_denies_everything_not_granted if {
@@ -96,6 +99,10 @@ granted_pairs := [
 	{"role": "owner", "action": "merge_request.open"},
 	{"role": "owner", "action": "repository.branch_protection.manage"},
 	{"role": "owner", "action": "repository.import"},
+	{"role": "owner", "action": "repo.lfs.read"},
+	{"role": "owner", "action": "repo.lfs.write"},
+	{"role": "member", "action": "repo.lfs.read"},
+	{"role": "member", "action": "repo.lfs.write"},
 ]
 
 test_role_matrix_grants_what_the_table_says if {
@@ -436,4 +443,37 @@ test_deny_import_from_another_tenant if {
 		import_request("owner", "repository.import", "repository"),
 		{"subject": {"id": "u-imp", "roles": ["owner"], "tenant_id": "globex"}},
 	)
+}
+
+# --- SPEC-0023 AC3: LFS is its own permission ----------------------------------------------------
+
+# The point of a separate action: holding repo.read does not carry the right to
+# pull every large object the repository references.
+test_deny_lfs_read_is_not_implied_by_repo_read if {
+	not authz.allow with input as object.union(
+		reader_request,
+		{"action": "repo.lfs.read"},
+	)
+}
+
+test_deny_lfs_write_is_not_implied_by_repo_write if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-1", "roles": ["reader"], "tenant_id": "acme"},
+		"action": "repo.lfs.write",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {},
+	}
+}
+
+# And an LFS action asked about the wrong resource kind is not answered by the
+# repository grant either.
+test_deny_lfs_action_asked_about_an_import if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-1", "roles": ["member"], "tenant_id": "acme"},
+		"action": "repo.lfs.read",
+		"resource": {"type": "import", "id": "import-1"},
+		"context": {},
+	}
 }

@@ -49,6 +49,7 @@ role_actions := {
 		"repository.branch_protection.manage",
 		"repository.import", "repository.import.read", "repository.import.revoke",
 		"repository.import.map_actor",
+		"repo.lfs.read", "repo.lfs.write",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -56,7 +57,14 @@ role_actions := {
 		# A member may read imported history — it is repository content — but may
 		# neither start an import, revoke one, nor assert who a foreign handle is.
 		"repository.import.read",
+		# Large objects are their own permission (SPEC-0023 AC3): a large-file read
+		# is bulk egress and a large-file write is bulk storage, and a tenant must be
+		# able to grant repository access without granting either.
+		"repo.lfs.read", "repo.lfs.write",
 	},
+	# A reader reads the repository. LFS is deliberately not included: pulling every
+	# large object in a repository is a different cost from reading its text, and a
+	# tenant that wants to grant one without the other has to be able to.
 	"reader": {"repo.read"},
 }
 
@@ -82,6 +90,8 @@ action_resource := {
 	"repository.import.read": "import",
 	"repository.import.revoke": "import",
 	"repository.import.map_actor": "import",
+	"repo.lfs.read": "repository",
+	"repo.lfs.write": "repository",
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
