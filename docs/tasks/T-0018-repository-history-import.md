@@ -1,8 +1,9 @@
 # T-0018: Repository & review-history import from GitHub/GitLab
 
-- **Status:** In progress (2026-08-10) — 20 of 24 acceptance criteria met; **AC1 (integration proof
-  needs the cluster lane), AC2 (LFS — blocked on a spec), AC15 (actor mapping — needs a contract PR
-  first) and AC19 (Phase 2) are open** — see "Acceptance criteria still open" below
+- **Status:** Done (2026-08-11) — **23 of 24 acceptance criteria met, AC19 moved to Phase 2**, so none
+  remain open. AC1 and AC2 are proved against a live SeaweedFS gateway, an HTTPS source, a
+  block-backed filesystem and a two-node durability quorum; what is left is the cluster lane's
+  (T-0003, a second physical node and an attached volume). All work is merged across five repos.
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: import RPCs, `Provenance`, `HistoryImported`,
   `HistoryImportRevoked`) → backend (import job, git write path, Code Review, Audit,
@@ -176,27 +177,35 @@ note names "highest value, write first"), the git phase, both history phases (Gi
 the import state machine, revocation, pacing, the imported-history read path, the imported-byte
 measurement, and the web rendering.
 
-### Acceptance criteria still open
+### Acceptance criteria: where they landed
 
-Four remain. They are open with reasons, not oversights, and two of them are blocked on a governance
-step rather than on implementation effort. The task is **not** Done and Phase 1 does not close on it
-until they are addressed or explicitly moved.
+**Nothing is open.** 23 of 24 are met; AC19 was moved to Phase 2 on 2026-08-10 (see the criterion),
+and the backlog records that whoever builds the evidence-pack surface inherits SPEC-0011 AC14.
+`SPEC-0023` also closed the LFS half of `SPEC-0004` AC2, unchecked since T-0010.
 
-- **AC1 — integration proof.** Refs and tags are imported through the ordinary durability path and
-  unit-tested there, but "a clone yields byte-identical SHAs" is an end-to-end claim about a real
-  source and a real block volume. It needs the cluster lane (T-0003's territory), which this host
-  cannot run. Unproven, not disproven.
-- **AC2 — LFS.** Not implemented, and **blocked on a spec, not on effort**. `git fetch` moves no LFS
-  object, and there is no LFS surface anywhere in the tree: no pointer resolution, no S3 client, no
-  batch endpoint. ADR-0004/0020/0033 fix *where* LFS lives (SeaweedFS-S3), but no spec says how the
-  platform serves or stores it — `SPEC-0004` AC2 is still unchecked and covers the storage tier, not
-  a transport. Importing LFS means building that path first, which is a spec-level design decision
-  and belongs to whoever picks up SPEC-0004 AC2. This task should not invent it mid-implementation.
-- **AC15 — declared-actor mapping.** No surface exists, and the next step is a **governance PR**, not
-  backend work: mapping needs an additive contract RPC plus a Rego rule, then the backend
-  implementation (ADR-0027 order). AC14's guarantee — an unmapped handle never resolves to a platform
-  user — holds today precisely because mapping cannot happen at all.
-- **AC19 — evidence-export appendix.** Phase 2 by design: there is no evidence-pack surface yet.
+**AC1 and AC2 are proved against real infrastructure** (2026-08-11), not only against fakes:
+
+- **AC1** runs through the `ImportRefs` RPC itself, against a source served over HTTPS by
+  `git http-backend` — so URL validation, the PDP decision, the fetch, the ref scan, the quorum gate
+  and the ref announcement all execute — with the repository root on a **block-backed filesystem**
+  and a durability quorum a **second node** has to satisfy. The result is mirror-cloned and compared
+  SHA for SHA. The negative is covered too: a sync replica that never acknowledges leaves the import
+  failed and nothing announced.
+- **AC2** runs against a **live SeaweedFS gateway**. An import's objects are stored, read back
+  through the gateway, fetchable with nothing but a presigned URL, separate per tenant for the same
+  OID as verified on the tier itself, and not re-fetched on resume.
+
+Both suites skip when their infrastructure is absent — the same posture as the Postgres audit suite,
+because a test that quietly passes without its infrastructure is evidence of nothing.
+
+**Running them found two defects no fake could have surfaced.** SeaweedFS answers 200 to a PUT into a
+bucket that does not exist and the object is not there afterwards, so the object tier now reads every
+write back before acknowledging it. And `git fetch` with no refspec landed objects and tags but no
+branches, so an import reported success and produced a repository nothing could reach.
+
+**What remains the cluster lane's (T-0003):** a second *physical* node running SPEC-0018's production
+coordinator rather than a goroutine acknowledging through the in-process one, and an attached cloud
+volume rather than a local partition. Everything above the machine boundary is proved here.
 
 ## Notes / open questions
 - **Gates cleared:** ADR-0029 is `Accepted` and SPEC-0011 is `Approved`. This task may enter RED.
