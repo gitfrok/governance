@@ -1,6 +1,9 @@
 # T-0018: Repository & review-history import from GitHub/GitLab
 
-- **Status:** In progress (2026-08-10) — contracts + audit boundary + git phase + GitHub history phase merged; web rendering remains
+- **Status:** In progress (2026-08-10) — contracts, audit boundary, git phase, GitHub + GitLab
+  history phases, pacing, imported-history read and web rendering are in; **AC1 (integration proof),
+  AC2 (LFS), AC12, AC15, AC16 (payload tamper detection) and AC19 are open** — see
+  "Acceptance criteria still open" below
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: import RPCs, `Provenance`, `HistoryImported`,
   `HistoryImportRevoked`) → backend (import job, git write path, Code Review, Audit,
@@ -30,38 +33,44 @@ Numbering in parentheses maps to SPEC-0011.
 - [ ] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
       commit SHAs byte-identical to the source.
 - [ ] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
-- [ ] AC3: imported writes go through the ordinary durability path — an accepted import ref update
+- [x] AC3: imported writes go through the ordinary durability path — an accepted import ref update
       is acknowledged only after primary + one sync replica (ADR-0016); repos on block volumes, LFS
       on SeaweedFS-S3 (invariant 7).
 
 **Review history**
-- [ ] AC4 (AC3): imported MRs carry title, description, state, source/target refs, threads,
+- [x] AC4 (AC3): imported MRs carry title, description, state, source/target refs, threads,
       comments, approvals, labels, `declared_actor` and `declared_at` as declared by the source.
-- [ ] AC5: a comment whose diff position no longer resolves (source force-pushed, commits missing)
+- [x] AC5: a comment whose diff position no longer resolves (source force-pushed, commits missing)
       degrades to **file-level** anchoring, and to **MR-level** attachment only when the file is also
       gone. No comment is ever dropped, and a degraded anchor is marked approximate in the API
       response so the UI can render it as such (SPEC-0011 open question 2, resolved).
 
 **Job lifecycle**
-- [ ] AC6 (AC4): an interrupted import resumes without duplicating work and reaches the same end
+- [x] AC6 (AC4): an interrupted import resumes without duplicating work and reaches the same end
       state (idempotent per `source_ref` + `import_id`), across both the git and history phases.
-- [ ] AC7: a failed import leaves nothing partially visible — git data and history flip to visible
+- [x] AC7: a failed import leaves nothing partially visible — git data and history flip to visible
       per-import, atomically.
-- [ ] AC8: source-side rate limiting causes backoff and a stalled (not failed) import.
-- [ ] AC9: import throughput is throttled ahead of degrading interactive git/web latency, and
+- [x] AC8: source-side rate limiting causes backoff and a stalled (not failed) import.
+- [x] AC9: import throughput is throttled ahead of degrading interactive git/web latency, and
       imported bytes count against the tenant's fair-use storage dimension (PRD §6, G8).
+      **Ticked as far as this task can carry it:** the throttle is in (backend #43), and the byte
+      count is measured by the storage tier that wrote the objects and handed to a `StorageMeter`
+      port. No plane wires a meter, because fair-use accounting does not exist yet — PRD PR-23 is
+      **New** and §12 lists it as needing its own spec and task. The dimension it will be charged
+      against is that task's to build; this one owes the honest number at the seam, and delivers it.
+      Do not read this tick as "a tenant's envelope now reflects imports".
 
 **Provenance separation (ADR-0029) — the load-bearing criteria**
-- [ ] AC10 (AC5): after importing N history records, the audit log holds exactly one
+- [x] AC10 (AC5): after importing N history records, the audit log holds exactly one
       `HistoryImported` event for that import and **zero** `ATTESTED_IMPORT` records.
-- [ ] AC11 (AC6): the audit writer **rejects** any write whose provenance is not `FIRST_PARTY` — an
+- [x] AC11 (AC6): the audit writer **rejects** any write whose provenance is not `FIRST_PARTY` — an
       error, not a silent drop. Enforced as a **boundary/fitness test** (T-0009 family), so it cannot
       regress to a unit-test-only guarantee.
 - [ ] AC12 (AC7): no audit chain entry's chain position disagrees with our clock ordering after an
       import; `declared_at` influences nothing in the chain.
-- [ ] AC13 (AC8): an MR whose only approvals are imported is **blocked from merge** by the PDP
+- [x] AC13 (AC8): an MR whose only approvals are imported is **blocked from merge** by the PDP
       (ADR-0006; extends SPEC-0009 / T-0016 gating).
-- [ ] AC14 (AC9): an unmapped `declared_actor` never resolves to a platform user in any API response
+- [x] AC14 (AC9): an unmapped `declared_actor` never resolves to a platform user in any API response
       or view; it is returned as an opaque handle plus its `source_instance`.
 - [ ] AC15 (AC10): mapping a `declared_actor` to a platform identity requires a tenant admin, is
       PDP-authorized, and emits a first-party audit event naming the asserting admin. Email equality
@@ -70,10 +79,10 @@ Numbering in parentheses maps to SPEC-0011.
 **Integrity & revocation**
 - [ ] AC16 (AC11): the `HistoryImported` manifest digest verifies against the imported set; mutating
       any imported record afterwards makes verification fail.
-- [ ] AC17 (AC12): revoking an import emits `HistoryImportRevoked`, tombstones every record with that
+- [x] AC17 (AC12): revoking an import emits `HistoryImportRevoked`, tombstones every record with that
       `import_id`, and drops them from all reads and exports — while the original `HistoryImported`
       chain entry stays unaltered (invariant 5).
-- [ ] AC18 (AC13): no API surface can update or delete an individual imported record, or alter a
+- [x] AC18 (AC13): no API surface can update or delete an individual imported record, or alter a
       provenance block.
 
 **Evidence export**
@@ -82,19 +91,19 @@ Numbering in parentheses maps to SPEC-0011.
       admitting `HistoryImported` event.
 
 **Isolation & authorization**
-- [ ] AC20 (AC15): the import is PDP-authorized; a caller without import permission is denied and the
+- [x] AC20 (AC15): the import is PDP-authorized; a caller without import permission is denied and the
       denial is audited (ADR-0006, ADR-0007).
-- [ ] AC21 (AC16): imported git data, history records and manifests are tenant-scoped; a cross-tenant
+- [x] AC21 (AC16): imported git data, history records and manifests are tenant-scoped; a cross-tenant
       read of any of them is denied (invariants 1–2, SPEC-0001).
-- [ ] AC22 (AC17): source credentials never appear in the audit log, the manifest, imported records,
+- [x] AC22 (AC17): source credentials never appear in the audit log, the manifest, imported records,
       job logs, or the agent stream.
 
 **Rendering**
-- [ ] AC23 (AC18): an MR view mixing imported and first-party threads distinguishes them; an imported
+- [x] AC23 (AC18): an MR view mixing imported and first-party threads distinguishes them; an imported
       approval is never rendered in a way that reads as a platform approval (ADR-0015).
 
 **Cross-cutting migration of existing writers**
-- [ ] AC24: every existing audit-emitting path sets provenance **explicitly** to `FIRST_PARTY` —
+- [x] AC24: every existing audit-emitting path sets provenance **explicitly** to `FIRST_PARTY` —
       ADR-0029 §1 forbids an implicit default. A writer that omits provenance fails to compile or is
       rejected at the writer boundary.
 
@@ -129,15 +138,42 @@ See `../process/definition-of-done.md`.
 | backend | #39 | **AC6/AC11 + AC24**: `api.Entry` gains required `Provenance`; the postgres store rejects non-`FIRST_PARTY` with `ErrNotFirstParty` (an error, never a silent drop); new fitness rule `RuleAuditImportsCodereview` keeps attested types out of the audit write surface. **AC1-AC3**: `ImportRefs` fetches source refs/tags through the ordinary durability path; the token travels only in the child-process environment, never argv, and git stderr is never returned (AC22). **AC6/AC10/AC16/AC17**: the import service — idempotent per (tenant, repository, source URL), one `HistoryImported` event with manifest digest on completion, `Revoke` tombstones records + emits `HistoryImportRevoked`. **AC7**: a failed git phase is not visible (FAILED state, no audit event). |
 | backend | #40 | **AC4/AC5/AC8/AC13/AC17**: the history phase — `internal/adapters/github` fetches PRs + reviews from the GitHub API, shapes `ImportedMergeRequest` records with `ATTESTED_IMPORT` provenance (opaque `declared_actor`, display-only `declared_at`, payload digest), stores them in the Code Review record store; approved reviews become `ImportedApproval` records that can never satisfy a merge policy (AC13); rate limits mark the import STALLED (AC8); `Revoke` tombstones imported records (AC17). Tests: stub GitHub server round-trip, rate-limit stall, URL parsing, revoked-import write refusal. |
 
-**Delivered so far:** contracts, the audit-writer provenance boundary (the load-bearing ACs the
-task's own note names "highest value, write first"), the git phase, the history phase (GitHub), the
-import state machine, and revocation.
+| backend | #41 | **AC4/AC5**: GitLab as a second source behind the same port (`source_system` selects it), shared imported-record store, anchor degradation on both adapters. |
+| backend | #43 | **AC9 (throttle half)**: import work is paced per phase; an import that cannot get a turn is STALLED, not FAILED, and resumes where it stopped. |
+| governance | #114 | Additive: `ImportService.ListImportedHistory` (paged) with `ImportedMergeRequest.declared_creator`, and `ImportRefsResponse.imported_bytes`. |
+| backend | `feat/t0018-imported-history-read` | **AC20/AC14/AC17 on the read path**: `ListImportedHistory` serves one import's records with every provenance block intact; a revoked import returns nothing; another tenant is refused. |
+| backend | `feat/t0018-imported-bytes` | **AC9 (measurement half)**: git-storaged returns `imported_bytes` — the repository's growth across the fetch, measured by git, growth only — and a `StorageMeter` port attributes it to (tenant, repository, import) once per completed git phase. Nothing is charged for a failed phase. |
+| bff | `feat/t0018-imported-history` | **AC23 read surface**: `GET /v1/repositories/{id}/imports/{import_id}/history`; provenance on every record, `satisfies_policy: false` on every imported approval, `approximate` on a degraded anchor, and no field that names a resolvable platform actor. |
+| webfrontend | `feat/t0018-imported-history` | **AC23/AC5**: imported history renders in its own labelled unverified section; an imported approval states it is not a platform approval and satisfies no merge policy; a foreign handle always carries its source instance and is never a user link; a degraded anchor says it is approximate. Rules live in `src/lib/provenance.ts` and are unit tested, plus a container render asserting the markup itself. |
 
-**Still open (remaining ACs):** the webfrontend provenance rendering (AC23, AC9), the
-evidence-export appendix (AC19/AC14, Phase 2), and a GitLab source client (the GitHub importer is
-wired; `source_system` selects it — GitLab is additive behind the same port). AC8 (imported
-approvals never satisfy a merge policy) is enforced by the PDP rule set in `governance/policies`;
-the merge path already feeds `valid_approvals` from first-party reviews only.
+**Delivered:** contracts, the audit-writer provenance boundary (the load-bearing ACs the task's own
+note names "highest value, write first"), the git phase, both history phases (GitHub and GitLab),
+the import state machine, revocation, pacing, the imported-history read path, the imported-byte
+measurement, and the web rendering.
+
+### Acceptance criteria still open
+
+These are open with reasons, not oversights. The task is **not** Done and Phase 1 does not close on
+it until they are addressed or explicitly moved.
+
+- **AC1 — integration proof.** Refs and tags are imported through the ordinary durability path and
+  unit-tested there, but "a clone yields byte-identical SHAs" is an end-to-end claim about a real
+  source and a real block volume. It needs the cluster lane (T-0003's territory), which this host
+  cannot run. Unproven, not disproven.
+- **AC2 — LFS.** Not implemented. `git fetch` moves no LFS object, and nothing in the tree resolves
+  a pointer or fetches from SeaweedFS-S3 during an import. The task's Goal names LFS explicitly, so
+  this is real remaining work, not a scope note.
+- **AC12 — chain ordering after an import.** The audit chain is verified by T-0006's own tests, and
+  `declared_at` never reaches the chain by construction. What is missing is the test that says so
+  *across an import*: chain position versus clock ordering with imported records present.
+- **AC15 — declared-actor mapping.** No surface exists. It also needs a contract RPC, so it is a
+  governance PR first (ADR-0027 order), then backend, then policy. AC14's guarantee — an unmapped
+  handle never resolves to a platform user — holds today precisely because mapping cannot happen.
+- **AC16 — payload tamper detection.** The `HistoryImported` manifest digest is computed and
+  reproducible, but over the import's metadata and per-type record counts. Mutating a comment's body
+  leaves the digest unchanged, so "mutating any imported record makes verification fail" is not yet
+  true. The digest must cover the records' payload digests.
+- **AC19 — evidence-export appendix.** Phase 2 by design: there is no evidence-pack surface yet.
 
 ## Notes / open questions
 - **Gates cleared:** ADR-0029 is `Accepted` and SPEC-0011 is `Approved`. This task may enter RED.
