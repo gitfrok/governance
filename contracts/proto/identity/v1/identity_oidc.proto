@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+// OIDC login verification surface (ADR-0045, SPEC-0006, T-0013).
+//
+// This is Identity&Access's server-side half of the OAuth 2.0 Authorization Code
+// Flow with PKCE. The BFF performs the redirect dance with the configured issuer;
+// this service performs the cryptographic verification and the claim-to-principal
+// mapping, which must never happen in a less-trusted layer.
+//
+// What the caller may supply is deliberately narrow: the artifacts it received
+// from the issuer and the PKCE values it generated. It cannot supply a tenant, an
+// actor, a role, an issuer, an audience, or an authorization outcome. Every one of
+// those is either configured per environment or derived here from a verified
+// token, because a browser-selected tenant is exactly the assertion RLS and the
+// PDP exist to refuse (ADR-0045).
+//
+// Every failure — an invalid signature, a wrong issuer or audience, an expired or
+// replayed token, an unmapped claim, an inactive tenant mapping — returns the same
+// coarse denial as AuthenticatePAT: an empty response. The surface says only
+// "no principal", never why, so it cannot be used to enumerate tenants, users, or
+// configuration.
+package gitsaas.identity.v1;
+
+import "proto/identity/v1/identity.proto";
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/identity/v1;identityv1";
+
+service OIDCLogin {
+  // ExchangeCode completes the Authorization Code Flow: it exchanges the code and
+  // PKCE verifier at the configured issuer, validates the resulting ID token, and
+  // returns the tenant-scoped principal it maps to. It exists so the OIDC client
+  // secret never leaves Identity&Access.
+  rpc ExchangeCode(ExchangeCodeRequest) returns (ExchangeCodeResponse);
+
+  // VerifyIDToken validates an ID token the caller already holds and returns the
+  // principal it maps to. It is the same verification as ExchangeCode without the
+  // token-endpoint round trip, for a caller that obtained the token another way.
+  rpc VerifyIDToken(VerifyIDTokenRequest) returns (VerifyIDTokenResponse);
+}
+
+// ExchangeCodeRequest carries only what the browser flow produced. The issuer,
+// client ID, audience, role-claim name, and allowed role vocabulary are
+// per-environment configuration and are deliberately absent: a caller that could
+// name its own issuer could name one it controls.
+message ExchangeCodeRequest {
+  // The authorization code returned by the issuer.
+  string code = 1;
+  // The PKCE code verifier whose challenge began this flow.
+  string code_verifier = 2;
+  // The redirect URI this flow used. It is validated against the configured one;
+  // it does not select where anything is sent.
+  string redirect_uri = 3;
+  // The nonce this flow began with, checked against the ID token's claim so a
+  // token minted for another flow cannot be replayed into this one.
+  string nonce = 4;
+}
+
+message ExchangeCodeResponse {
+  // Absent when verification or mapping failed, which is the only failure signal.
+  Principal principal = 1;
+}
+
+message VerifyIDTokenRequest {
+  string id_token = 1;
+  string nonce = 2;
+}
+
+message VerifyIDTokenResponse {
+  // Absent when verification or mapping failed, which is the only failure signal.
+  Principal principal = 1;
+}

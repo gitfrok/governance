@@ -26,6 +26,10 @@ needs a direct response.
   authorized merge (SPEC-0019) — storage asks the PDP for it exactly as it does for a push
 - `proto/identity/v1/identity.proto` — credential authentication and PAT lifecycle port for
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
+- `proto/identity/v1/identity_oidc.proto` — the server-side half of the OIDC Authorization Code
+  Flow with PKCE (ADR-0045, SPEC-0006): the BFF hands over the artifacts the browser flow produced,
+  and gets back a tenant-scoped principal or nothing. Issuer, audience, and role vocabulary are
+  per-environment configuration and cannot be named by a caller
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git
 - `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
