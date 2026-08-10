@@ -1,6 +1,6 @@
 # SPEC-0023: Git LFS transport and object store
 
-- **Status:** Draft
+- **Status:** Approved (spec review 2026-08-10 — open questions 1 and 2 decided; see below)
 - **Owner:** unassigned
 - **Context(s):** Repository/Git (git-storaged, transport), with objects on the SeaweedFS-S3 tier
 - **ADRs:** 0004 (git storage tier — large objects on SeaweedFS-S3), 0033 (repos on block volumes,
@@ -114,20 +114,22 @@ No other context reads either.
 - LFS traffic must be pace-able the way import work is (`SPEC-0011` AC21): a large `lfs pull` must
   not starve interactive git.
 
+## Decisions taken at spec review (2026-08-10)
+1. **Transfers go direct to the object tier.** A batch response hands the client a pre-signed,
+   scoped, expiring SeaweedFS-S3 URL; object bytes never traverse the application path. The cost
+   accepted with this: a pre-signed URL cannot be revoked mid-transfer, so its lifetime is the
+   revocation window. It is therefore short, per-object, and per-operation — a download credential
+   must not be usable to upload, and must not name a second object.
+2. **An import speaks the source's LFS batch API directly.** No shelling out to `git lfs`: the
+   source token stays under the same rule `ImportRefs` already enforces — it travels in the request
+   the platform makes and never into a child process's configuration — and the platform keeps
+   control of what it fetches and how that work is paced (AC21's pacer applies).
+
 ## Open questions / assumptions
-1. **Direct-to-tier transfer or proxied?** A pre-signed SeaweedFS-S3 URL keeps object bytes off the
-   application path; it also puts a credential the platform cannot revoke mid-transfer in a client's
-   hands. Both are defensible and the choice is not obviously ADR-level. Resolve at spec review; if
-   it turns out to constrain the storage tier's shape, it becomes a Proposed ADR instead.
-2. **Import fetch mechanism.** Speaking the source's LFS batch API directly keeps the platform in
-   control of what it fetches and how it is throttled; shelling out to `git lfs` reuses a mature
-   client but puts a source credential into a child process's configuration and makes the token
-   surface harder to reason about than `ImportRefs`'s current environment-only rule. Resolve at spec
-   review.
-3. **Does an import fetch every object, or only those reachable from imported refs?** Fetching
+1. **Does an import fetch every object, or only those reachable from imported refs?** Fetching
    everything is simpler and can be enormous; fetching reachable-only is what a migrating customer
    expects but requires walking the imported history. Assumption for now: reachable from imported
    refs, because AC7 must be checkable.
-4. This spec assumes the SeaweedFS-S3 tier is reachable from the data plane in every environment it
+2. This spec assumes the SeaweedFS-S3 tier is reachable from the data plane in every environment it
    is expected to serve. T-0003's dev environment currently has no S3 lane; if that stays true, AC1
    is provable only in the cluster lane, exactly as `SPEC-0011` AC1 is.

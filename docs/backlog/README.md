@@ -93,7 +93,17 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
   done, not wired to dataplane, no KEDA runtime).
 - **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
   with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
-  **SPEC-0011 Approved** — ready to start. T-0019 was folded into T-0018 at spec review.
+  **SPEC-0011 Approved**. T-0019 was folded into T-0018 at spec review.
+  **In progress (2026-08-10):** 22 of 24 acceptance criteria met. Two moved or open:
+  - **AC19 (evidence-pack appendix) moved to Phase 2** (decided 2026-08-10). No evidence-pack surface
+    exists anywhere, and the PRD places it in Phase 2 under PR-17. Recorded here so it is not lost
+    with the task: **whoever builds the evidence-pack surface owes SPEC-0011 AC14** — zero attested
+    records in a pack's control sections, attested history only in a labelled appendix carrying its
+    provenance blocks and the admitting `HistoryImported` event. ADR-0029 §4 binds that surface
+    whether or not the criterion is copied into its task.
+  - **AC2 (LFS)** waits on `SPEC-0023` (Git LFS transport and object store), Approved 2026-08-10 with
+    both transfer decisions taken. It is implementation work now, and it also closes the unchecked
+    LFS half of `SPEC-0004` AC2.
 - **EP-10 Deployable images**: T-0021 (container images for both planes) — **Done** (2026-08-10):
   backend #19/#25 (dataplane + controlplane from `scratch`), bff #16/#19, webfrontend #16/#18 (SSR).
   ADR-0035 (build surface) Accepted 2026-08-08; ADR-0044 (cosign key custody) and ADR-0047 (public

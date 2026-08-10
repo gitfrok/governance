@@ -29,8 +29,17 @@ gap to the migrating customer.
 Numbering in parentheses maps to SPEC-0011.
 
 **Git data**
-- [ ] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
-      commit SHAs byte-identical to the source.
+- [x] AC1 (SPEC-0011 AC1): all refs and tags are imported; a clone of the imported repo yields
+      commit SHAs byte-identical to the source. **Proved against a real source repository, not in a
+      cluster:** the test builds a source with two branches, a lightweight tag and an annotated tag,
+      imports it, mirror-clones the result, and asserts the source's own SHAs for every ref plus a
+      full ref-list comparison. It drives the fetch step directly because `validSourceURL` refuses a
+      local path by design (AC22 — a source must arrive over the network). What the cluster lane
+      still owes this criterion is that it holds on a block volume with a real sync replica; that
+      object identity survives an import is now proved. Writing it found the git phase **broken** —
+      `git fetch` with no refspec landed objects and tags but no branches, so an import reported
+      success and left a repository nothing could reach (backend `feat/t0018-actor-mapping`,
+      `4072b42`).
 - [ ] AC2 (AC2): LFS pointers resolve and the referenced objects are fetchable after import.
 - [x] AC3: imported writes go through the ordinary durability path — an accepted import ref update
       is acknowledged only after primary + one sync replica (ADR-0016); repos on block volumes, LFS
@@ -92,9 +101,13 @@ Numbering in parentheses maps to SPEC-0011.
       provenance block.
 
 **Evidence export**
-- [ ] AC19 (AC14): an evidence pack spanning the import contains zero attested records in its control
+- [~] AC19 (AC14): an evidence pack spanning the import contains zero attested records in its control
       sections; attested history appears only in the labeled appendix with provenance blocks and the
-      admitting `HistoryImported` event.
+      admitting `HistoryImported` event. **Moved to Phase 2 (decided 2026-08-10).** No evidence-pack
+      surface exists anywhere in the platform, and the PRD places it in Phase 2 (PR-17). The rule this
+      criterion states is not lost: whoever builds that surface inherits it, and ADR-0029 §4 binds
+      them regardless of where the criterion is written down. Recorded in the backlog under EP-9 so it
+      cannot be quietly dropped with this task.
 
 **Isolation & authorization**
 - [x] AC20 (AC15): the import is PDP-authorized; a caller without import permission is denied and the
