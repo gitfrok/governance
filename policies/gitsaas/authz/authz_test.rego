@@ -62,6 +62,9 @@ denied_pairs := [
 	{"role": "reader", "action": "repo.write"},
 	{"role": "reader", "action": "repo.admin"},
 	{"role": "member", "action": "repo.admin"},
+	{"role": "reader", "action": "merge_request.open"},
+	{"role": "reader", "action": "repository.branch_protection.manage"},
+	{"role": "member", "action": "repository.branch_protection.manage"},
 ]
 
 test_role_matrix_denies_everything_not_granted if {
@@ -76,9 +79,12 @@ granted_pairs := [
 	{"role": "reader", "action": "repo.read"},
 	{"role": "member", "action": "repo.read"},
 	{"role": "member", "action": "repo.write"},
+	{"role": "member", "action": "merge_request.open"},
 	{"role": "owner", "action": "repo.read"},
 	{"role": "owner", "action": "repo.write"},
 	{"role": "owner", "action": "repo.admin"},
+	{"role": "owner", "action": "merge_request.open"},
+	{"role": "owner", "action": "repository.branch_protection.manage"},
 ]
 
 test_role_matrix_grants_what_the_table_says if {
@@ -259,4 +265,108 @@ test_deny_reasons_are_indistinguishable if {
 		{"subject": {"id": "u-1", "roles": [], "tenant_id": "acme"}},
 	)
 	wrong_tenant == no_role
+}
+
+# --- T-0016: Merge request actions ------------------------------------------------
+
+# merge_request.review and merge_request.merge target a merge_request resource, not a
+# repository, so they need their own request shape rather than the reader_request base.
+mr_subject(role) := {"id": "u-mr", "roles": [role], "tenant_id": "acme"}
+
+test_allow_member_merge_request_review if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("member"),
+		"action": "merge_request.review",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {},
+	}
+}
+
+test_allow_owner_merge_request_review if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("owner"),
+		"action": "merge_request.review",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {},
+	}
+}
+
+test_deny_reader_merge_request_review if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("reader"),
+		"action": "merge_request.review",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {},
+	}
+}
+
+test_allow_merge_with_sufficient_approvals if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("member"),
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "2", "required_approvals": "1"},
+	}
+}
+
+test_deny_merge_without_sufficient_approvals if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("member"),
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "0", "required_approvals": "1"},
+	}
+}
+
+# A merge with no approval context at all is denied — the caller cannot omit the
+# check by leaving context empty (SPEC-0019 AC5).
+test_deny_merge_with_no_approval_context if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("member"),
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {},
+	}
+}
+
+# --- T-0016: Protected branches ---------------------------------------------------
+
+# A direct push to a protected branch is denied regardless of role (SPEC-0019 AC2).
+test_deny_direct_push_to_protected_branch if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-1", "roles": ["owner"], "tenant_id": "acme"},
+		"action": "repo.write",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {"operation": "direct_push", "protected": "true"},
+	}
+}
+
+# A direct push to an unprotected branch is still governed by the role table.
+test_allow_direct_push_to_unprotected_branch if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-2", "roles": ["member"], "tenant_id": "acme"},
+		"action": "repo.write",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {"operation": "direct_push", "protected": "false"},
+	}
+}
+
+# A merge path (non-direct-push) to a protected branch is not blocked by the
+# direct-push denial; it lives or dies by the merge_request.merge rule instead.
+test_deny_direct_push_does_not_block_merge_action if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-2", "roles": ["member"], "tenant_id": "acme"},
+		"action": "repo.write",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {"operation": "merge", "protected": "true"},
+	}
 }

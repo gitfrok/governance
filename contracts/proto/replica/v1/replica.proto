@@ -1,0 +1,168 @@
+syntax = "proto3";
+
+// Replica coordination and fencing contract (ADR-0016, ADR-0018, ADR-0042, ADR-0046, SPEC-0018).
+//
+// One additive, implementation-independent surface so a git-storaged node cannot mistake a lease,
+// an async acknowledgement, or a stale primary for authority to accept a push (ADR-0042 §2).
+// It carries only opaque shard/node/operation identifiers, the fencing term, and bounded RPO
+// evidence for the operator override. It never represents a filesystem path, a credential, a Git
+// payload, an agent-stream field, or a caller-provided authorization assertion (SPEC-0018 AC6,
+// ADR-0042 §5).
+package gitsaas.replica.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/replica/v1;replicav1";
+
+// ReplicaCoordinator is the per-shard authority that owns the membership record, the monotonic
+// fencing term, and the durable-acknowledgement quorum that gates push acknowledgment. It is
+// additive only: it cannot mutate Repository/Git storage or issue Git operations itself; it only
+// records who may and who has durably stored one operation under the current term.
+service ReplicaCoordinator {
+  // GetShard returns the current read-only shard record. `if_term` is an optional client-side
+  // staleness guard: a non-zero value that does not match the current term is refused as stale.
+  rpc GetShard(GetShardRequest) returns (GetShardResponse);
+
+  // BindWrite leases the write-route token for one receive-pack operation. A node that is not the
+  // write-ready primary for the offered term is denied, and the denial cannot mutate the shard record
+  // (ADR-0042 §2). The granted term, if any, is the term under which the caller may run receive-pack
+  // and collect durability acknowledgements.
+  rpc BindWrite(BindWriteRequest) returns (BindWriteResponse);
+
+  // AckDurable records that the node which served a receive-pack operation durably stored it. The
+  // coordinator keys the acknowledgement off its own shard record (primary vs. in-sync replica), so
+  // a stale primary or an async-only node cannot supply the quorum. The response reports whether the
+  // primary and the sync replica have both acked this operation under the same term; only then may the
+  // requesting router acknowledge its caller (ADR-0016, SPEC-0018 AC1).
+  rpc AckDurable(AckDurableRequest) returns (AckDurableResponse);
+
+  // PromoteReplica is the automated recovery path: a compare-and-swap from `healthy` state to the
+  // recorded in-sync replica only. It allocates a higher fencing term, requires fence acknowledgement,
+  // and exposes write-ready only afterward (ADR-0042 §3, SPEC-0018 AC3). A CAS failure — not healthy,
+  // or racing another promotion — refuses without changing the record (ADR-0042 §4 "stays read-only").
+  // On success the shard is `recovering` and not yet write-ready until AcknowledgeFence.
+  rpc PromoteReplica(PromoteReplicaRequest) returns (PromoteReplicaResponse);
+
+  // AcknowledgeFence is the old primary's report that it has observed the new fencing term and
+  // fenced the old one; only then does the shard become write-ready (ADR-0042 §3, SPEC-0018 AC3).
+  // A stale term or a node that is not the current primary is denied without changing the record.
+  rpc AcknowledgeFence(AcknowledgeFenceRequest) returns (AcknowledgeFenceResponse);
+
+  // ForcePromote is the audited operator override. It is reachable only from `degraded_read_only`
+  // (ADR-0018, ADR-0042 §4), selects an operator-chosen async replica, and carries no caller-provided
+  // allow assertion: the PDP decision ID and actor are audit context only (ADR-0046 §2/§3). The
+  // outcome — including the old/new fencing term and the estimated RPO window — is emitted as the one
+  // immutable `replica.force_promote` AuditEvent after a successful fence and CAS (SPEC-0018 AC5).
+  rpc ForcePromote(ForcePromoteRequest) returns (ForcePromoteResponse);
+}
+
+// ShardState is the coarse availability of one repository shard's replica set (ADR-0042 §1).
+enum ShardState {
+  SHARD_STATE_UNSPECIFIED = 0;         // rejected by every node
+  SHARD_STATE_HEALTHY = 1;             // primary + in-sync replica up; a write-ready primary may serve pushes
+  SHARD_STATE_DEGRADED_READ_ONLY = 2;  // confirmed primary + sync loss; no writes, no stale auto-promote
+  SHARD_STATE_RECOVERING = 3;          // post-promotion fence in progress; not yet write-ready
+}
+
+// ShardRecord is the immutable-by-writer view of one repository shard. A writer never reads
+// Repository/Git tables; this record is the only coordination state it consults.
+message ShardRecord {
+  string tenant_id = 1;            // opaque tenant handle
+  string repository_id = 2;        // opaque repository/shard handle
+  string primary_node = 3;          // opaque node identifier
+  string sync_replica = 4;         // opaque in-sync replica identifier
+  uint32 membership_version = 5;    // increments when the replica set changes
+  uint64 fencing_term = 6;         // unsigned, monotonic, strictly increasing per shard
+  ShardState state = 7;
+  bool write_ready = 8;            // true only after the current term's fence is acknowledged
+}
+
+message GetShardRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+  uint64 if_term = 3;               // optional staleness guard
+}
+
+message GetShardResponse {
+  ShardRecord shard = 1;
+}
+
+message BindWriteRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string operation_id = 3;          // opaque receive-pack operation handle
+  string node_id = 4;              // the node requesting the lease
+  uint64 term = 5;                 // the term the caller believes is current
+}
+
+message BindWriteResponse {
+  bool granted = 1;
+  // Meaningful only when granted is false; the shard record is unchanged.
+  DeniedReason deny_reason = 2;
+  uint64 current_term = 3;         // the term the caller must retry against
+}
+
+message AckDurableRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string operation_id = 3;         // the op bound by BindWrite
+  uint64 term = 4;                 // the term under which the op ran
+  string node_id = 5;              // which replica is acknowledging
+}
+
+// AckDurableResponse reports how far the quorum has progressed for one operation+term. The router
+// acknowledges its Git caller only once both flags are true under the same term (ADR-0016, SPEC-0018
+// AC1).
+message AckDurableResponse {
+  bool primary_acked = 1;
+  bool sync_acked = 2;
+}
+
+message PromoteReplicaRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+}
+
+message PromoteReplicaResponse {
+  bool promoted = 1;
+  DeniedReason deny_reason = 2;    // CAS failure reason; record unchanged
+  uint64 term = 3;                 // new term if promoted
+  bool write_ready = 4;            // fence acknowledged for the new term
+}
+
+message AcknowledgeFenceRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string node_id = 3;   // the old primary reporting the fence
+  uint64 term = 4;      // the new fencing term it is acknowledging
+}
+
+message AcknowledgeFenceResponse {
+  bool acknowledged = 1;   // true only if the node was the old primary for `term` and is now fenced
+  DeniedReason deny_reason = 2;
+}
+
+message ForcePromoteRequest {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string target_node = 3;           // operator-selected async replica
+  string policy_decision_id = 4;    // PDP allow context for the audit trail (ADR-0046 §3)
+  string actor_id = 5;              // verified platform-operator principal
+}
+
+message ForcePromoteResponse {
+  bool promoted = 1;
+  DeniedReason deny_reason = 2;     // CAS/fence failure; record unchanged
+  uint64 previous_term = 3;
+  uint64 resulting_term = 4;        // the term under which the promoted replica may write
+  uint32 estimated_rpo_seconds = 5; // bounded RPO evidence for the audit event
+}
+
+// DeniedReason is the bounded vocabulary of coordination refusals. It never carries a filesystem
+// path, credential, Git payload, or an authorization assertion.
+enum DeniedReason {
+  DENIED_REASON_UNSPECIFIED = 0;
+  DENIED_REASON_STALE_TERM = 1;     // offered term is below the current fencing term
+  DENIED_REASON_NOT_PRIMARY = 2;    // caller is not the primary for the current term
+  DENIED_REASON_NOT_WRITE_READY = 3; // primary's fence for this term is not yet acknowledged
+  DENIED_REASON_UNKNOWN_SHARD = 4;   // shard record does not exist
+  DENIED_REASON_NOT_HEALTHY = 5;     // PromoteReplica CAS: shard is not in a promotable state
+}

@@ -31,16 +31,21 @@ default allow := false
 # It is also why there is no "admin implies everything" shortcut — an implicit grant is exactly the
 # kind of rule that turns out, years later, to have granted something nobody intended.
 #
-# T-0005 ships the vocabulary the skeleton needs. T-0013 (identity) and T-0016 (merge requests) own
-# extending it; a resource kind with no entry here is denied, which is the correct state for a
-# feature that does not exist yet.
+# T-0005 ships the skeleton vocabulary. T-0013 (identity) extended it with
+# personal_access_token actions; T-0016 (merge requests) adds merge_request.* and
+# branch-protection actions below.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
 		"identity.pat.issue", "identity.pat.list", "identity.pat.revoke",
 		"ci.run", "ci.cancel",
+		"merge_request.open", "merge_request.review", "merge_request.merge",
+		"repository.branch_protection.manage",
 	},
-	"member": {"repo.read", "repo.write", "ci.run", "ci.cancel"},
+	"member": {
+		"repo.read", "repo.write", "ci.run", "ci.cancel",
+		"merge_request.open", "merge_request.review", "merge_request.merge",
+	},
 	"reader": {"repo.read"},
 }
 
@@ -58,6 +63,10 @@ action_resource := {
 	"identity.pat.revoke": "personal_access_token",
 	"ci.run": "repository",
 	"ci.cancel": "ci_job",
+	"merge_request.open": "repository",
+	"merge_request.review": "merge_request",
+	"merge_request.merge": "merge_request",
+	"repository.branch_protection.manage": "repository",
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
@@ -78,6 +87,32 @@ allow if {
 	# And some role the subject holds must grant it.
 	some role in input.subject.roles
 	role_actions[role][input.action]
+
+	# Two server-derived denials the role table alone cannot express (SPEC-0019):
+	# a protected branch rejects direct pushes, and a merge needs enough valid
+	# approvals. The caller cannot lift either by holding a stronger role.
+	not deny
+}
+
+# Deny direct pushes to protected branches (SPEC-0019 AC2). Even a tenant owner
+# cannot bypass this in-band; force-promotion is a separate platform-operator path
+# (ADR-0046). The Git transport PEP supplies context.operation and context.protected.
+deny if {
+	input.action == "repo.write"
+	input.context.operation == "direct_push"
+	input.context.protected == "true"
+}
+
+# Deny a merge that lacks the required number of valid approvals (SPEC-0019 AC5).
+# valid_approvals and required_approvals are server-derived from the review log and
+# the protection rule respectively; the caller cannot assert its own counts.
+deny if {
+	input.action == "merge_request.merge"
+	not sufficient_approvals
+}
+
+sufficient_approvals if {
+	to_number(input.context.valid_approvals) >= to_number(input.context.required_approvals)
 }
 
 # reason explains the outcome in terms that are safe to return to the caller.

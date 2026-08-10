@@ -66,11 +66,11 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Accepted |
 | [ADR-0041](0041-git-http-ssh-front-doors.md) | Git HTTP and SSH front doors terminate in the data plane | Accepted |
 | [ADR-0042](0042-replica-promotion-fencing.md) | Replica promotion uses monotonic fencing terms | Accepted |
-| [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Proposed |
+| [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Accepted |
 | [ADR-0043](0043-credential-verifier-lookup.md) | Resolve opaque credential verifiers through a narrow RLS gateway | Accepted |
 | [ADR-0044](0044-cosign-signing-key-custody.md) | Cosign signing-key custody and rotation for first-party images | Accepted |
-| [ADR-0045](0045-zitadel-tenant-principal-mapping.md) | Zitadel verified claims map to tenant-scoped principals | Proposed |
-| [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Proposed |
+| [ADR-0045](0045-zitadel-tenant-principal-mapping.md) | Zitadel verified claims map to tenant-scoped principals | Accepted |
+| [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Accepted |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
@@ -107,7 +107,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
   36 of 428 concurrent ref reads missed a ref that always existed, with zero rename errors. Evidence:
   `../bench/T-0007/README.md`.
 - Replica promotion fencing and operator-only force-promote — **ADR-0042 Accepted**; T-0012 may enter contract work.
-- Platform-operator tenant bindings for `replica.force_promote` — **ADR-0046 Proposed**; review required before T-0012 contract or policy implementation.
+- Platform-operator tenant bindings for `replica.force_promote` — **ADR-0046 Accepted** (2026-08-10); review required before T-0012 contract or policy implementation.
 - Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
 - Unit-economics model per pricing tier — ADR-0008
 - Merge enforcement — ADR-0031. Two follow-ups are **closed** (both 2026-08-05): the

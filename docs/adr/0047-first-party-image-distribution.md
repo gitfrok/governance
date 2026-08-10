@@ -1,6 +1,6 @@
 # ADR-0047: First-party release images are publicly pullable; trust is verified offline
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-10
 - **Deciders:** platform
 - **Governs:** G1 tenant isolation, G3 supply-chain security, G4 change governance, G9 least-privilege footprint

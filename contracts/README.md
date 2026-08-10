@@ -26,6 +26,9 @@ needs a direct response.
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git
+- `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
+  ADR-0016/0018/0042): shard records, fencing terms, durable-primary and sync acknowledgements,
+  compare-and-swap auto-promotion, and the audited platform-operator force-promote
 - `proto/ci/v1/ci.proto` — immutable CI job enqueue/read/cancel commands (SPEC-0020); runners,
   source capabilities, queue rows, and Kubernetes details remain private to CI/CD
 - `proto/codereview/v1/codereview.proto` — merge-request, review, and exact-ref branch-protection

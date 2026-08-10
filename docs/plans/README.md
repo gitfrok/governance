@@ -4,3 +4,4 @@ Execution plans per phase/epic: objectives, workstreams, sequencing, dependencie
 and exit criteria. Plans turn `../roadmap` intent into ordered `../tasks`.
 
 - `phase-0-foundations.md`
+- `phase-1-mvp.md`
