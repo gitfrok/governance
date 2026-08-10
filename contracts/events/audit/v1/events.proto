@@ -59,3 +59,44 @@ enum Outcome {
   OUTCOME_ALLOWED     = 1;  // the action was performed
   OUTCOME_DENIED      = 2;  // refused by policy, RLS, or another guard
 }
+
+// HistoryImported is the one first-party audit event an import produces
+// (ADR-0029 §3, SPEC-0011 AC10).
+//
+// It records the auditable fact — "this authenticated operator imported this
+// attested set from there at this time" — and the manifest digest over the
+// imported payload set, so the set is reproducible after the fact without
+// claiming it is true. It is chained normally and is the ONLY record of the
+// import in the audit trail: the imported content itself is ATTESTED_IMPORT
+// and never enters the log.
+message HistoryImported {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The operator who ran the import, authenticated and PDP-authorized.
+  string actor_id = 3;
+  string repository_id = 4;
+  string import_id = 5;
+  // e.g. "github", "github.com".
+  string source_system = 6;
+  string source_instance = 7;
+  // Record counts per type: MRs, threads, comments, approvals.
+  map<string, int64> record_counts = 8;
+  // Digest over the imported payload set; mutating any imported record
+  // afterwards makes verification fail (SPEC-0011 AC16).
+  string manifest_digest = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}
+
+// HistoryImportRevoked records the revocation of a prior import (ADR-0029 §5,
+// SPEC-0011 AC17). It references the original import_id; the original
+// HistoryImported chain entry stays unaltered (invariant 5). Revocation is a
+// forward-only act — the records are tombstoned, never edited or deleted.
+message HistoryImportRevoked {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The operator who revoked the import, authenticated and PDP-authorized.
+  string actor_id = 3;
+  string repository_id = 4;
+  string import_id = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
