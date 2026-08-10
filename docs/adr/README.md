@@ -72,6 +72,7 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0045](0045-zitadel-tenant-principal-mapping.md) | Zitadel verified claims map to tenant-scoped principals | Accepted |
 | [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Accepted |
 | [ADR-0048](0048-git-storaged-image-base.md) | `git-storaged` ships on a minimal base with git, not `scratch` | Accepted |
+| [ADR-0049](0049-bff-browser-session.md) | The browser session is an opaque server-side cookie the BFF owns | Proposed |
 
 ## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
 - ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
