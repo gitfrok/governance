@@ -67,6 +67,12 @@ message IssuePATRequest {
   string label = 3;
   repeated string scope_labels = 4;
   google.protobuf.Timestamp expires_at = 5;
+  // Roles the issued PAT resolves to, from the tenant directory at issue time.
+  // The authenticator returns them as the Principal's roles (identity.proto
+  // Principal.roles), so a Git front door's PDP input carries the same role
+  // grants a web session's would. Additive: an absent field issues a PAT that
+  // authenticates with no roles, exactly as before.
+  repeated string roles = 6;
 }
 
 message IssuePATResponse {
