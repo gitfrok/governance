@@ -81,7 +81,7 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 ## Phase 1 — MVP
 - **EP-4 Git plane**: T-0010 (Git-RPC, **Done** — backend #20), T-0011 (smart-HTTP+SSH,
   **Done** — backend #27/#28; real git clone/push over HTTPS+SSH, tests pass), T-0012
-  (sync-replica+failover, **Todo** — ADR-0046 Accepted, SPEC-0005 Approved, no backend code yet).
+  (sync-replica+failover, **Done** — backend; replica coordinator + write-path quorum.
 - **EP-5 Identity**: T-0013 (Zitadel + PATs, tenant scoping) — **In progress**: credential
   foundation (PAT/SSH auth, tenant scoping, PDP-gated lifecycle) **Done** — backend #21;
   Zitadel/OIDC login **pending** (ADR-0045 Accepted, adapter not started).
