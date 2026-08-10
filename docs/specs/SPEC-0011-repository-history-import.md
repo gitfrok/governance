@@ -131,6 +131,22 @@ No cross-context table access (ADR-0022).
       MR-level attachment only when the file is also gone. No comment is dropped, and the API marks a
       degraded anchor as approximate so the UI can render it as such.
 
+**Read surface** (added 2026-08-10; AC18 requires a rendered view and nothing served the records it
+renders. The criterion it depends on was implicit, which is how a read path with no test came close
+to shipping.)
+- [ ] AC20: Imported history is readable per import: a reader within the owning tenant retrieves the
+      import's merge requests with their threads, approvals and provenance blocks. A read outside the
+      tenant is refused, a read without import-read permission is denied at the PDP, and a revoked
+      import returns nothing (which is AC12 observed on the read path, not a second rule).
+
+**Import cost** (added 2026-08-10; the NFR "imports … count against the tenant's fair-use storage
+dimension" had no criterion, so nothing could fail if imports were free.)
+- [ ] AC21: The bytes an import writes for a tenant are reported by the storage tier that wrote them
+      and charged to that tenant's fair-use storage dimension. An import that fetches nothing charges
+      nothing. Import work is paced: a step of import work waits before it runs, so an import yields
+      throughput to the interactive git and web traffic it shares a plane with, and a paced-out import
+      stops rather than proceeding unthrottled.
+
 ## Governance mapping (G1–G9)
 
 | Objective | How this spec satisfies it |

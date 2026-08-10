@@ -148,9 +148,11 @@ message ImportRefsRequest {
 message ImportRefsResponse {
   // One entry per ref that moved, with the new revision.
   repeated RefUpdate refs = 1;
-  // Bytes this fetch wrote for the tenant. The caller counts them against the
-  // tenant's fair-use storage dimension, which only storage can measure
-  // (SPEC-0011 AC9, PRD §6 G8). Zero means the fetch wrote nothing new.
+  // Bytes this fetch wrote for the tenant, counted after the write was
+  // acknowledged rather than attempted, so the number is what the tenant now
+  // stores. The caller charges them to the tenant's fair-use storage dimension,
+  // which only storage can measure (SPEC-0011 AC21, PRD §6 G8). Zero means the
+  // fetch wrote nothing new.
   int64 imported_bytes = 2;
 }
 
