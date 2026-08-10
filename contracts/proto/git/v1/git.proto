@@ -27,6 +27,20 @@ service GitStorage {
   // it does for a push — a caller that has already been allowed by its own PEP is
   // still not trusted to assert that here.
   rpc MergeRef(MergeRefRequest) returns (MergeRefResponse);
+
+  // ImportRefs fetches a source repository's refs and tags into this repository
+  // on behalf of an authorized import (SPEC-0011, T-0018).
+  //
+  // It is the import path's git phase: the caller has already been PDP-authorized
+  // by Code Review's ImportService; storage asks the PDP again with its own
+  // server-derived context, then runs `git fetch` from the source URL and
+  // publishes RefUpdated for every ref that moved. The fetch is acknowledged
+  // through the same durability path as a push — the primary and one in-sync
+  // replica must both hold the objects before the refs are announced (ADR-0016).
+  //
+  // The source URL and token are request-only secrets. They are never stored,
+  // never logged, and never copied into an event, audit record, or error.
+  rpc ImportRefs(ImportRefsRequest) returns (ImportRefsResponse);
 }
 
 // OperationContext identifies one Git operation. It is sent as the first client-stream message;
@@ -115,5 +129,28 @@ message MergeRefRequest {
 // error and no partial state, in the same shape as any other storage refusal.
 message MergeRefResponse {
   string target_ref = 1;
+  string revision = 2;
+}
+
+// ImportRefsRequest carries the import's git phase to storage. The source URL is
+// a request-only secret: it never becomes an event, an audit record, a log line,
+// or an error. The token is a request-only secret too, and must never be stored.
+message ImportRefsRequest {
+  OperationContext context = 1;
+  // The source repository URL (https or ssh). Never stored, never logged.
+  string source_url = 2;
+  // Optional bearer token for a private source. Request-only, never stored.
+  string source_token = 3;
+}
+
+// ImportRefsResponse reports the refs that moved. A refused import returns a
+// coarse error and no partial state.
+message ImportRefsResponse {
+  // One entry per ref that moved, with the new revision.
+  repeated RefUpdate refs = 1;
+}
+
+message RefUpdate {
+  string ref = 1;
   string revision = 2;
 }
