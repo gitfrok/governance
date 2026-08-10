@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+// Provenance classification for historical records (ADR-0029).
+//
+// Every historical record carries exactly one class. There is no third class
+// and no default: a writer that cannot state provenance cannot write. Only
+// FIRST_PARTY records may enter the audit log; ATTESTED_IMPORT records live in
+// the owning bounded context and never in the audit trail.
+//
+// See also contracts/events/audit/v1/events.proto for HistoryImported and
+// HistoryImportRevoked, the first-party events that admit and revoke an import.
+package gitsaas.contracts.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/contracts/v1;contractsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// Provenance is the immutable block attached to every imported history record.
+//
+// A record's provenance is fixed at write time and never changes. The fields
+// assert what was fetched from a foreign system; they never claim the content
+// is true (ADR-0029 §1-2). declared_at is display-only: it never influences
+// audit chain order, and it never becomes an occurrence time our system
+// vouches for.
+message Provenance {
+  // FIRST_PARTY — witnessed by our services: actor authenticated by us,
+  // authorized by the PDP, timestamped by our clock. The only class the audit
+  // log accepts.
+  // ATTESTED_IMPORT — asserted by a foreign system, copied by us. Never
+  // enters the audit log.
+  enum Class {
+    CLASS_UNSPECIFIED = 0;
+    CLASS_FIRST_PARTY = 1;
+    CLASS_ATTESTED_IMPORT = 2;
+  }
+
+  Class class = 1;
+
+  // The import operation that produced this record. Empty for FIRST_PARTY
+  // records; required for ATTESTED_IMPORT.
+  string import_id = 2;
+
+  // The foreign system, e.g. "github" or "gitlab". Required for
+  // ATTESTED_IMPORT.
+  string source_system = 3;
+
+  // The foreign instance, e.g. "github.com" or "gitlab.example.com".
+  // Required for ATTESTED_IMPORT.
+  string source_instance = 4;
+
+  // The foreign object's stable identifier/URL as fetched.
+  string source_ref = 5;
+
+  // The foreign handle as an opaque string. Never resolved to a platform
+  // identity implicitly (ADR-0029 §4).
+  string declared_actor = 6;
+
+  // The timestamp the source asserted. Display-only; never used for chain
+  // ordering (ADR-0029 §2).
+  google.protobuf.Timestamp declared_at = 7;
+
+  // Hash of the fetched payload as received, so the imported set can be
+  // re-verified against the HistoryImported manifest digest (AC16).
+  string payload_digest = 8;
+}

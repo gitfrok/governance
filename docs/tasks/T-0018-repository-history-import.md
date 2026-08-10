@@ -1,6 +1,6 @@
 # T-0018: Repository & review-history import from GitHub/GitLab
 
-- **Status:** Todo
+- **Status:** In progress (2026-08-10) — governance #110 + backend #39 in review; history phase + web rendering remain
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: import RPCs, `Provenance`, `HistoryImported`,
   `HistoryImportRevoked`) → backend (import job, git write path, Code Review, Audit,
@@ -120,6 +120,22 @@ Numbering in parentheses maps to SPEC-0011.
 
 ## Definition of Done
 See `../process/definition-of-done.md`.
+
+## Progress record (2026-08-10)
+
+| Repo | PR/Commit | What |
+|---|---|---|
+| governance | #110 | Additive contracts: `provenance.proto` (shared `Provenance` block with `CLASS_` enum), `ImportService` (Create/Get/List/RevokeImport) + `Import` state machine + `ImportedThread/Comment/Approval` read types on codereview, `HistoryImported`/`HistoryImportRevoked` audit events, `ImportRefs` git-phase RPC on GitStorage |
+| backend | #39 | **AC6/AC11 + AC24**: `api.Entry` gains required `Provenance`; the postgres store rejects non-`FIRST_PARTY` with `ErrNotFirstParty` (an error, never a silent drop); new fitness rule `RuleAuditImportsCodereview` keeps attested types out of the audit write surface. **AC1-AC3**: `ImportRefs` fetches source refs/tags through the ordinary durability path; the token travels only in the child-process environment, never argv, and git stderr is never returned (AC22). **AC6/AC10/AC16/AC17**: the import service — idempotent per (tenant, repository, source URL), one `HistoryImported` event with manifest digest on completion, `Revoke` tombstones records + emits `HistoryImportRevoked`. **AC7**: a failed git phase is not visible (FAILED state, no audit event). |
+
+**Delivered so far:** contracts, the audit-writer provenance boundary (the load-bearing ACs the
+task's own note names "highest value, write first"), the git phase, and the import state machine.
+
+**Still open (remaining ACs):** the history phase (`HistoryImporter` port exists but is not wired —
+no source API client for GitHub/GitLab), the webfrontend provenance rendering (AC23, AC9), and the
+evidence-export appendix (AC19/AC14, Phase 2). AC8 (imported approvals never satisfy a merge
+policy) is enforced by the PDP rule set in `governance/policies`; the merge path already feeds
+`valid_approvals` from first-party reviews only.
 
 ## Notes / open questions
 - **Gates cleared:** ADR-0029 is `Accepted` and SPEC-0011 is `Approved`. This task may enter RED.

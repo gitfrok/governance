@@ -13,6 +13,7 @@ package gitsaas.codereview.v1;
 option go_package = "github.com/yourorg/gitsaas/gen/proto/codereview/v1;codereviewv1";
 
 import "google/protobuf/timestamp.proto";
+import "proto/contracts/v1/provenance.proto";
 
 service MergeRequestService {
   rpc CreateMergeRequest(CreateMergeRequestRequest) returns (CreateMergeRequestResponse);
@@ -65,6 +66,52 @@ message MergeRequest {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
   int64 version = 13;
+  // Present only on imported MRs. An imported MR's approvals never satisfy a
+  // merge policy and are never rendered as a platform approval (ADR-0029 §4).
+  gitsaas.contracts.v1.Provenance provenance = 14;
+}
+
+// ImportedThread is one imported review thread (SPEC-0011 AC4). It is
+// display-only history: declared_actor stays an opaque foreign handle until a
+// tenant admin asserts a verified mapping (ADR-0029 §4), and the anchor
+// degrades from diff-position to file-level to MR-level rather than dropping a
+// comment (AC5).
+message ImportedThread {
+  string thread_id = 1;
+  string merge_request_id = 2;
+  string path = 3;
+  // Anchor precision: DIFF when the diff position resolves, FILE when only the
+  // file remains, MERGE when the file is also gone. An approximate anchor is
+  // marked in the API response so the UI can render it as such (AC5).
+  Anchor anchor = 4;
+  repeated ImportedComment comments = 5;
+  gitsaas.contracts.v1.Provenance provenance = 6;
+
+  enum Anchor {
+    ANCHOR_UNSPECIFIED = 0;
+    ANCHOR_DIFF = 1;
+    ANCHOR_FILE = 2;
+    ANCHOR_MERGE = 3;
+  }
+}
+
+message ImportedComment {
+  string comment_id = 1;
+  string declared_actor = 2;
+  string body = 3;
+  google.protobuf.Timestamp declared_at = 4;
+  gitsaas.contracts.v1.Provenance provenance = 5;
+}
+
+// ImportedApproval is one imported approval (SPEC-0011 AC4). It never
+// satisfies a required-reviewer approval policy: an MR whose only approvals are
+// imported is blocked from merge by the PDP (AC13, ADR-0029 §4).
+message ImportedApproval {
+  string approval_id = 1;
+  string merge_request_id = 2;
+  string declared_actor = 3;
+  google.protobuf.Timestamp declared_at = 4;
+  gitsaas.contracts.v1.Provenance provenance = 5;
 }
 
 message CreateMergeRequestRequest {
@@ -142,4 +189,103 @@ message SetBranchProtectionRequest {
 
 message SetBranchProtectionResponse {
   BranchProtection branch_protection = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Repository & review-history import (SPEC-0011, ADR-0029, T-0018).
+//
+// Import is a one-shot, resumable operation: git data (all refs, tags, LFS
+// objects) through the ordinary write path, and pull/merge-request history as
+// ATTESTED_IMPORT records in this context's own schema. Imported history never
+// enters the audit log, never satisfies a merge policy, and is never rendered
+// as a platform approval. The import operation itself emits exactly one
+// first-party HistoryImported audit event; revocation emits HistoryImportRevoked
+// and tombstones the records (the original chain entry stays unaltered).
+service ImportService {
+  // CreateImport starts (or resumes) an import of one source repository.
+  // Idempotent per (tenant, repository, source_ref).
+  rpc CreateImport(CreateImportRequest) returns (CreateImportResponse);
+  // GetImport returns one import's state and provenance summary.
+  rpc GetImport(GetImportRequest) returns (GetImportResponse);
+  // ListImports lists the imports for a repository, newest first.
+  rpc ListImports(ListImportsRequest) returns (ListImportsResponse);
+  // RevokeImport tombstones every record of an import and emits
+  // HistoryImportRevoked. The original HistoryImported chain entry is
+  // unaltered.
+  rpc RevokeImport(RevokeImportRequest) returns (RevokeImportResponse);
+}
+
+// ImportState is the coarse lifecycle of an import job.
+enum ImportState {
+  IMPORT_STATE_UNSPECIFIED = 0;
+  IMPORT_STATE_PENDING = 1;   // created, not yet started
+  IMPORT_STATE_RUNNING = 2;   // git and/or history phase in progress
+  IMPORT_STATE_COMPLETE = 3;  // both phases done
+  IMPORT_STATE_FAILED = 4;    // aborted; nothing partially visible
+  IMPORT_STATE_STALLED = 5;   // rate-limited or waiting on the source
+  IMPORT_STATE_REVOKED = 6;   // revoked; records tombstoned
+}
+
+message Import {
+  string import_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  // The source URL the git data is fetched from (https or ssh).
+  string source_url = 4;
+  // e.g. "github" or "gitlab"; selects the history API client.
+  string source_system = 5;
+  string source_instance = 6;
+  ImportState state = 7;
+  // One HistoryImported manifest digest, set when the import completes.
+  string manifest_digest = 8;
+  // True once the git phase is durably imported through the ordinary write
+  // path (primary + one sync replica acknowledged, ADR-0016).
+  bool git_phase_complete = 9;
+  // True once the history phase is imported and verified.
+  bool history_phase_complete = 10;
+  // Record counts per type, matching HistoryImported.record_counts.
+  map<string, int64> record_counts = 11;
+  // Set when the import stalled (source-side rate limiting) or failed.
+  string failure_reason = 12;
+}
+
+message CreateImportRequest {
+  ReviewCommandContext context = 1;
+  string source_url = 2;
+  string source_system = 3;
+  string source_instance = 4;
+  // Optional credentials for a private source. Never logged, never stored in
+  // the audit trail, never echoed (SPEC-0011 AC22).
+  string source_token = 5;
+}
+
+message CreateImportResponse {
+  Import import = 1;
+}
+
+message GetImportRequest {
+  ReviewCommandContext context = 1;
+  string import_id = 2;
+}
+
+message GetImportResponse {
+  Import import = 1;
+}
+
+message ListImportsRequest {
+  ReviewCommandContext context = 1;
+  string repository_id = 2;
+}
+
+message ListImportsResponse {
+  repeated Import imports = 1;
+}
+
+message RevokeImportRequest {
+  ReviewCommandContext context = 1;
+  string import_id = 2;
+}
+
+message RevokeImportResponse {
+  Import import = 1;
 }
