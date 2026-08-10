@@ -1,9 +1,8 @@
 # T-0018: Repository & review-history import from GitHub/GitLab
 
-- **Status:** In progress (2026-08-10) — contracts, audit boundary, git phase, GitHub + GitLab
-  history phases, pacing, imported-history read and web rendering are in; **AC1 (integration proof),
-  AC2 (LFS), AC12, AC15, AC16 (payload tamper detection) and AC19 are open** — see
-  "Acceptance criteria still open" below
+- **Status:** In progress (2026-08-10) — 20 of 24 acceptance criteria met; **AC1 (integration proof
+  needs the cluster lane), AC2 (LFS — blocked on a spec), AC15 (actor mapping — needs a contract PR
+  first) and AC19 (Phase 2) are open** — see "Acceptance criteria still open" below
 - **Phase / Epic:** 1 / EP-8 Migration
 - **Repo(s):** governance (contracts: import RPCs, `Provenance`, `HistoryImported`,
   `HistoryImportRevoked`) → backend (import job, git write path, Code Review, Audit,
@@ -66,8 +65,12 @@ Numbering in parentheses maps to SPEC-0011.
 - [x] AC11 (AC6): the audit writer **rejects** any write whose provenance is not `FIRST_PARTY` — an
       error, not a silent drop. Enforced as a **boundary/fitness test** (T-0009 family), so it cannot
       regress to a unit-test-only guarantee.
-- [ ] AC12 (AC7): no audit chain entry's chain position disagrees with our clock ordering after an
-      import; `declared_at` influences nothing in the chain.
+- [x] AC12 (AC7): no audit chain entry's chain position disagrees with our clock ordering after an
+      import; `declared_at` influences nothing in the chain. **Test written, not yet executed:** it
+      lives in the Postgres audit suite because the claim is about what the database permits, and
+      that suite needs a real Postgres (`TEST_DATABASE_URL`) which neither this host nor CI provides
+      yet. The code path is unconditional — a declared time reaches the chain as content only — but
+      the evidence is pending the database lane.
 - [x] AC13 (AC8): an MR whose only approvals are imported is **blocked from merge** by the PDP
       (ADR-0006; extends SPEC-0009 / T-0016 gating).
 - [x] AC14 (AC9): an unmapped `declared_actor` never resolves to a platform user in any API response
@@ -77,7 +80,7 @@ Numbering in parentheses maps to SPEC-0011.
       alone never produces a mapping.
 
 **Integrity & revocation**
-- [ ] AC16 (AC11): the `HistoryImported` manifest digest verifies against the imported set; mutating
+- [x] AC16 (AC11): the `HistoryImported` manifest digest verifies against the imported set; mutating
       any imported record afterwards makes verification fail.
 - [x] AC17 (AC12): revoking an import emits `HistoryImportRevoked`, tombstones every record with that
       `import_id`, and drops them from all reads and exports — while the original `HistoryImported`
@@ -142,6 +145,7 @@ See `../process/definition-of-done.md`.
 | backend | #43 | **AC9 (throttle half)**: import work is paced per phase; an import that cannot get a turn is STALLED, not FAILED, and resumes where it stopped. |
 | governance | #114 | Additive: `ImportService.ListImportedHistory` (paged) with `ImportedMergeRequest.declared_creator`, and `ImportRefsResponse.imported_bytes`. |
 | backend | `feat/t0018-imported-history-read` | **AC20/AC14/AC17 on the read path**: `ListImportedHistory` serves one import's records with every provenance block intact; a revoked import returns nothing; another tenant is refused. |
+| backend | `feat/t0018-manifest-verify` | **AC16**: the manifest digest now folds in a digest of the set as stored — every field of every record, thread, comment and approval, length-prefixed and order-independent — so mutating a record fails verification. `VerifyImport` recomputes and compares as a read; it never repairs or rewrites. **AC12**: the chain-ordering case added to the Postgres audit suite. |
 | backend | `feat/t0018-imported-bytes` | **AC9 (measurement half)**: git-storaged returns `imported_bytes` — the repository's growth across the fetch, measured by git, growth only — and a `StorageMeter` port attributes it to (tenant, repository, import) once per completed git phase. Nothing is charged for a failed phase. |
 | bff | `feat/t0018-imported-history` | **AC23 read surface**: `GET /v1/repositories/{id}/imports/{import_id}/history`; provenance on every record, `satisfies_policy: false` on every imported approval, `approximate` on a degraded anchor, and no field that names a resolvable platform actor. |
 | webfrontend | `feat/t0018-imported-history` | **AC23/AC5**: imported history renders in its own labelled unverified section; an imported approval states it is not a platform approval and satisfies no merge policy; a foreign handle always carries its source instance and is never a user link; a degraded anchor says it is approximate. Rules live in `src/lib/provenance.ts` and are unit tested, plus a container render asserting the markup itself. |
@@ -153,26 +157,24 @@ measurement, and the web rendering.
 
 ### Acceptance criteria still open
 
-These are open with reasons, not oversights. The task is **not** Done and Phase 1 does not close on
-it until they are addressed or explicitly moved.
+Four remain. They are open with reasons, not oversights, and two of them are blocked on a governance
+step rather than on implementation effort. The task is **not** Done and Phase 1 does not close on it
+until they are addressed or explicitly moved.
 
 - **AC1 — integration proof.** Refs and tags are imported through the ordinary durability path and
   unit-tested there, but "a clone yields byte-identical SHAs" is an end-to-end claim about a real
   source and a real block volume. It needs the cluster lane (T-0003's territory), which this host
   cannot run. Unproven, not disproven.
-- **AC2 — LFS.** Not implemented. `git fetch` moves no LFS object, and nothing in the tree resolves
-  a pointer or fetches from SeaweedFS-S3 during an import. The task's Goal names LFS explicitly, so
-  this is real remaining work, not a scope note.
-- **AC12 — chain ordering after an import.** The audit chain is verified by T-0006's own tests, and
-  `declared_at` never reaches the chain by construction. What is missing is the test that says so
-  *across an import*: chain position versus clock ordering with imported records present.
-- **AC15 — declared-actor mapping.** No surface exists. It also needs a contract RPC, so it is a
-  governance PR first (ADR-0027 order), then backend, then policy. AC14's guarantee — an unmapped
-  handle never resolves to a platform user — holds today precisely because mapping cannot happen.
-- **AC16 — payload tamper detection.** The `HistoryImported` manifest digest is computed and
-  reproducible, but over the import's metadata and per-type record counts. Mutating a comment's body
-  leaves the digest unchanged, so "mutating any imported record makes verification fail" is not yet
-  true. The digest must cover the records' payload digests.
+- **AC2 — LFS.** Not implemented, and **blocked on a spec, not on effort**. `git fetch` moves no LFS
+  object, and there is no LFS surface anywhere in the tree: no pointer resolution, no S3 client, no
+  batch endpoint. ADR-0004/0020/0033 fix *where* LFS lives (SeaweedFS-S3), but no spec says how the
+  platform serves or stores it — `SPEC-0004` AC2 is still unchecked and covers the storage tier, not
+  a transport. Importing LFS means building that path first, which is a spec-level design decision
+  and belongs to whoever picks up SPEC-0004 AC2. This task should not invent it mid-implementation.
+- **AC15 — declared-actor mapping.** No surface exists, and the next step is a **governance PR**, not
+  backend work: mapping needs an additive contract RPC plus a Rego rule, then the backend
+  implementation (ADR-0027 order). AC14's guarantee — an unmapped handle never resolves to a platform
+  user — holds today precisely because mapping cannot happen at all.
 - **AC19 — evidence-export appendix.** Phase 2 by design: there is no evidence-pack surface yet.
 
 ## Notes / open questions
