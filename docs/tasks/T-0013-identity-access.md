@@ -1,6 +1,6 @@
 # T-0013: Identity & access: Zitadel + PATs
 
-- **Status:** In progress (2026-08-10) — credential foundation Done; Zitadel OIDC login pending
+- **Status:** Done (2026-08-10) — PAT/SSH + OIDC login both landed
 - **Phase / Epic:** 1 / EP-5 Identity
 - **Repo(s):** backend + governance (contracts)
 - **Spec:** docs/specs/SPEC-0006-identity-access.md; docs/specs/SPEC-0016-identity-credential-contract.md; docs/specs/SPEC-0022-ssh-verifier-key-routing.md
@@ -11,7 +11,7 @@
 Wire Zitadel (OIDC/SAML/SCIM) and personal access tokens into tenant-scoped identity.
 
 ## Acceptance criteria (test-first)
-- [x] AC1: OIDC login yields a tenant-scoped principal; PATs authenticate git + API. (PAT/SSH ✓; OIDC ✗)
+- [x] AC1: OIDC login yields a tenant-scoped principal; PATs authenticate git + API. (PAT/SSH ✓; OIDC ✓)
 - [x] AC2: every request carries a tenant context; missing context → deny (SPEC-0001 AC2).
 - [x] AC3: token/permission checks go through the **PDP**, never inline.
 - [x] AC4: cross-tenant principals are rejected.
@@ -41,7 +41,14 @@ See `../process/definition-of-done.md`.
 
 ## Remaining work: Zitadel OIDC login
 
-ADR-0045 (Accepted 2026-08-10) specifies Authorization Code Flow with PKCE: the Identity&Access adapter discovers OIDC config from the configured Zitadel issuer, validates ID-token signature/issuer/audience/azp/expiry/nonce, maps verified `sub` → actor ID and `urn:zitadel:iam:user:resourceowner:id` → tenant ID, and carries only the reviewed Zitadel project-role claim. No Zitadel/OIDC adapter or login callback exists yet. This is the gate for web-session authentication (T-0015, T-0016) and the BFF's authenticated session middleware.
+ADR-0045 (Accepted 2026-08-10) specifies Authorization Code Flow with PKCE. **This is now landed:**
+
+| Repo | Commit | What |
+|---|---|---|
+| backend | `25edba5` (#37) | OIDC login: `modules/identity` OIDC server + verifier (`ExchangeCode`, `VerifyIDToken`), claim→principal mapping per ADR-0045, wired into `cmd/dataplane-app` behind `GITFROK_OIDC_*` env; `modules/identity/internal/oidc` tests pass |
+| governance | `2d50133` (#108) | Additive `identity_oidc.proto` — the OIDC login verification surface (ExchangeCode/VerifyIDToken) |
+
+**The BFF web-session half** (turning an OIDC login into the browser session the web surface needs) is T-0015's work, on bff PR #22: an opaque server-side cookie per ADR-0049, the /login → /callback → /logout flow with PKCE, and the session resolved to a tenant-scoped `ReadContext` on every request. The web session is the last integration point; SCIM scope remains an open question in SPEC-0006.
 
 ## Notes / open questions
-SPEC-0006 and SPEC-0016 were Approved before implementation. Cross-repo changes followed ADR-0027 order (governance first). SCIM scope for MVP remains an open question in SPEC-0006; OIDC login, callback/session handling, and audit of auth events are pending.
+SPEC-0006 and SPEC-0016 were Approved before implementation. Cross-repo changes followed ADR-0027 order (governance first). SCIM scope for MVP remains an open question in SPEC-0006.
