@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+// Browser repository-view shapes for the BFF HTTP surface (SPEC-0021).
+//
+// These messages are the proto-JSON schema of the BFF's tree, file, and diff
+// view endpoints. Tenant and actor are deliberately absent: the BFF derives
+// identity from the authenticated session and never accepts it from browser
+// input. The BFF maps only from RepositoryReader results; it does not invoke
+// the PDP, parse Git objects, touch storage, or derive permission outcomes.
+package gitsaas.bff.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/bff/v1;bffv1";
+
+enum BrowserEntryKind {
+  BROWSER_ENTRY_KIND_UNSPECIFIED = 0;
+  BROWSER_ENTRY_KIND_FILE = 1;
+  BROWSER_ENTRY_KIND_DIRECTORY = 2;
+  BROWSER_ENTRY_KIND_SYMLINK = 3;
+}
+
+// BrowserTreeEntry is one navigable child of a tree view. Paths are
+// repository-relative handles, never host filesystem paths. Object IDs are
+// deliberately not surfaced: the browser identifies content by revision and
+// path only.
+message BrowserTreeEntry {
+  string path = 1;
+  BrowserEntryKind kind = 2;
+  int64 size_bytes = 3;
+}
+
+// TreeView is the response body of
+// GET /v1/repositories/{repository_id}/tree. The continuation token is
+// opaque.
+message TreeView {
+  repeated BrowserTreeEntry entries = 1;
+  string next_page_token = 2;
+}
+
+// FileViewMetadata is sent once, in the first response frame of
+// GET /v1/repositories/{repository_id}/file, before the streamed bytes. It
+// preserves RepositoryReader's metadata without exposing an object ID.
+message FileViewMetadata {
+  string path = 1;
+  string revision = 2;
+  int64 size_bytes = 3;
+}

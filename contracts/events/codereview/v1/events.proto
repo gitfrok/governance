@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+// Code Review domain events (SPEC-0019). Events carry opaque IDs and
+// tenant/repository scope; they never carry review text, credentials, Git
+// objects, or a policy allow flag. Repository/Git consumes only
+// BranchProtectionChanged, into a tenant-scoped local projection.
+package gitsaas.events.codereview.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/codereview/v1;coderevieweventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+enum ReviewSubmittedDisposition {
+  REVIEW_SUBMITTED_DISPOSITION_UNSPECIFIED = 0;
+  REVIEW_SUBMITTED_DISPOSITION_APPROVE = 1;
+  REVIEW_SUBMITTED_DISPOSITION_REQUEST_CHANGES = 2;
+  REVIEW_SUBMITTED_DISPOSITION_COMMENT = 3;
+}
+
+message MergeRequestOpened {
+  string event_id = 1;
+  string merge_request_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string source_ref = 5;
+  string target_ref = 6;
+  string creator_id = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message ReviewSubmitted {
+  string event_id = 1;
+  string merge_request_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string actor_id = 5;
+  ReviewSubmittedDisposition disposition = 6;
+  string head_revision = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message MergeRequestMerged {
+  string event_id = 1;
+  string merge_request_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string actor_id = 5;
+  string target_ref = 6;
+  string head_revision = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message BranchProtectionChanged {
+  string event_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  string target_ref = 4;
+  int32 required_approvals = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}

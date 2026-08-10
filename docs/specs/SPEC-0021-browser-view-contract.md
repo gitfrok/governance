@@ -1,6 +1,6 @@
 # SPEC-0021: Browser repository-view HTTP contract
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** platform
 - **Context(s):** BFF, webfrontend, Repository/Git
 - **ADRs:** 0015, 0020, 0022, 0023
