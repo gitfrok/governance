@@ -22,7 +22,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0015 | Web: repo browser + file/diff + palette | 1 | **Done** — bff #22, webfrontend #20, super-repo #77 merged; `make dev-up` + `make dev-smoke` green with the full stack on minikube, `app.gitsaas.test` serving |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Done — backend #31/#33/#34/#35 (MR lifecycle, protection, merge ref move) |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Done — backend #29/#32, deploy PR #76 (ScaledObject); dev cluster limit: no gVisor RuntimeClass under rootless podman |
-| T-0018 | Repository & review-history import | 1 | In progress — contracts (#110), audit FIRST_PARTY boundary + git phase + import service (#39), GitHub history phase (#40) merged; web rendering remains |
+| T-0018 | Repository & review-history import | 1 | **Done** (2026-08-11) — 23 of 24 criteria met, AC19 moved to Phase 2. Contracts (#110/#114/#116), audit FIRST_PARTY boundary + git phase + import service (#39/#40), actor mapping + LFS transport (#45), FUSE object tier (#46), imported-history read surface (bff #25) and provenance rendering (webfrontend #23). AC1 and AC2 proved against a live SeaweedFS gateway, an HTTPS source and a two-node quorum |
 | T-0020 | Contract schema gate (`buf lint` + `buf breaking` + codegen freshness) | 0 | Done |
 | T-0021 | Container images for both planes | 1 | **Done** — backend #19/#25, bff #16/#19, webfrontend #16/#18 |
 
