@@ -1,6 +1,6 @@
 # ADR-0048: `git-storaged` ships on a minimal base with git, not `scratch`
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-10
 - **Deciders:** platform
 - **Governs:** G9 least-privilege footprint, G4 change governance
