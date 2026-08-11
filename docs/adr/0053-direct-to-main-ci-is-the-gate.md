@@ -1,6 +1,6 @@
 # ADR-0053: Work lands directly on `main`; CI on push is the only gate
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0054
 - **Date:** 2026-08-12 (proposed and accepted the same day)
 - **Deciders:** platform
 - **Governs:** G7 process integrity (the gates must be real, or not claimed)
