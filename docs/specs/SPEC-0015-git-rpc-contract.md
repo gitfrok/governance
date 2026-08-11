@@ -36,13 +36,20 @@ Git-protocol semantics ad hoc at the process boundary.
   `gitsaas.events.repository.v1.RefUpdated` event for every changed ref. The
   event remains the asynchronous integration boundary for CI, search, and
   audit.
-- `GitStorage.SetProtection` carries one exact-ref branch-protection rule from
-  Code Review to the storage node (SPEC-0019 AC7). It is the boundaried
-  counterpart of `BranchProtectionChanged`: the event is sufficient when Code
-  Review and git-storaged share a process; the RPC is the route by which the
-  rule reaches the node that enforces direct pushes when they do not. Storage
-  asks the PDP for the rule change exactly as it does for any ref-affecting
-  operation.
+ - `GitStorage.SetProtection` carries one exact-ref branch-protection rule from
+   Code Review to the storage node (SPEC-0019 AC7). It is the boundaried
+   counterpart of `BranchProtectionChanged`: the event is sufficient when Code
+   Review and git-storaged share a process; the RPC is the route by which the
+   rule reaches the node that enforces direct pushes when they do not. Storage
+   asks the PDP for the rule change exactly as it does for any ref-affecting
+   operation.
+- `GitStorage.SubscribeRefUpdates` is the boundaried counterpart of the
+  repository `RefUpdated` event: when git-storaged and the dataplane share a
+  process, the dataplane's in-process bus announces every ref update; when they
+  do not, the dataplane subscribes to this server-streaming RPC and publishes
+  the notification as `RefUpdated` on its own bus. Storage keeps applying
+  updates whether or not a subscriber is connected — the subscription is a wire
+  event channel, not a command or an acknowledgement protocol.
 
 ## Out of scope
 
@@ -60,6 +67,9 @@ Git-protocol semantics ad hoc at the process boundary.
 - `GitStorage.ReceivePack(stream ReceivePackRequest) returns (stream ReceivePackResponse)`;
 - `GitStorage.SetProtection(SetProtectionRequest) returns (SetProtectionResponse)` — one
   exact-ref rule (`target_ref`, `required_approvals`) under a `RefUpdateContext`;
+- `GitStorage.SubscribeRefUpdates(SubscribeRefUpdatesRequest) returns (stream RefUpdateNotification)` —
+  server-streaming ref announcements (per-notification `ref`, `old_sha`, `new_sha`,
+  `actor_id`, `actor_roles`, `occurred_at`), tenant/repository wildcard filtering;
 - `OperationContext` with `tenant_id`, `repository_id`, `actor_id`, and
   `request_id`;
 - packet payloads as `bytes`, plus an explicit client-stream close marker.
