@@ -61,4 +61,9 @@ message BranchProtectionChanged {
   // cross-process consumer can re-derive the verified subject when it applies
   // its own PDP decision for the rule (GitStorage.SetProtection).
   string actor_id = 7;
+  // The roles the actor held when SetProtection was decided, delivered so a
+  // cross-process consumer can re-run its own PDP decision with the same
+  // subject the authorizing PEP saw (same shape as RefUpdated.actor_roles in
+  // events/ci). Never a policy outcome: the consumer still decides for itself.
+  repeated string actor_roles = 8;
 }
