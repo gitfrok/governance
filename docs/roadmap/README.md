@@ -1,59 +1,54 @@
 # Roadmap
 
-Milestone-based; each phase has an **exit criterion** before the next begins. Detailed
-execution lives in `../plans/`; work items in `../backlog/` and `../tasks/`.
+Milestone-based; each phase has an **exit criterion** before the next begins. Execution detail is in
+`../plans/`, work items in `../backlog/` and `../tasks/`.
 
-## Phase 0 — Foundations
-Scaffolding, dev environment, tenancy + RLS, PDP, audit log, and the **storage benchmark**
-that unblocks the git-storage design.
-**Status:** **Complete (2026-08-09).**
-**Exit (met):** an empty-but-wired foundation: a Minikube environment with real TLS;
-tenant-scoping, deny-by-default policy, and append-only audit seams; the storage decision;
-and boundary, architecture, contract, policy/isolation, and fitness gates enforced in CI.
+## Phase 0 — Foundations · **Complete (2026-08-09)**
 
-The end-to-end policy-checked request is a Phase-1 deployment milestone. It requires the
-plane images owned by T-0021, which is correctly scoped to Phase 1; it is not a Phase-0
-exit criterion.
+Scaffolding, dev environment, tenancy + RLS, PDP, audit log, and the storage benchmark that unblocked
+the git-storage design.
 
-## Phase 1 — MVP (GitHub-lite)
-Git push/pull (RPC + sync-replica write path), auth (Zitadel), repo/file/diff UI, MR/PR
-review with protected branches, CI v0 (gVisor sandboxes), and the **container images** that make any
-of it deployable.
-**Status:** **Complete (2026-08-11).**
-**Exit (met):** a team can host a repo, open/review/merge an MR, and run a pipeline.
-(Tasks T-0010–T-0018, T-0021 — all Done.)
+**Exit (met):** an empty-but-wired foundation — Minikube with real TLS; tenant-scoping, deny-by-default
+policy and append-only audit seams; the storage decision (ADR-0033); boundary, architecture, contract,
+policy/isolation and fitness gates enforced in CI.
 
-The end-to-end scenario's code-driven half was executed live on 2026-08-11 (push, protected-ref
-denial + audit, MR open/approve/merge, `main` moved) and host DNS is wired on the verified host.
-Two of the scenario's steps remain *demonstrable* only on T-0003's cluster lane, both recorded
-limits rather than open code: CI dispatch needs a gVisor RuntimeClass no rootless-podman driver
-can provide (T-0017), and the durability-quorum/failover demonstration needs a second physical
-node (T-0012/T-0018; both proved by their test suites).
+## Phase 1 — MVP (GitHub-lite) · **Complete (2026-08-11)**
 
-T-0021 (images) is new and sits under the others: nothing in the four repos builds a container image
-yet, so no plane has ever run as a deployed artifact. Its AC0 — an ADR for the image build surface —
-is **met: ADR-0035, Accepted 2026-08-08**, so the task is unblocked and AC1–AC6 are ready to start.
+Git push/pull (RPC + sync-replica write path), auth (Zitadel), repo/file/diff UI, MR review with
+protected branches, CI v0 (gVisor sandboxes), and the container images that make any of it deployable.
 
-Its images enable the Phase-1 end-to-end deployment milestone: a policy-checked request in
-Minikube. Phase 0 completed on 2026-08-09 with its foundation scope; T-0021 remains correctly
-scoped to Phase 1.
+**Exit (met):** a team can host a repo, open/review/merge an MR, and run a pipeline. Tasks T-0010–T-0018
+and T-0021 all Done; the code-driven half of the end-to-end scenario executed live 2026-08-11.
 
-## Phase 2 — the Ultimate wedge
-Security scanners → normalized findings → **unified dashboard**; security/approval policies
-as code; audit UI + evidence export; code search.
+Two of the scenario's steps are *demonstrable* only on T-0003's cluster lane, recorded as host limits
+rather than open code: CI dispatch needs a gVisor RuntimeClass no rootless-podman driver provides
+(T-0017), and the durability-quorum/failover demonstration needs a second physical node (T-0012 and
+T-0018 both prove it in their suites). Detail: `../plans/phase-1-mvp.md`.
+
+## Phase 2 — the Ultimate wedge · **next**
+
+Security scanners → normalized findings → **unified dashboard**; security/approval policies as code;
+audit UI + evidence export; code search.
 **Exit:** the differentiating governance/security surface is usable end-to-end.
 
+No plan file, epics or tasks exist yet, so the first move is a plan under `../plans/`. It inherits
+T-0018's AC19 — an evidence pack must carry zero attested records in its control sections (ADR-0029 §4,
+SPEC-0011 AC14).
+
 ## Phase 3 — BYO
-Agent (implements `contracts/proto/agent/v1`), Operator + Helm, per-cloud drivers, usage
-metering → billing + fair-use.
+
+Agent (implements `contracts/proto/agent/v1`), Operator + Helm, per-cloud drivers, usage metering →
+billing + fair-use.
 **Exit:** a customer runs the data plane in their own GKE/EKS/AKS under a flat plan.
 
 ## Architecture evolution (ADR-0025 → ADR-0026)
-Phases 0–3 ship as a **modular monolith per plane** (ADR-0025). A module is extracted into its own
-**coarse service** (ADR-0026) only when a fitness-function trigger fires — distinct scaling profile,
-isolation/blast-radius/compliance need, divergent SLO/deploy-cadence/ownership, or the monolith's
-build/test/deploy time crossing budget. Under BYO each extraction adds a pod to the customer's
-cluster, so it must justify the footprint (G8). Triggers are tracked (T-0009), not scheduled.
+
+Phases 0–3 ship as a **modular monolith per plane** (ADR-0025). A module becomes its own **coarse
+service** (ADR-0026) only when a fitness-function trigger fires — distinct scaling profile,
+isolation/blast-radius/compliance need, divergent SLO/deploy-cadence/ownership, or build/test/deploy
+time crossing the ADR-0030 budget. Under BYO each extraction adds a pod to the customer's cluster, so
+it must justify the footprint (G8). Triggers are measured (T-0009), not scheduled.
 
 ## Later / not scheduled
+
 Registry hardening, packages, air-gapped installs (Topology A), advanced compliance frameworks.

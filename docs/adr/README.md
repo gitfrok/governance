@@ -1,24 +1,20 @@
 # Architecture Decision Records (ADRs) — Source of Truth
 
-This directory is the **single Source of Truth (SOT)** for the architecture of the
-Git SaaS platform. Every architecturally-significant decision lives here as an ADR.
-**If any diagram, wiki, slide, design doc, or comment disagrees with an Accepted ADR, the ADR wins.**
+Every architecturally-significant decision lives here as an ADR. **If any diagram, wiki, slide, design
+doc, or comment disagrees with an Accepted ADR, the ADR wins.** Narrative context is in
+`../architecture/`, the shared surface in `contracts/`; the *decisions* are here.
 
-Narrative context lives in `docs/architecture/`; the shared contracts in `contracts/`; the *decisions* live here.
+## Process (ADR-0001, ADR-0002)
 
-## Format
-ADRs use the Nygard/MADR style: *Status, Context, Decision, Consequences, Alternatives*.
-One decision per file. See [`0000-template.md`](0000-template.md).
+Nygard/MADR style — *Status, Context, Decision, Consequences, Alternatives* — one decision per file;
+see [`0000-template.md`](0000-template.md). Statuses run
+`Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `Deprecated`).
 
-## Statuses
-`Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `Deprecated`)
-
-## Process (our decision governance — see ADR-0001 & ADR-0002)
-1. Copy `0000-template.md` to `NNNN-title.md` (next number).
-2. Open a pull request — **the PR review is the decision-approval gate** (see the repo PR template).
-3. On merge, set status to `Accepted`. ADRs are immutable once Accepted.
-4. To change a decision, add a **new** ADR that supersedes the old one (mark the old one
-   `Superseded by ADR-XXXX`). Never rewrite history.
+1. Copy the template to `NNNN-title.md`, taking the next number.
+2. Open a PR — **the PR review is the decision-approval gate.**
+3. On merge, set the status to `Accepted`. **Accepted ADRs are immutable.**
+4. To change a decision, add a **new** ADR that supersedes the old one and mark the old one
+   `Superseded by ADR-XXXX`. Never rewrite history.
 
 ## Index
 
@@ -66,57 +62,32 @@ One decision per file. See [`0000-template.md`](0000-template.md).
 | [ADR-0040](0040-apache-2-across-the-tree.md) | Apache-2.0 across the whole tree | Accepted |
 | [ADR-0041](0041-git-http-ssh-front-doors.md) | Git HTTP and SSH front doors terminate in the data plane | Accepted |
 | [ADR-0042](0042-replica-promotion-fencing.md) | Replica promotion uses monotonic fencing terms | Accepted |
-| [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Accepted |
 | [ADR-0043](0043-credential-verifier-lookup.md) | Resolve opaque credential verifiers through a narrow RLS gateway | Accepted |
 | [ADR-0044](0044-cosign-signing-key-custody.md) | Cosign signing-key custody and rotation for first-party images | Accepted |
 | [ADR-0045](0045-zitadel-tenant-principal-mapping.md) | Zitadel verified claims map to tenant-scoped principals | Accepted |
+| [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Accepted |
 | [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Accepted |
 | [ADR-0048](0048-git-storaged-image-base.md) | `git-storaged` ships on a minimal base with git, not `scratch` | Accepted |
 | [ADR-0049](0049-bff-browser-session.md) | The browser session is an opaque server-side cookie the BFF owns | Proposed |
 | [ADR-0050](0050-large-objects-over-seaweedfs-fuse.md) | Large objects (LFS, CI artifacts, container images) are served from a SeaweedFS FUSE mount | Accepted |
 | [ADR-0051](0051-seaweedfs-mount-produced-by-node-daemonset.md) | The SeaweedFS FUSE mount is produced by one privileged node DaemonSet, not by a sidecar in each pod | Accepted |
 
-## Open follow-ups (tracked *inside* ADRs; promote to new ADRs when decided)
-- ~~Licence for `backend`, `bff`, `webfrontend`, and the super-repo — ADR-0039 (was ADR-0038)~~
-  **Closed — ADR-0040 (Proposed 2026-08-08): Apache-2.0 across the whole tree**, including
-  relicensing `governance` off GPL v2. Apache-2.0 is compatible with the dependencies ADR-0006 (OPA)
-  and ADR-0014 (Zoekt) mandate, which is the constraint that ruled out GPL v2, and its express patent
-  grant matters for the binaries ADR-0009 and ADR-0013 hand to BYO customers. Still open inside
-  ADR-0040: whether the distributed artifacts need a `NOTICE` or an SBOM of third-party licences.
-- **No gate asserts an ADR's status matches what merging it meant.** Proposed on `main` is legitimate
-  — `AGENTS.md` tells an agent to draft a Proposed ADR and stop, and that ADR merges while it waits.
-  The defect is narrower: an ADR whose PR review *was* the approval should merge `Accepted`, and
-  nothing in the file distinguishes that from propose-and-stop. It is a question about intent, so it
-  lives in `.github/pull_request_template.md` rather than in `check-docs.sh`. Has caught out
-  ADR-0038, ADR-0039 and ADR-0040 so far.
-- CI job asserting installed versions meet the floors — ADR-0023. **Split by T-0003's cluster run.**
-  The *image* half is now **ADR-0034 (Accepted 2026-08-06)**: `redpandadata/redpanda:v26.1` was never a published
-  tag, because a floor written as a bare minor is not a pullable pin. Still open here: the *toolchain*
-  half — asserting installed `go`/`node`/`tsc` meet their floors in CI.
-- `make dev-up` Minikube bootstrap + per-OS driver docs — ADR-0024
-- Event catalog/naming — ADR-0022. The boundary-enforcement linter shipped in T-0002/T-0009; event
-  names are the protobuf full names of `contracts/events` (T-0008), but no catalog documents them.
-- Event catalog naming remains open (above). Service-extraction triggers are **closed**: measured
-  by T-0009, budgeted by ADR-0030 (Accepted), gated on every backend CI run.
-- Super-repo CI: fail on submodule pointers referencing unmerged commits — ADR-0027
-- Per-repo scaffolding + generated-type publishing (contracts → TS) — ADR-0027/0028
-- Contract schema gate — **ADR-0032 Accepted**, **T-0020 Done 2026-08-06**. `buf lint` and
-  `buf breaking` (baseline: tip of `main`, category `FILE`) are required in governance CI, and the
-  super-repo requires generated code to match its pinned contracts. Still open, and now the only
-  part: **per-consumer** codegen gating, which needs the generated-type publishing follow-up above —
-  a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition.
-- ~~Repo backing: SeaweedFS-FUSE vs block volumes — benchmark, may amend ADR-0016 — ADR-0020/0023~~
-  **Closed — benchmarked (T-0007) → ADR-0033 Accepted 2026-08-06**: block volumes confirmed; ADR-0016 needs
-  no amendment. SeaweedFS-FUSE fails `rename()` atomicity, which git requires for every ref update —
-  36 of 428 concurrent ref reads missed a ref that always existed, with zero rename errors. Evidence:
-  `../bench/T-0007/README.md`.
-- Replica promotion fencing and operator-only force-promote — **ADR-0042 Accepted**; T-0012 may enter contract work.
-- Platform-operator tenant bindings for `replica.force_promote` — **ADR-0046 Accepted** (2026-08-10); review required before T-0012 contract or policy implementation.
-- Cert issuance/rotation (SPIFFE/SPIRE) + HTTP-2 proxy fallback — ADR-0017
-- Unit-economics model per pricing tier — ADR-0008
-- Merge enforcement — ADR-0031. Two follow-ups are **closed** (both 2026-08-05): the
-  second-org-member one (`main-review` bypass emptied, four-eyes review binding on owners) and the
-  `webfrontend` one (it now has a CI workflow, required in its `main-integrity` as
-  `build + typecheck + test + arch gates`, so every repo has a check to fail on). Still open: the two
-  rulesets are five per-repo copies because org-level rulesets need GitHub Team — `make
-  rulesets-check` in the super-repo is what catches drift.
+## Open follow-ups
+
+Tracked *inside* the named ADR; promote to a new ADR when decided. Closed items are not kept here —
+the deciding ADR is the record.
+
+| Follow-up | ADR |
+|---|---|
+| **ADR-0049 is still `Proposed` while the BFF session it decides is implemented** (bff #22). Accept it or supersede it | 0049 |
+| Whether distributed artifacts need a `NOTICE` or an SBOM of third-party licences | 0040 |
+| **No gate asserts an ADR's status matches what merging it meant.** Proposed on `main` is legitimate — an agent drafts a Proposed ADR and stops, and that ADR merges while it waits. The narrow defect: an ADR whose PR review *was* the approval should merge `Accepted`, and nothing distinguishes that from propose-and-stop. It is a question about intent, so it belongs in `.github/pull_request_template.md`, not in `check-docs.sh`. Has caught out ADR-0038, ADR-0039 and ADR-0040 | 0001 |
+| The *toolchain* half of the version-floor gate — assert installed `go`/`node`/`tsc` meet their floors in CI. The *image* half closed as ADR-0034 | 0023 |
+| Per-OS Minikube driver docs, and CI that exercises the dev-cluster flow itself | 0024 |
+| Event catalog and naming — names exist as the protobuf full names of `contracts/events`, but nothing documents them | 0022 |
+| Super-repo CI: fail on submodule pointers referencing unmerged commits | 0027 |
+| Per-repo scaffolding + generated-type publishing (contracts → TS). Blocks **per-consumer** codegen gating: a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition, so freshness is gated at the super-repo pin instead | 0027, 0028, 0032 |
+| Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
+| Unit-economics model per pricing tier | 0008 |
+| The two merge rulesets are five per-repo copies, because org-level rulesets need GitHub Team — `make rulesets-check` catches drift | 0031 |
+| First-party images are pinned by tag, not digest, in `deploy/dev` | 0035 |
