@@ -1,7 +1,7 @@
 # ADR-0049: The browser session is an opaque server-side cookie the BFF owns
 
-- **Status:** Proposed
-- **Date:** 2026-08-10
+- **Status:** Accepted
+- **Date:** 2026-08-10 · **Accepted:** 2026-08-12
 - **Deciders:** platform
 - **Governs:** G1 tenant isolation, G2 least privilege, G5 auditability
 - **Refines:** ADR-0045 (Zitadel tenant/principal mapping), ADR-0015 (BFF boundary)

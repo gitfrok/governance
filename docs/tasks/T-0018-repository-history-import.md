@@ -155,32 +155,17 @@ Numbering in parentheses maps to SPEC-0011.
 ## Definition of Done
 See `../process/definition-of-done.md`.
 
-## Progress record (2026-08-10)
+## Where the work landed
 
-| Repo | PR/Commit | What |
+| Repo | PRs | What |
 |---|---|---|
-| governance | #110 | Additive contracts: `provenance.proto` (shared `Provenance` block with `CLASS_` enum), `ImportService` (Create/Get/List/RevokeImport) + `Import` state machine + `ImportedThread/Comment/Approval` read types on codereview, `HistoryImported`/`HistoryImportRevoked` audit events, `ImportRefs` git-phase RPC on GitStorage |
-| backend | #39 | **AC6/AC11 + AC24**: `api.Entry` gains required `Provenance`; the postgres store rejects non-`FIRST_PARTY` with `ErrNotFirstParty` (an error, never a silent drop); new fitness rule `RuleAuditImportsCodereview` keeps attested types out of the audit write surface. **AC1-AC3**: `ImportRefs` fetches source refs/tags through the ordinary durability path; the token travels only in the child-process environment, never argv, and git stderr is never returned (AC22). **AC6/AC10/AC16/AC17**: the import service — idempotent per (tenant, repository, source URL), one `HistoryImported` event with manifest digest on completion, `Revoke` tombstones records + emits `HistoryImportRevoked`. **AC7**: a failed git phase is not visible (FAILED state, no audit event). |
-| backend | #40 | **AC4/AC5/AC8/AC13/AC17**: the history phase — `internal/adapters/github` fetches PRs + reviews from the GitHub API, shapes `ImportedMergeRequest` records with `ATTESTED_IMPORT` provenance (opaque `declared_actor`, display-only `declared_at`, payload digest), stores them in the Code Review record store; approved reviews become `ImportedApproval` records that can never satisfy a merge policy (AC13); rate limits mark the import STALLED (AC8); `Revoke` tombstones imported records (AC17). Tests: stub GitHub server round-trip, rate-limit stall, URL parsing, revoked-import write refusal. |
+| governance | #110, #114, #116 | Additive contracts: `provenance.proto` (shared `Provenance` block), `ImportService` + `Import` state machine + `ImportedThread/Comment/Approval` read types on codereview, `HistoryImported`/`HistoryImportRevoked` events, `ImportRefs` on GitStorage, paged `ListImportedHistory`, `imported_bytes`; SPEC-0023 and its AC11–AC14 |
+| backend | #39 | **AC6/AC11/AC24**: `api.Entry` requires `Provenance`; the postgres store rejects non-`FIRST_PARTY` with `ErrNotFirstParty` (an error, never a silent drop); fitness rule `RuleAuditImportsCodereview` keeps attested types out of the audit write surface. **AC1–AC3/AC22**: `ImportRefs` fetches through the ordinary durability path, with the token only in the child-process environment and git stderr never returned. **AC7/AC10/AC16/AC17**: the import service, idempotent per (tenant, repository, source URL) |
+| backend | #40, #41 | **AC4/AC5/AC8/AC13/AC17**: the history phase for GitHub and then GitLab behind the same port — records carry `ATTESTED_IMPORT` provenance, an opaque `declared_actor`, a display-only `declared_at` and a payload digest; approved reviews become `ImportedApproval` records that can never satisfy a merge policy; rate limits mark the import STALLED; revoke tombstones |
+| backend | #43, #45, #46 | **AC9**: per-phase pacing, plus `imported_bytes` measured by git as growth only and handed to a `StorageMeter` port. **AC14/AC15**: assertion-only actor mapping, keyed per source instance, conflict refused. **AC16**: the manifest digest folds in the set as stored, so mutating a record fails verification; `VerifyImport` never repairs. **AC2**: the LFS transport and the object tier |
+| bff | #25 | **AC23 read surface**: provenance on every record, `satisfies_policy: false` on every imported approval, `approximate` on a degraded anchor, no field naming a resolvable platform actor |
+| webfrontend | #23 | **AC23/AC5**: imported history in its own labelled unverified section; a foreign handle always carries its source instance and is never a user link. Rules in `src/lib/provenance.ts`, unit tested plus a container render |
 
-| backend | #41 | **AC4/AC5**: GitLab as a second source behind the same port (`source_system` selects it), shared imported-record store, anchor degradation on both adapters. |
-| backend | #43 | **AC9 (throttle half)**: import work is paced per phase; an import that cannot get a turn is STALLED, not FAILED, and resumes where it stopped. |
-| governance | #114 | Additive: `ImportService.ListImportedHistory` (paged) with `ImportedMergeRequest.declared_creator`, and `ImportRefsResponse.imported_bytes`. |
-| backend | `feat/t0018-imported-history-read` | **AC20/AC14/AC17 on the read path**: `ListImportedHistory` serves one import's records with every provenance block intact; a revoked import returns nothing; another tenant is refused. |
-| backend | `feat/t0018-manifest-verify` | **AC16**: the manifest digest now folds in a digest of the set as stored — every field of every record, thread, comment and approval, length-prefixed and order-independent — so mutating a record fails verification. `VerifyImport` recomputes and compares as a read; it never repairs or rewrites. **AC12**: the chain-ordering case added to the Postgres audit suite. |
-| backend | `feat/t0018-imported-bytes` | **AC9 (measurement half)**: git-storaged returns `imported_bytes` — the repository's growth across the fetch, measured by git, growth only — and a `StorageMeter` port attributes it to (tenant, repository, import) once per completed git phase. Nothing is charged for a failed phase. |
-| bff | `feat/t0018-imported-history` | **AC23 read surface**: `GET /v1/repositories/{id}/imports/{import_id}/history`; provenance on every record, `satisfies_policy: false` on every imported approval, `approximate` on a degraded anchor, and no field that names a resolvable platform actor. |
-| webfrontend | `feat/t0018-imported-history` | **AC23/AC5**: imported history renders in its own labelled unverified section; an imported approval states it is not a platform approval and satisfies no merge policy; a foreign handle always carries its source instance and is never a user link; a degraded anchor says it is approximate. Rules live in `src/lib/provenance.ts` and are unit tested, plus a container render asserting the markup itself. |
-
-**Delivered:** contracts, the audit-writer provenance boundary (the load-bearing ACs the task's own
-note names "highest value, write first"), the git phase, both history phases (GitHub and GitLab),
-the import state machine, revocation, pacing, the imported-history read path, the imported-byte
-measurement, and the web rendering.
-
-### Acceptance criteria: where they landed
-
-**Nothing is open.** 23 of 24 are met; AC19 was moved to Phase 2 on 2026-08-10 (see the criterion),
-and the backlog records that whoever builds the evidence-pack surface inherits SPEC-0011 AC14.
 `SPEC-0023` also closed the LFS half of `SPEC-0004` AC2, unchecked since T-0010.
 
 **AC1 and AC2 are proved against real infrastructure** (2026-08-11), not only against fakes:
@@ -207,20 +192,9 @@ branches, so an import reported success and produced a repository nothing could 
 coordinator rather than a goroutine acknowledging through the in-process one, and an attached cloud
 volume rather than a local partition. Everything above the machine boundary is proved here.
 
-## Notes / open questions
-- **Gates cleared:** ADR-0029 is `Accepted` and SPEC-0011 is `Approved`. This task may enter RED.
-- **Three submodules, three PRs, in order** (ADR-0027, invariants 21–25): governance (contracts) →
-  backend → webfrontend, each its own commit; super-repo bumps pins to merged commits only.
-  **Never one commit across two.**
+## Notes
 - Git objects are content-addressed, so provenance attaches to the **import**, not to blobs
   (ADR-0029). No provenance block on git data — only the import record and its audit event.
-- This task absorbed the former **T-0019** at spec review (SPEC-0011 open question 3). It is large:
-  agree an internal implementation order before starting — suggested contracts → audit-writer
-  boundary (AC11) → git import → history import → actor mapping → rendering → export appendix.
-- AC23 may justify splitting out a **T-0020** (webfrontend provenance rendering) if the UI work
-  grows. Decide at planning, not mid-implementation, and never in a way that ships imported history
-  unlabeled in the UI.
-- AC24 is a cross-cutting edit to every current audit emitter. Cheap now (audit has one emitter path
-  from T-0006), expensive later. Sequence this task before Phase-2 audit surfaces land.
-- No Phase-1 plan file exists (`../plans/` holds only `phase-0-foundations.md`); sequencing here is
-  asserted by `Depends on`, not by a plan.
+- This task absorbed the former **T-0019** at spec review (SPEC-0011 open question 3): git data and
+  review history ship as one unit of work, so a repository is never left half-imported.
+- **AC19 is owed forward to Phase 2** — see the criterion above and `../backlog/README.md` under EP-8.
