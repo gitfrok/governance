@@ -80,7 +80,6 @@ the deciding ADR is the record.
 
 | Follow-up | ADR |
 |---|---|
-| The session store is decided as **Valkey**; wiring it is in flight under the ADR-0052 waiver (bff, then `deploy/dev`) | 0049, 0052 |
 | The staleness bound for roles captured at login — the ADR fixes where roles live, not how often they are re-fetched | 0049 |
 | The CSRF mechanism for browser-initiated writes. `SameSite=Lax` mitigates but does not close it, and the MR write surface must carry a defence | 0049 |
 | Whether distributed artifacts need a `NOTICE` or an SBOM of third-party licences | 0040 |
