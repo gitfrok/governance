@@ -57,4 +57,8 @@ message BranchProtectionChanged {
   string target_ref = 4;
   int32 required_approvals = 5;
   google.protobuf.Timestamp occurred_at = 6;
+  // The actor whose authorized SetProtection produced this change. Added so a
+  // cross-process consumer can re-derive the verified subject when it applies
+  // its own PDP decision for the rule (GitStorage.SetProtection).
+  string actor_id = 7;
 }

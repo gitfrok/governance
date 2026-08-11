@@ -71,7 +71,9 @@ The contract also defines additive Code Review events: `MergeRequestOpened`, `Re
 `MergeRequestMerged`, and `BranchProtectionChanged`. Events carry opaque IDs and tenant/repository
 scope, never review text, credentials, Git objects, or a policy allow flag. Repository/Git consumes
 only `BranchProtectionChanged` into a local projection; it neither reads Code Review tables nor
-calls Code Review on the receive-pack hot path.
+calls Code Review on the receive-pack hot path. `BranchProtectionChanged.actor_id` carries the
+verified subject of the authorized `SetProtection` that produced the change, so a cross-process
+consumer can re-derive that identity when it applies its own PDP decision for the rule.
 
 The policy follow-up adds this reviewed vocabulary:
 
