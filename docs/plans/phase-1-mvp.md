@@ -9,6 +9,13 @@ Phase 0 is **Closed**. Enablers landed: T-0001…T-0009, T-0020, T-0021 (contain
 planes, 2026-08-10). **Every Phase-1 task is now Done**, which satisfies the first of the three exit
 criteria below and none of the other two — see [Exit criteria](#exit-criteria) for what that leaves.
 
+**2026-08-11 addition:** the end-to-end scenario's code-driven half was executed live and passed —
+push, protected-ref direct push denied and audited, `SetBranchProtection` forwarded to storage,
+MR open (refs announced cross-process via the new `GitStorage.SubscribeRefUpdates`, governance #128),
+review approve, merge, `main` moved. The remaining gaps are purely the three environmental blocks
+under [Exit criteria](#exit-criteria); the runbook records the verified command flow
+(`deploy/MVP-RUNBOOK.md` §8a).
+
 | Task | Status | Reality on disk |
 |---|---|---|
 | T-0010 Git-RPC service | Done | `backend/git-storaged/server.go` implements UploadPack/ReceivePack + RepositoryReader |
@@ -57,9 +64,10 @@ all three would have shipped:
    phase, import service, GitHub history phase, declared-actor mapping, the LFS transport and its
    FUSE object tier (ADR-0050), the imported-history read surface and provenance rendering.
 8. **Exit proof:** a single end-to-end scenario in Minikube (`make dev-up`) — OIDC login → clone →
-   durable push (primary+sync) → open MR → direct push to protected ref denied → approve+merge →
-   CI job runs + green gates merge → audit trail + git-node failover promotes in-sync replica.
-   **This is the workstream that remains**, and it is the only one.
+    durable push (primary+sync) → open MR → direct push to protected ref denied → approve+merge →
+    CI job runs + green gates merge → audit trail + git-node failover promotes in-sync replica.
+    **The code-driven steps were executed live 2026-08-11** (see current state); the durable-push,
+    CI-dispatch and failover steps are unprovable on this single non-hypervisor node.
 
 ## Critical path
 T-0012 (durability/ack path) ⟷ T-0016 (MR gate) ⟷ T-0017 (CI gate). The exit bar needs all three:
@@ -71,7 +79,7 @@ the web session for both T-0015 and T-0016 UI; T-0018 is terminal behind T-0016 
 | # | Criterion | State (2026-08-11) |
 |---|---|---|
 | 1 | T-0010–T-0018 + T-0021 marked **Done** in `tasks/README.md` | **met** — T-0018 was the last, closed 2026-08-11 |
-| 2 | the end-to-end Minikube scenario above passes | **not met** — see below |
+| 2 | the end-to-end Minikube scenario above passes | **partially met** — the full MR flow (push → protected-ref denial + audit → MR open → approve → merge) verified live 2026-08-11; the durable-push/failover and CI-dispatch steps remain unprovable on this single non-hypervisor node — see below |
 | 3 | CI gates green per `ci-gates.md` | **met on every merged PR**, with the two standing gaps `ci-gates.md` already records: backend integration tests skip without `TEST_DATABASE_URL`, and the live-infrastructure suites skip without their endpoints |
 
 Criterion 2 is the whole of what is left, and it is **not blocked on code** — every step of the
