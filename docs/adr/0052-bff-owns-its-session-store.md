@@ -80,9 +80,12 @@ The BFF may open **exactly one** datastore: the session store ADR-0049 decides, 
    `GITFROK_SESSION_STORE=memory` posture, and it remains the default so a developer with no Valkey
    still gets a working login.
 
-6. **Sessions carry a server-side absolute expiry, enforced by the store.** Valkey key expiry is the
-   mechanism; the BFF sets it at creation and never extends it in place, so the ADR-0049 expiry bound
-   holds without a sweeper.
+6. **Both of ADR-0049's expiry bounds are enforced server-side, by different things.** The
+   **absolute** deadline is a field in the record, stamped at creation and never rewritten, so no
+   amount of activity can push a session past it — a key whose TTL was extended out of band is
+   deleted on the next load rather than honoured. The **idle** timeout is the key's TTL, refreshed on
+   a successful load but never beyond that deadline, so an abandoned session disappears without a
+   sweeper. The record is the authority; the TTL is the sweeper.
 
 ## Consequences
 
