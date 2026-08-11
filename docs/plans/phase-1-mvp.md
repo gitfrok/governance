@@ -89,6 +89,9 @@ acceptance criterion rests on.
   `../backlog/README.md` under EP-8). No evidence-pack surface exists to satisfy it; ADR-0029 §4 binds
   whoever builds one.
 - **MR UI scope:** the minimal MR page shipped (super-repo #81); rich review threads stay deferred.
-- **T-0013 session encoding:** opaque server-side cookie per ADR-0049, implemented by the BFF session
-  middleware (bff #22). **ADR-0049 is still `Proposed`** — accepting it is outstanding.
+- **T-0013 session encoding:** opaque server-side cookie per **ADR-0049 (Accepted 2026-08-12)**,
+  implemented by the BFF session middleware (bff #22). Two things the ADR leaves open follow it: the
+  staleness bound for roles, and the CSRF defence for browser-initiated writes. Its decision 5 names
+  **Valkey** as the store, and the dev cluster still runs `GITFROK_SESSION_STORE=memory`, so wiring
+  Valkey is now a deviation from an Accepted decision rather than a pending one.
 - **CI as merge-gate:** shipped observable to the bar; gating merge on CI status is a follow-up.

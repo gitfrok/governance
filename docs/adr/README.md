@@ -68,7 +68,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0046](0046-platform-operator-force-promote-authz.md) | Platform-operator principals authorize replica force-promotion | Accepted |
 | [ADR-0047](0047-first-party-image-distribution.md) | First-party release images are publicly pullable; trust is verified offline | Accepted |
 | [ADR-0048](0048-git-storaged-image-base.md) | `git-storaged` ships on a minimal base with git, not `scratch` | Accepted |
-| [ADR-0049](0049-bff-browser-session.md) | The browser session is an opaque server-side cookie the BFF owns | Proposed |
+| [ADR-0049](0049-bff-browser-session.md) | The browser session is an opaque server-side cookie the BFF owns | Accepted |
 | [ADR-0050](0050-large-objects-over-seaweedfs-fuse.md) | Large objects (LFS, CI artifacts, container images) are served from a SeaweedFS FUSE mount | Accepted |
 | [ADR-0051](0051-seaweedfs-mount-produced-by-node-daemonset.md) | The SeaweedFS FUSE mount is produced by one privileged node DaemonSet, not by a sidecar in each pod | Accepted |
 
@@ -79,7 +79,9 @@ the deciding ADR is the record.
 
 | Follow-up | ADR |
 |---|---|
-| **ADR-0049 is still `Proposed` while the BFF session it decides is implemented** (bff #22). Accept it or supersede it | 0049 |
+| The session store is decided as **Valkey**, and the BFF still runs `GITFROK_SESSION_STORE=memory` in dev — wire it | 0049 |
+| The staleness bound for roles captured at login — the ADR fixes where roles live, not how often they are re-fetched | 0049 |
+| The CSRF mechanism for browser-initiated writes. `SameSite=Lax` mitigates but does not close it, and the MR write surface must carry a defence | 0049 |
 | Whether distributed artifacts need a `NOTICE` or an SBOM of third-party licences | 0040 |
 | **No gate asserts an ADR's status matches what merging it meant.** Proposed on `main` is legitimate — an agent drafts a Proposed ADR and stops, and that ADR merges while it waits. The narrow defect: an ADR whose PR review *was* the approval should merge `Accepted`, and nothing distinguishes that from propose-and-stop. It is a question about intent, so it belongs in `.github/pull_request_template.md`, not in `check-docs.sh`. Has caught out ADR-0038, ADR-0039 and ADR-0040 | 0001 |
 | The *toolchain* half of the version-floor gate — assert installed `go`/`node`/`tsc` meet their floors in CI. The *image* half closed as ADR-0034 | 0023 |
