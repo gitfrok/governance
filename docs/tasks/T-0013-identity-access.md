@@ -28,6 +28,7 @@ See `../process/definition-of-done.md`.
 | Repo | Commit | What |
 |---|---|---|
 | backend | `1e6d6b7` (#21) | Tenant-scoped credential foundation: `modules/identity/` with PAT/SSH key authentication, HMAC keyed verifier ring, tenant-scoping, PDP-gated lifecycle (issue/revoke/list), RLS-backed credential store, and gRPC `CredentialAuthenticator` surface. |
+| backend | `aa5fc84` (#50) | SPEC-0016 AC6: `IssuePATRequest.roles` plumbed gRPC → module → domain; the in-memory dev store returns issuance roles on every authenticate, the Postgres store keeps directory-resolved roles at authenticate time (parameter is parity only). |
 | governance | `9b79511` (#78) | Additive identity credential authentication contract in `contracts/proto/identity/v1/`. |
 | governance | `e3d6628` (#84) | Additive verified actor roles field in the identity contract. |
 | governance | `0d8bb98` (#90) | ADR-0043 Accepted — credential verifiers resolved through a narrow RLS gateway. |
