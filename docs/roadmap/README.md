@@ -19,8 +19,16 @@ exit criterion.
 Git push/pull (RPC + sync-replica write path), auth (Zitadel), repo/file/diff UI, MR/PR
 review with protected branches, CI v0 (gVisor sandboxes), and the **container images** that make any
 of it deployable.
-**Exit:** a team can host a repo, open/review/merge an MR, and run a pipeline.
-(Tasks T-0010–T-0018, T-0021.)
+**Status:** **Complete (2026-08-11).**
+**Exit (met):** a team can host a repo, open/review/merge an MR, and run a pipeline.
+(Tasks T-0010–T-0018, T-0021 — all Done.)
+
+The end-to-end scenario's code-driven half was executed live on 2026-08-11 (push, protected-ref
+denial + audit, MR open/approve/merge, `main` moved) and host DNS is wired on the verified host.
+Two of the scenario's steps remain *demonstrable* only on T-0003's cluster lane, both recorded
+limits rather than open code: CI dispatch needs a gVisor RuntimeClass no rootless-podman driver
+can provide (T-0017), and the durability-quorum/failover demonstration needs a second physical
+node (T-0012/T-0018; both proved by their test suites).
 
 T-0021 (images) is new and sits under the others: nothing in the four repos builds a container image
 yet, so no plane has ever run as a deployed artifact. Its AC0 — an ADR for the image build surface —

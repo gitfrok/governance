@@ -82,28 +82,28 @@ Epics are grouped by roadmap phase and link down to executable tasks in `../task
 - **EP-4 Git plane**: T-0010 (Git-RPC, **Done** — backend #20), T-0011 (smart-HTTP+SSH,
   **Done** — backend #27/#28; real git clone/push over HTTPS+SSH, tests pass), T-0012
   (sync-replica+failover, **Done** — backend #30; replica coordinator + write-path quorum).
-- **EP-5 Identity**: T-0013 (Zitadel + PATs, tenant scoping) — **In progress**: credential
-  foundation (PAT/SSH auth, tenant scoping, PDP-gated lifecycle) **Done** — backend #21;
-  Zitadel/OIDC login **pending** (ADR-0045 Accepted, adapter not started).
+- **EP-5 Identity**: T-0013 (Zitadel + PATs, tenant scoping) — **Done (2026-08-11)**: PAT/SSH
+  auth foundation, tenant scoping, PDP-gated lifecycle (backend #21), OIDC login via
+  `ExchangeCode`/`VerifyIDToken` (backend #37), BFF session middleware (bff #22, ADR-0049), and
+  the roles-on-PAT plumbing for SPEC-0016 AC6 (backend #50, governance #124). The full OIDC
+  roundtrip through the BFF was verified live on the dev cluster 2026-08-11.
 - **EP-6 Code UX**: T-0014 (repo read APIs + BFF, **Done** — backend #22/#24; bff #18),
-  T-0015 (web browser/diff/palette, **Todo** — SPEC-0021 Approved, webfrontend has only a stub `index.astro`).
-- **EP-7 Review & CI**: T-0016 (MR + protected branches + approval policy, **Todo** —
-  SPEC-0019 Approved, no backend Code Review module yet), T-0017 (CI v0 gVisor+KEDA,
-  **In progress** — `modules/ci` on `feat/t0017-ci-runner` branch; domain+runner model
-  done, not wired to dataplane, no KEDA runtime).
-- **EP-8 Migration**: T-0018 (repository + review-history import — refs/tags/LFS *and* MR history
-  with attested provenance, one unit of work). Scoped in by PRD PR-12; **ADR-0029 Accepted**,
-  **SPEC-0011 Approved**. T-0019 was folded into T-0018 at spec review.
-  **In progress (2026-08-10):** 22 of 24 acceptance criteria met. Two moved or open:
-  - **AC19 (evidence-pack appendix) moved to Phase 2** (decided 2026-08-10). No evidence-pack surface
-    exists anywhere, and the PRD places it in Phase 2 under PR-17. Recorded here so it is not lost
-    with the task: **whoever builds the evidence-pack surface owes SPEC-0011 AC14** — zero attested
-    records in a pack's control sections, attested history only in a labelled appendix carrying its
-    provenance blocks and the admitting `HistoryImported` event. ADR-0029 §4 binds that surface
-    whether or not the criterion is copied into its task.
-  - **AC2 (LFS)** waits on `SPEC-0023` (Git LFS transport and object store), Approved 2026-08-10 with
-    both transfer decisions taken. It is implementation work now, and it also closes the unchecked
-    LFS half of `SPEC-0004` AC2.
+  T-0015 (web browser/diff/palette, **Done** — bff #22, webfrontend #20, super-repo #77 merged;
+  `app.gitsaas.test` serving on minikube).
+- **EP-7 Review & CI**: T-0016 (MR + protected branches + approval policy, **Done** — backend
+  #31/#33/#34/#35: MR lifecycle, protection, merge ref move; PDP gate + audit), T-0017
+  (CI v0 gVisor+KEDA, **Done** — backend #29/#32 + deploy PR #76; dev-cluster limit recorded:
+  no gVisor RuntimeClass under rootless podman, so dispatch is unconfigured there).
+- **EP-8 Migration**: T-0018 (repository + review-history import) — **Done (2026-08-11)**: 23 of
+  24 criteria met, AC19 moved to Phase 2 (decided 2026-08-10). Contracts (#110/#114/#116),
+  audit FIRST_PARTY boundary + git phase + import service (#39/#40), actor mapping + LFS
+  transport (#45), FUSE object tier (#46), imported-history read surface (bff #25) and
+  provenance rendering (webfrontend #23). AC1/AC2 proved against a live SeaweedFS gateway, an
+  HTTPS source and a two-node quorum.
+  **AC19 (evidence-pack appendix) is owed to whoever builds the evidence-pack surface in
+  Phase 2** (PRD PR-17): zero attested records in a pack's control sections, attested history
+  only in a labelled appendix carrying its provenance blocks and the admitting `HistoryImported`
+  event. ADR-0029 §4 binds that surface whether or not the criterion is copied into its task.
 - **EP-10 Deployable images**: T-0021 (container images for both planes) — **Done** (2026-08-10):
   backend #19/#25 (dataplane + controlplane from `scratch`), bff #16/#19, webfrontend #16/#18 (SSR).
   ADR-0035 (build surface) Accepted 2026-08-08; ADR-0044 (cosign key custody) and ADR-0047 (public
