@@ -71,6 +71,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0049](0049-bff-browser-session.md) | The browser session is an opaque server-side cookie the BFF owns | Accepted |
 | [ADR-0050](0050-large-objects-over-seaweedfs-fuse.md) | Large objects (LFS, CI artifacts, container images) are served from a SeaweedFS FUSE mount | Accepted |
 | [ADR-0051](0051-seaweedfs-mount-produced-by-node-daemonset.md) | The SeaweedFS FUSE mount is produced by one privileged node DaemonSet, not by a sidecar in each pod | Accepted |
+| [ADR-0052](0052-bff-owns-its-session-store.md) | The BFF may open exactly one datastore — its own session store — behind a declared waiver | Accepted |
 
 ## Open follow-ups
 
@@ -79,7 +80,7 @@ the deciding ADR is the record.
 
 | Follow-up | ADR |
 |---|---|
-| The session store is decided as **Valkey**, and the BFF still runs `GITFROK_SESSION_STORE=memory` in dev — wire it | 0049 |
+| The session store is decided as **Valkey**; wiring it is in flight under the ADR-0052 waiver (bff, then `deploy/dev`) | 0049, 0052 |
 | The staleness bound for roles captured at login — the ADR fixes where roles live, not how often they are re-fetched | 0049 |
 | The CSRF mechanism for browser-initiated writes. `SameSite=Lax` mitigates but does not close it, and the MR write surface must carry a defence | 0049 |
 | Whether distributed artifacts need a `NOTICE` or an SBOM of third-party licences | 0040 |
