@@ -41,6 +41,21 @@ service GitStorage {
   // The source URL and token are request-only secrets. They are never stored,
   // never logged, and never copied into an event, audit record, or error.
   rpc ImportRefs(ImportRefsRequest) returns (ImportRefsResponse);
+
+  // SetProtection delivers one exact-ref branch-protection rule from Code Review
+  // to this storage node (SPEC-0019 AC7).
+  //
+  // Code Review owns the rules and has already PDP-authorized the change; the
+  // rule arrives here so the receive-pack path can derive server-side context
+  // for the PDP before it accepts a direct ref update. It is the cross-process
+  // counterpart of BranchProtectionChanged: when Code Review and git-storaged
+  // share a process the event is enough, and when they do not, this RPC is the
+  // route by which the rule reaches the node that enforces direct pushes.
+  //
+  // Storage asks the PDP itself, exactly as for every other ref-affecting
+  // operation — a caller that has already been allowed by its own PEP is still
+  // not trusted to assert the rule into effect.
+  rpc SetProtection(SetProtectionRequest) returns (SetProtectionResponse);
 }
 
 // OperationContext identifies one Git operation. It is sent as the first client-stream message;
@@ -160,3 +175,21 @@ message RefUpdate {
   string ref = 1;
   string revision = 2;
 }
+
+// SetProtectionRequest delivers one exact-ref branch-protection rule.
+//
+// target_ref is an exact refs/heads/... name — pattern syntax is not accepted.
+// required_approvals accompanies it so the stored fact matches the rule Code
+// Review holds, though only the ref's protection affects the receive-pack path.
+//
+// Deliberately absent: an allow flag, a decision id, and any protection outcome.
+// None of those are server-derived facts storage can accept as input.
+message SetProtectionRequest {
+  RefUpdateContext context = 1;
+  string target_ref = 2;
+  int32 required_approvals = 3;
+}
+
+// SetProtectionResponse is empty by design: the rule is in effect, or the call
+// failed, and there is no new state a caller needs read back.
+message SetProtectionResponse {}

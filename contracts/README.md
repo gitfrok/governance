@@ -23,7 +23,9 @@ needs a direct response.
 - `proto/git/v1/git.proto` — internal packet-stream transport between the smart-HTTP/SSH front
   doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side.
   It also carries `MergeRef`, the single-ref compare-and-swap move Code Review uses to complete an
-  authorized merge (SPEC-0019) — storage asks the PDP for it exactly as it does for a push
+  authorized merge (SPEC-0019) — storage asks the PDP for it exactly as it does for a push — and
+  `SetProtection`, the route by which an exact-ref branch-protection rule reaches the storage node
+  that enforces direct pushes when Code Review and git-storaged do not share a process
 - `proto/identity/v1/identity.proto` — credential authentication and PAT lifecycle port for
   tenant-scoped principals (SPEC-0016); it authenticates but never authorizes Git operations
 - `proto/identity/v1/identity_oidc.proto` — the server-side half of the OIDC Authorization Code
