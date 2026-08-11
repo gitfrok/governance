@@ -36,6 +36,13 @@ Git-protocol semantics ad hoc at the process boundary.
   `gitsaas.events.repository.v1.RefUpdated` event for every changed ref. The
   event remains the asynchronous integration boundary for CI, search, and
   audit.
+- `GitStorage.SetProtection` carries one exact-ref branch-protection rule from
+  Code Review to the storage node (SPEC-0019 AC7). It is the boundaried
+  counterpart of `BranchProtectionChanged`: the event is sufficient when Code
+  Review and git-storaged share a process; the RPC is the route by which the
+  rule reaches the node that enforces direct pushes when they do not. Storage
+  asks the PDP for the rule change exactly as it does for any ref-affecting
+  operation.
 
 ## Out of scope
 
@@ -51,6 +58,8 @@ Git-protocol semantics ad hoc at the process boundary.
 
 - `GitStorage.UploadPack(stream UploadPackRequest) returns (stream UploadPackResponse)`;
 - `GitStorage.ReceivePack(stream ReceivePackRequest) returns (stream ReceivePackResponse)`;
+- `GitStorage.SetProtection(SetProtectionRequest) returns (SetProtectionResponse)` — one
+  exact-ref rule (`target_ref`, `required_approvals`) under a `RefUpdateContext`;
 - `OperationContext` with `tenant_id`, `repository_id`, `actor_id`, and
   `request_id`;
 - packet payloads as `bytes`, plus an explicit client-stream close marker.
