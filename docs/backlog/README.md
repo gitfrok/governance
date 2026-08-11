@@ -16,11 +16,11 @@ authoritative; **Definition of Done** for all of them is `../process/definition-
 What is worth carrying forward out of them:
 
 - **EP-0** closed when the gates began to *block* rather than only run: ADR-0031 split `main`
-  enforcement into `main-integrity` (no bypass actors) and `main-review`, applied to all five repos by
-  the super-repo's `scripts/apply-rulesets.sh`. Verified empirically — a direct admin push to `main` is
-  `[remote rejected]` and `gh pr merge --admin` is refused on a red required check. **Still open:** the
-  two rulesets are five per-repo copies, because org-level rulesets need GitHub Team; `make
-  rulesets-check` catches drift.
+  enforcement into two rulesets, verified empirically at the time — a direct admin push to `main` was
+  `[remote rejected]`. **ADR-0031 is now superseded by ADR-0053:** the repos went private, and this
+  plan gives a private repo neither rulesets nor branch protection (both endpoints answer 403), so that
+  mechanism can no longer be applied or verified. Work lands directly on `main` and CI on push is the
+  gate.
 - **EP-2**: SPEC-0002's open question is answered — decision-cache invalidation is by *bundle
   revision*, not by clock, so a policy change invalidates every cached decision by construction. And
   **AC4's fitness function is a tripwire, not a proof**: authorization logic has no import signature

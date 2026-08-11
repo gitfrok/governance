@@ -1,6 +1,6 @@
 # ADR-0031: Split merge enforcement — bind admins to checks, keep review bypassable
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0053
 - **Date:** 2026-08-04
 - **Deciders:** platform
 - **Governs:** G7 process integrity (CI gates cannot be bypassed)

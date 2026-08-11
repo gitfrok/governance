@@ -113,7 +113,13 @@ nothing could fail. It now has a workflow (build, typecheck, tests, boundaries) 
 expectation holds fleet-wide. `check` mode compares each repo's required-check list against the
 expected context exactly, and `webfrontend`'s expected context is no longer the empty one.
 
-**What is deliberately still open**, tracked in ADR-0031, not here:
-- Org-level rulesets need GitHub Team, so the two rulesets are five per-repo copies;
-  `make rulesets-check` is what keeps them from drifting. It is not in CI: it needs an admin token,
-  and the super-repo workflow runs with `contents: read`.
+**Everything above describes how AC5 was met while the repos were public, and it held.**
+**ADR-0053 supersedes ADR-0031 as of 2026-08-12:** the repos are private, and this plan gives a private
+repo neither rulesets nor branch protection — both endpoints answer
+`403 Upgrade to GitHub Pro`. So none of the rulesets above can be applied or verified any more, and
+`make rulesets-check` cannot function; `apply-rulesets.sh` now says so rather than reporting drift.
+
+AC5 stays ticked on a narrower claim, stated plainly: **the checks run on every push to `main` in all
+five repos**, and a red `main` is a stop-everything condition. There is no merge left to block, so the
+letter of "blocks merge on violation" is not met and is not claimed. Restoring the stronger form needs
+either public repos or a paid plan, and decision 6 of ADR-0053 keeps the script that would do it.

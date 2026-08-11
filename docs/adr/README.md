@@ -50,7 +50,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0028](0028-agdd-framework.md) | AGDD — AI-Agent Governance-Driven Development framework | Accepted |
 | [ADR-0029](0029-imported-history-attested-provenance.md) | Imported history is attested, not audited — two-class provenance | Accepted |
 | [ADR-0030](0030-extraction-trigger-budgets.md) | Extraction-trigger budgets for the modular monolith | Accepted |
-| [ADR-0031](0031-merge-enforcement-split-rulesets.md) | Split merge enforcement — bind admins to checks, keep review bypassable | Accepted |
+| [ADR-0031](0031-merge-enforcement-split-rulesets.md) | Split merge enforcement — bind admins to checks, keep review bypassable | Superseded by ADR-0053 |
 | [ADR-0032](0032-contract-schema-gates.md) | Gate the contract schema — lint + breaking checks on `contracts/` | Accepted |
 | [ADR-0033](0033-git-storage-backing-block-volumes.md) | Live bare repos stay on block volumes — SeaweedFS-FUSE fails git's rename contract | Accepted |
 | [ADR-0034](0034-image-pins-are-resolvable-patch-tags.md) | Image pins are fully-qualified, resolvable, patch-level tags | Accepted |
@@ -72,6 +72,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0050](0050-large-objects-over-seaweedfs-fuse.md) | Large objects (LFS, CI artifacts, container images) are served from a SeaweedFS FUSE mount | Accepted |
 | [ADR-0051](0051-seaweedfs-mount-produced-by-node-daemonset.md) | The SeaweedFS FUSE mount is produced by one privileged node DaemonSet, not by a sidecar in each pod | Accepted |
 | [ADR-0052](0052-bff-owns-its-session-store.md) | The BFF may open exactly one datastore — its own session store — behind a declared waiver | Accepted |
+| [ADR-0053](0053-direct-to-main-ci-is-the-gate.md) | Work lands directly on `main`; CI on push is the only gate | Accepted |
 
 ## Open follow-ups
 
@@ -91,5 +92,6 @@ the deciding ADR is the record.
 | Per-repo scaffolding + generated-type publishing (contracts → TS). Blocks **per-consumer** codegen gating: a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition, so freshness is gated at the super-repo pin instead | 0027, 0028, 0032 |
 | Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
 | Unit-economics model per pricing tier | 0008 |
-| The two merge rulesets are five per-repo copies, because org-level rulesets need GitHub Team — `make rulesets-check` catches drift | 0031 |
+| Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |
+| Whether a red `main` should notify anything beyond whoever pushed it | 0053 |
 | First-party images are pinned by tag, not digest, in `deploy/dev` | 0035 |
