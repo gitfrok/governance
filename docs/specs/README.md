@@ -29,3 +29,15 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0021 | Browser repository-view HTTP contract | Approved | T-0015 |
 | SPEC-0022 | SSH verifier-key routing | Approved | T-0013, T-0011 |
 | SPEC-0023 | Git LFS transport and object store | Approved | T-0010, T-0018 |
+| SPEC-0024 | Normalized findings model & scanner ingestion | Approved | T-0022 |
+| SPEC-0025 | Findings ingestion and read contract | Approved | T-0022 |
+| SPEC-0026 | Unified security dashboard & triage | Approved | T-0023 |
+| SPEC-0027 | Triage and dashboard-read contract | Approved | T-0023 |
+| SPEC-0028 | Findings on merge requests | Approved | T-0024 |
+| SPEC-0029 | Security & approval policy — versioned, dry-run, enforced | Approved | T-0025 |
+| SPEC-0030 | Policy decision-provenance and dry-run contract | Approved | T-0025 |
+| SPEC-0031 | Date-ranged evidence pack export | Approved | T-0026 |
+| SPEC-0032 | Evidence export contract | Approved | T-0026 |
+| SPEC-0033 | Scoped, read-only, time-boxed auditor access | Approved | T-0027 |
+| SPEC-0034 | Permission-filtered code search | Approved | T-0028 |
+| SPEC-0035 | Code search query and indexing contract | Approved | T-0028 |

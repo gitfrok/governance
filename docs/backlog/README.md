@@ -56,12 +56,50 @@ prove both in their suites).
 evidence pack spanning an import must carry zero attested records in its control sections, with
 attested history confined to a labelled appendix carrying its provenance blocks and the admitting
 `HistoryImported` event (SPEC-0011 AC14). No evidence-pack surface exists yet to satisfy it. **ADR-0029
-§4 binds whoever builds that surface whether or not the criterion is copied into their task.**
+§4 binds whoever builds that surface whether or not the criterion is copied into their task.** It is
+now owned by **EP-13 / T-0026 (AC2)**, which carries the criterion verbatim.
 
-## Phase 2 — Ultimate wedge *(to be expanded)*
+## Phase 2 — Ultimate wedge · all epics OPEN
 
-Scanner integration; unified security dashboard; security/approval policies-as-code; audit UI +
-evidence export (inherits AC19 above); Zoekt search.
+Plan: `../plans/phase-2-ultimate-wedge.md` (Active 2026-08-14). Scope is exactly PR-13…PR-19.
+
+| Epic | Tasks | Status |
+|---|---|---|
+| **EP-11** Findings plane | T-0022, T-0023, T-0024 | Open — specs Approved, ready for RED |
+| **EP-12** Policy-as-code | T-0025 | Open — specs Approved, ready for RED |
+| **EP-13** Evidence & auditor access | T-0026, T-0027 | Open — specs Approved, ready for RED |
+| **EP-14** Code search | T-0028 | Open — specs Approved, ready for RED |
+
+**EP-11 gates the phase.** T-0022 fixes the normalized findings model and, harder, the rule for
+**stable finding identity across scans**; triage that survives a re-scan (T-0023), MR attribution
+(T-0024) and the scan-gate sections of an evidence pack (T-0026) all degrade at once if it is wrong.
+Nothing outside EP-14 should start before T-0022's contract is merged in `governance/`.
+
+**EP-13 owns the criterion EP-8 owed forward.** T-0018's AC19 is carried verbatim as **T-0026 AC2**.
+Its gate is closed: **ADR-0055 (Accepted 2026-08-14)** settles audit retention — the chain never
+removes anything, attested imported records live outside the chain and expire a year after import or
+with their repository, and an evidence pack is a self-contained snapshot. SPEC-0031/0032/0033 are
+Approved and both tasks may go RED.
+
+**EP-14 is independent** and gates nothing; it can run alongside EP-11 from the start.
+
+**All twelve specs Approved 2026-08-14** — SPEC-0024…SPEC-0035. Every Phase-2 epic may go RED.
+Next free: SPEC-0036.
+
+Three decisions were taken at approval and are recorded in the specs themselves:
+
+- **SPEC-0029's authoring fork — reading A.** Policy stays reviewed Rego in `governance/policies`;
+  git is the version store and the recorded policy version is the bundle revision. Reading B
+  (in-product per-tenant authoring) would be a second mutable policy source and requires a Proposed
+  ADR before any contract work.
+- **Proto package paths** — `contracts/proto/security/v1` for findings (ADR-0022's context name),
+  `search/v1` for code search, and a new `audit/v1` for Audit's first RPC surface.
+- **Audit retention — ADR-0055 (Accepted 2026-08-14).** The append-only chain never removes anything
+  (tenant-lifetime retention, ADR-0007 invariant 5 unqualified, no tombstones); attested imported
+  records sit outside the chain per ADR-0029 and expire one year after import or with their
+  repository, while the admitting `HistoryImported` event is chained and outlives them; an evidence
+  pack is a self-contained snapshot; neither period is tenant-configurable in v1. This closes
+  ADR-0007's retention follow-up and SPEC-0011's last open item.
 
 ## Phase 3 — BYO *(to be expanded)*
 

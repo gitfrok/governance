@@ -74,6 +74,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0052](0052-bff-owns-its-session-store.md) | The BFF may open exactly one datastore — its own session store — behind a declared waiver | Accepted |
 | [ADR-0053](0053-direct-to-main-ci-is-the-gate.md) | Work lands directly on `main`; CI on push is the only gate | Superseded by ADR-0054 |
 | [ADR-0054](0054-main-guard-only.md) | `main` is guarded against rewrite and deletion, and against nothing else | Accepted |
+| [ADR-0055](0055-audit-retention-attested-imported-records.md) | Audit retention: the chain never removes; attested history expires; a pack is a snapshot | Accepted |
 
 ## Open follow-ups
 
@@ -91,6 +92,8 @@ the deciding ADR is the record.
 | Event catalog and naming — names exist as the protobuf full names of `contracts/events`, but nothing documents them | 0022 |
 | Super-repo CI: fail on submodule pointers referencing unmerged commits | 0027 |
 | Per-repo scaffolding + generated-type publishing (contracts → TS). Blocks **per-consumer** codegen gating: a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition, so freshness is gated at the super-repo pin instead | 0027, 0028, 0032 |
+| Meter audit-store and evidence-pack growth against the PRD §6 fair-use dimensions — retention is now unbounded by decision, and nothing measures it | 0055 |
+| Whether an expired attested store leaves a marker distinguishable from "never imported" | 0055 |
 | Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
 | Unit-economics model per pricing tier | 0008 |
 | Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |

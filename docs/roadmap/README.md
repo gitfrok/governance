@@ -31,9 +31,12 @@ Security scanners → normalized findings → **unified dashboard**; security/ap
 audit UI + evidence export; code search.
 **Exit:** the differentiating governance/security surface is usable end-to-end.
 
-No plan file, epics or tasks exist yet, so the first move is a plan under `../plans/`. It inherits
-T-0018's AC19 — an evidence pack must carry zero attested records in its control sections (ADR-0029 §4,
-SPEC-0011 AC14).
+The plan is `../plans/phase-2-ultimate-wedge.md` (Active 2026-08-14); epics **EP-11…EP-14** and tasks
+**T-0022…T-0028** are filed in `../backlog/` and `../tasks/`. Every task has its spec — **SPEC-0024…SPEC-0035**, all
+**Approved 2026-08-14** (next free: SPEC-0036), so every Phase-2 task may go RED. **ADR-0055**
+(Accepted) settles audit retention, closing ADR-0007's follow-up and SPEC-0011's last open item. The
+phase inherits T-0018's AC19 — an evidence pack must carry zero attested records in its control
+sections (ADR-0029 §4, SPEC-0011 AC14) — now owned by T-0026 AC2.
 
 ## Phase 3 — BYO
 

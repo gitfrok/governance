@@ -26,6 +26,13 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Done — backend #29/#32, super-repo #76; dispatch needs a gVisor RuntimeClass |
 | T-0018 | Repository & review-history import | 1 | Done — 23 of 24 criteria; AC19 moved to Phase 2 |
 | T-0021 | Container images for both planes | 1 | Done — backend #19/#25, bff #16/#19, webfrontend #16/#18 |
+| T-0022 | Normalized findings model + scanner ingestion | 2 | Todo — gates the phase; SPEC-0024/0025 **Approved**, ready for RED |
+| T-0023 | Unified security dashboard + triage state | 2 | Todo — SPEC-0026/0027 **Approved** |
+| T-0024 | Findings inline on the merge request | 2 | Todo — SPEC-0028 **Approved** |
+| T-0025 | Security & approval policy: versioned, dry-run, enforced | 2 | Todo — SPEC-0029/0030 **Approved** (reading A) |
+| T-0026 | Date-ranged evidence pack export | 2 | Todo — SPEC-0031/0032 **Approved**; carries T-0018 AC19 |
+| T-0027 | Scoped, read-only, time-boxed auditor access | 2 | Todo — SPEC-0033 **Approved** |
+| T-0028 | Permission-filtered code search | 2 | Todo — SPEC-0034/0035 **Approved**; independent |
 
 ## Retired numbers (never reused)
 
