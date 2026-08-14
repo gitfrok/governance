@@ -1,0 +1,510 @@
+syntax = "proto3";
+
+// Audit's first RPC surface: date-ranged evidence pack export (SPEC-0031,
+// SPEC-0032, T-0026). Through Phase 1 Audit carried events only
+// (contracts/events/audit/v1); evidence export is why the package is created
+// here rather than extended onto another context's service (SPEC-0032,
+// resolved package-creation question).
+//
+// A pack is the compliance-owner's answer to "assemble the audit evidence by
+// hand" (PRD PR-17): one closed date range, four control sections —
+// approvals, policy decisions, scan gates, access changes — and one labelled
+// appendix for attested imported history. Enough for a SOC 2 Type II control
+// walkthrough without engineer involvement (SPEC-0031).
+//
+// The two structural commitments this schema encodes:
+//
+// 1. ATTESTED EXCLUSION IS A TYPE PROPERTY (SPEC-0032 AC2, inheriting T-0018
+//    AC19 / SPEC-0011 AC14). The control-section record messages carry no
+//    field capable of holding an attested imported record: no provenance
+//    block, no foreign handle, no declared time, no import reference. An
+//    attested record is representable ONLY in AttestedAppendix, with its
+//    provenance blocks and the admitting HistoryImported event, labelled as
+//    foreign history (ADR-0029 §6). Exclusion therefore holds by construction
+//    rather than by an assembly-time filter, and scripts/check-contracts.sh
+//    asserts it against the compiled descriptor.
+//
+// 2. A PACK IS A SELF-CONTAINED SNAPSHOT (ADR-0055 rule 3). Sections embed
+//    their records and anchors at generation time; nothing references the
+//    chain without embedding what it cites. A pack stays verifiable after the
+//    attested history an appendix quoted has aged out of its own store.
+//
+// Assembly is server-determined. RequestEvidencePack accepts a closed date
+// range and an optional repository scope and nothing else: no record list, no
+// section filter that could omit an unfavourable control record, no retention
+// override (SPEC-0032). Generation and retrieval are PDP decisions with
+// server-derived context (evidence.pack.generate / evidence.pack.read), and
+// generation appends exactly one immutable audit record correlated to the
+// decision ID (SPEC-0032 AC6).
+package gitsaas.audit.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/audit/v1;auditv1";
+
+import "google/protobuf/timestamp.proto";
+import "proto/contracts/v1/provenance.proto";
+
+service EvidenceService {
+  // RequestEvidencePack starts the asynchronous assembly of a pack over one
+  // closed date range (SPEC-0031, SPEC-0032). It accepts only the range and
+  // an optional repository scope; assembly — which sections, which records —
+  // is entirely server-determined, so a caller cannot shape the pack's
+  // contents (SPEC-0032 AC4). Idempotent per tenant, range and request ID:
+  // replaying a request ID produces no second pack and no second audit record
+  // (SPEC-0032 AC1). Generation is a PDP decision (evidence.pack.generate)
+  // and is itself audited (SPEC-0031 AC6).
+  rpc RequestEvidencePack(RequestEvidencePackRequest) returns (RequestEvidencePackResponse);
+  // GetEvidencePackStatus observes assembly: the pack's state and per-section
+  // record counts, observable while a large range assembles without blocking
+  // interactive traffic (SPEC-0031 non-functional). Not-found, cross-tenant
+  // and unauthorized are the same coarse denial (SPEC-0001).
+  rpc GetEvidencePackStatus(GetEvidencePackStatusRequest) returns (GetEvidencePackStatusResponse);
+  // GetEvidencePack streams a READY pack to the caller, bounded and chunked:
+  // no operation loads a full pack into memory (SPEC-0032 non-functional).
+  // The pack is a self-contained snapshot (ADR-0055 rule 3) — records and
+  // anchors are embedded, never referenced — and every control record is
+  // verifiable against the append-only chain (SPEC-0032 AC7). Retrieval is a
+  // PDP decision (evidence.pack.read); auditor reads arrive later through
+  // SPEC-0033's grants, which extend this same action. Not-found,
+  // cross-tenant, unauthorized and not-yet-ready are the same coarse denial
+  // (SPEC-0001).
+  rpc GetEvidencePack(GetEvidencePackRequest) returns (stream GetEvidencePackResponse);
+}
+
+// EvidenceContext is derived from an authenticated principal by the PEP.
+// The actor ID and roles are verified server-side; a caller cannot assert
+// them. A pack is always tenant-scoped and can never span two tenants
+// (SPEC-0031 AC6), so the context carries no repository: repository scope is
+// a per-request filter, never part of the verified identity. An empty or
+// cross-tenant context is a coarse denial that does not distinguish
+// nonexistent from unauthorized (SPEC-0001).
+message EvidenceContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+  repeated string actor_roles = 3;
+  string request_id = 4;
+}
+
+// SectionType names the four control sections a pack always carries
+// (SPEC-0031 AC1). The labelled appendix is not a control section and is
+// deliberately not a member: it is a distinct shape (AttestedAppendix), so a
+// section type can never be widened to render attested history as a control.
+enum SectionType {
+  SECTION_TYPE_UNSPECIFIED = 0;
+  // Approvals witnessed by Code Review.
+  SECTION_TYPE_APPROVALS = 1;
+  // Policy decisions recorded by the PDP (SPEC-0030).
+  SECTION_TYPE_POLICY_DECISIONS = 2;
+  // Scan gates witnessed by Security/Findings.
+  SECTION_TYPE_SCAN_GATES = 3;
+  // Access changes witnessed by Identity & Access.
+  SECTION_TYPE_ACCESS_CHANGES = 4;
+}
+
+// PackState is the lifecycle of an asynchronous assembly (SPEC-0031
+// non-functional: observable per section; a large range does not block
+// interactive traffic).
+enum PackState {
+  PACK_STATE_UNSPECIFIED = 0;
+  // Requested and authorized; assembly has not started reporting yet.
+  PACK_STATE_PENDING = 1;
+  // Assembly in progress; per-section counts are live.
+  PACK_STATE_ASSEMBLING = 2;
+  // Fully assembled and retrievable via GetEvidencePack.
+  PACK_STATE_READY = 3;
+  // Assembly could not complete; the reason is in the status response. A
+  // failed pack is never partially retrievable.
+  PACK_STATE_FAILED = 4;
+}
+
+// GapReason names why a section could not be fully assembled for part of the
+// range. A section whose source is incomplete reports the gap explicitly; a
+// pack never presents a partial section as complete (SPEC-0031 AC10,
+// SPEC-0032 AC8). The reason is an honest rendering of a source that was
+// unavailable or lagged — never "no records".
+enum GapReason {
+  GAP_REASON_UNSPECIFIED = 0;
+  // The owning context's contract surface was unreachable for a bounded part
+  // of the range (ADR-0022: sections assemble through contracts or
+  // projections only).
+  GAP_REASON_SOURCE_UNAVAILABLE = 1;
+  // The event-fed projection feeding the section lagged past its freshness
+  // bound while the section assembled.
+  GAP_REASON_PROJECTION_LAGGED = 2;
+  // Assembly of the section's records failed; nothing is guessed or
+  // substituted for the missing part.
+  GAP_REASON_ASSEMBLY_FAILED = 3;
+}
+
+// ControlDecisionMode is the only evaluation mode a policy decision may carry
+// in a control section. It is a CLOSED enum with a single non-default value —
+// ENFORCED — rather than a rendering of policy.v1.EvaluationMode: a DRY_RUN
+// decision is not representable in a control section (SPEC-0032 AC3), and the
+// omission is deliberate. Adding a second value is a reviewed contracts
+// change, not a silent widening.
+enum ControlDecisionMode {
+  CONTROL_DECISION_MODE_UNSPECIFIED = 0;
+  // The decision was enforced: it gated a real action and was recorded as a
+  // control in the audit chain. The only mode a control section admits.
+  CONTROL_DECISION_MODE_ENFORCED = 1;
+}
+
+// SectionGap is an explicit marker that part of a section's range could not
+// be assembled (SPEC-0031 AC10). It carries bounds, so a reader knows exactly
+// where the section is silent; an unbounded or reasonless gap is not
+// representable.
+message SectionGap {
+  // Inclusive bounds of the un-assembled sub-range.
+  google.protobuf.Timestamp from = 1;
+  google.protobuf.Timestamp to = 2;
+  GapReason reason = 3;
+}
+
+// ChainAnchor bounds a section's cited slice of the append-only chain
+// (ADR-0007, SPEC-0032: per-section verification data). With the anchors a
+// consumer re-derives that every cited record sits in the chain and that no
+// cited record was mutated (SPEC-0032 AC7); the chain itself never removes
+// anything, so an anchor never dangles (ADR-0055 rule 1).
+message ChainAnchor {
+  // Sequence number of the section's first cited chain record.
+  int64 first_seq = 1;
+  // Sequence number of the section's last cited chain record.
+  int64 last_seq = 2;
+  // Hash of the first cited record, including its prev-hash link.
+  string first_record_hash = 3;
+  // Hash of the last cited record.
+  string last_record_hash = 4;
+  // Hash of the chain record immediately before first_seq — the continuity
+  // anchor. A consumer that re-fetches the chain segment verifies
+  // first_record_hash links to it, closing the section into the chain rather
+  // than leaving it as an isolated, self-certifying list. Empty only when
+  // the section cites no records.
+  string prev_record_hash = 5;
+}
+
+// ApprovalRecord is one first-party approval witnessed by Code Review.
+//
+// Control-section record messages are structurally incapable of carrying an
+// attested record (SPEC-0032 AC2): this message has no provenance block, no
+// foreign handle, no declared time and no import reference. An imported
+// approval never appears as a control approval; it is display-only history in
+// the labelled appendix (SPEC-0031 AC4, ADR-0029 §4).
+message ApprovalRecord {
+  // The merge request the approval was recorded on, as an opaque identifier.
+  string merge_request_id = 1;
+  // The branch-protection rule the approval counted towards, when one
+  // governed the merge.
+  string protection_rule_id = 2;
+}
+
+// PolicyDecisionRecord is one enforced PDP decision, with the provenance
+// SPEC-0030 requires an evidence pack to carry (SPEC-0031 AC3): the deciding
+// policy version and the digest over the input the decision was made over.
+// mode is ControlDecisionMode — ENFORCED only — so a dry-run decision is not
+// representable here (SPEC-0032 AC3, SPEC-0029 AC2).
+message PolicyDecisionRecord {
+  // The PDP-assigned identity of the decision.
+  string decision_id = 1;
+  // The deciding policy version: the bundle revision that produced the
+  // decision (policy.v1.DecideResponse.policy_revision).
+  string bundle_revision = 2;
+  // Digest over the canonicalized input the decision was made over.
+  string input_digest = 3;
+  // ENFORCED is the only representable value.
+  ControlDecisionMode mode = 4;
+}
+
+// ScanGateRecord is one scan gate witnessed by Security/Findings: the gate a
+// merge passed or failed on the findings attributed to it (SPEC-0029).
+message ScanGateRecord {
+  // The merge request the gate was evaluated for, as an opaque identifier.
+  string merge_request_id = 1;
+  // The scan the gate's findings facts came from.
+  string scan_id = 2;
+  // The ACCEPT/FALSE_POSITIVE triage record IDs the gate relied on, if an
+  // exemption applied — the same IDs the PDP decision recorded
+  // (SPEC-0029 AC4).
+  repeated string relied_upon_triage_ids = 3;
+}
+
+// AccessChangeRecord is one access change witnessed by Identity & Access.
+// Access changes are sourced through Identity & Access's own contract
+// surface, never by reading its tables (ADR-0022, SPEC-0032 assumption).
+message AccessChangeRecord {
+  // The kind of access changed, e.g. "role", "personal_access_token",
+  // "protection_rule".
+  string access_kind = 1;
+  // The principal whose access changed, as an opaque identifier.
+  string target_principal_id = 2;
+  // The identifier of the grant or membership record changed, when one
+  // exists.
+  string grant_id = 3;
+}
+
+// ControlSectionRecord is one cited record of a control section. Every record
+// shares its chain position, actor, resource, action, outcome and timestamp —
+// all first-party facts witnessed by the platform (SPEC-0032) — and carries
+// exactly one section-specific detail in `detail`.
+//
+// This message is the boundary SPEC-0032 AC2 pins: it has no field capable of
+// carrying an attested imported record. There is no gitsaas.contracts.v1.
+// Provenance here, no declared actor, no declared time, no import_id and no
+// foreign source reference — those fields exist only in AttestedAppendix, and
+// scripts/check-contracts.sh proves their absence against the compiled
+// descriptor. The embedded-record shape (not a reference) is ADR-0055 rule 3.
+message ControlSectionRecord {
+  // The record's position in the tenant's append-only audit chain
+  // (ADR-0007). Chain sequence, hashes and actor are server facts; a caller
+  // supplies none of them.
+  int64 chain_seq = 1;
+  // Hash of this record in the chain, including its prev-hash link: what a
+  // consumer recomputes to detect a mutated record (SPEC-0032 AC7).
+  string record_hash = 2;
+  // The verified actor who performed the action, from authenticated
+  // identity — always a platform principal in a control section, never a
+  // foreign handle.
+  string actor_id = 3;
+  // What was acted on, as an opaque identifier.
+  string resource = 4;
+  // The action, from the stable audit vocabulary, e.g.
+  // "merge_request.merge".
+  string action = 5;
+  // Whether the action was performed or refused. A denied action is evidence
+  // too: refusals are the interesting half of an investigation
+  // (events/audit/v1 Outcome).
+  bool allowed = 6;
+  // When the platform witnessed the action, on the platform's clock.
+  google.protobuf.Timestamp occurred_at = 7;
+  // Exactly one section-specific detail. A record with no detail is a
+  // schema defect; UNSPECIFIED sections are not assembled.
+  oneof detail {
+    ApprovalRecord approval = 8;
+    PolicyDecisionRecord policy_decision = 9;
+    ScanGateRecord scan_gate = 10;
+    AccessChangeRecord access_change = 11;
+  }
+}
+
+// ControlSection is one of the four sections a pack always carries
+// (SPEC-0031 AC1). It embeds its records — a self-contained snapshot, not a
+// view (ADR-0055 rule 3) — together with the anchors that tie them to the
+// chain and explicit gap markers where the source was incomplete. A section
+// whose records sit inside a reported gap is absent, never partially
+// presented as complete (SPEC-0031 AC10).
+message ControlSection {
+  SectionType type = 1;
+  // The chain anchors bounding this section's cited slice (SPEC-0032
+  // verification data). Empty when the section cites no records — an empty
+  // section is a legitimate answer and says so via its anchors and counts.
+  ChainAnchor anchors = 2;
+  // True only when the section was fully assembled across the whole range.
+  // False with one or more gaps is the only honest shape of a partial
+  // section; the pair is what makes "a pack never presents a partial section
+  // as complete" checkable (SPEC-0032 AC8).
+  bool complete = 3;
+  // The parts of the range the section could not assemble. Empty when
+  // complete.
+  repeated SectionGap gaps = 4;
+  // The section's cited records, in chain-sequence order. Every entry is
+  // first-party by construction: the record message cannot carry an attested
+  // record (SPEC-0032 AC2).
+  repeated ControlSectionRecord records = 5;
+  // Digest over the section's embedded records as serialized: a consumer
+  // recomputes it to detect a mutated section, alongside the per-record
+  // chain check (SPEC-0032 AC7).
+  string records_digest = 6;
+}
+
+// HistoryImportedReference is the admitting HistoryImported event, embedded
+// in the pack (events/audit/v1.HistoryImported, ADR-0029 §3). It is a
+// FIRST-PARTY chained event and is retained for the life of the tenant
+// (ADR-0055 rule 2) — so it stays readable here after the attested history
+// it admitted has expired. Field names mirror the event's; the event itself
+// is what the appendix's records must reconcile against.
+message HistoryImportedReference {
+  string event_id = 1;
+  // The operator who ran the import, authenticated and PDP-authorized.
+  string actor_id = 2;
+  string repository_id = 3;
+  string import_id = 4;
+  string source_system = 5;
+  string source_instance = 6;
+  // Record counts per type, matching the event's record_counts.
+  map<string, int64> record_counts = 7;
+  // Digest over the imported payload set; the appendix's embedded payloads
+  // re-verify against it (SPEC-0011 AC16).
+  string manifest_digest = 8;
+  google.protobuf.Timestamp occurred_at = 9;
+}
+
+// AttestedAppendixRecord is one attested imported record, representable ONLY
+// here (SPEC-0032, ADR-0029 §6). It embeds the record's payload bytes at
+// generation time (ADR-0055 rule 3), so the appendix stays readable after the
+// attested store's one-year retention expires the original (ADR-0055 rule 2).
+// Everything about it is labelled as foreign history: the provenance block,
+// the opaque foreign handle, the source-asserted time — none of which a
+// ControlSectionRecord can carry.
+message AttestedAppendixRecord {
+  // The kind of imported record, matching HistoryImported's record_counts
+  // keys: "merge_request", "thread", "comment", "approval".
+  string record_kind = 1;
+  // The foreign object's stable identifier as fetched.
+  string source_ref = 2;
+  // The frozen record payload as fetched, embedded byte-for-byte. The domain
+  // never interprets it; a consumer renders it as display-only history
+  // (ADR-0029 §4).
+  bytes payload = 3;
+  // Media type of the payload, so it round-trips renderable.
+  string payload_media_type = 4;
+  // The record's provenance block (ADR-0029 §2): class ATTESTED_IMPORT, its
+  // import, source, declared actor and declared time, and the payload digest.
+  // This import is the ONLY place the shared Provenance message appears in
+  // this file — its absence from the control-section messages is the type
+  // property SPEC-0032 AC2 pins.
+  gitsaas.contracts.v1.Provenance provenance = 5;
+}
+
+// AttestedAppendix is the labelled appendix carrying attested imported
+// history (SPEC-0031 AC2, ADR-0029 §6). It states, by its shape and its
+// label, that these records are third-party assertions carrying no
+// control-effectiveness claim; a reader cannot mistake one for a witnessed
+// record. The appendix groups its records by the admitting import, each group
+// embedding the HistoryImported event that admitted them. An empty appendix
+// is a legitimate answer: it says the range admitted no imported history.
+message AttestedAppendix {
+  // The appendix's label, server-set and never empty in a generated pack:
+  // "attested imported history — display-only, no control-effectiveness
+  // claim" or a localized rendering of it. The label travels with the
+  // records so no renderer can drop it (ADR-0029 §6).
+  string label = 1;
+  // One entry per import whose attested records intersect the range.
+  repeated AttestedImportGroup groups = 2;
+}
+
+// AttestedImportGroup is one import's contribution to the appendix: the
+// admitting HistoryImported event and the attested records it admitted.
+message AttestedImportGroup {
+  HistoryImportedReference history_imported = 1;
+  repeated AttestedAppendixRecord records = 2;
+}
+
+// EvidencePack is the full self-contained snapshot (ADR-0055 rule 3). It is
+// delivered in chunks by GetEvidencePack; the shape is defined here once so
+// status, streaming and verification reason about one object.
+message EvidencePack {
+  // The opaque, server-assigned pack identity.
+  string pack_id = 1;
+  string tenant_id = 2;
+  // The closed range the pack covers, exactly as requested.
+  google.protobuf.Timestamp range_from = 3;
+  google.protobuf.Timestamp range_to = 4;
+  // The optional repository scope; empty covers the tenant's repositories.
+  string repository_id = 5;
+  // The verified actor whose request produced the pack, and the PDP decision
+  // that authorized generation — both server facts (SPEC-0032 AC6).
+  string requested_by = 6;
+  string decision_id = 7;
+  google.protobuf.Timestamp generated_at = 8;
+  // Always four, one per SectionType value: approvals, policy decisions,
+  // scan gates, access changes (SPEC-0031 AC1).
+  repeated ControlSection sections = 9;
+  // The labelled appendix. Always present, possibly empty of records
+  // (SPEC-0031 AC2).
+  AttestedAppendix appendix = 10;
+}
+
+// RequestEvidencePackRequest accepts ONLY a closed date range and an optional
+// repository scope (SPEC-0032). It deliberately has no field for a record
+// list, a section filter, a retention override or an authorization outcome:
+// a request that would shape the pack's contents has no fields to shape them
+// in (SPEC-0032 AC4). A range with from after to, or with either bound
+// missing, is rejected — the range is closed, never half-open (SPEC-0031
+// AC1).
+message RequestEvidencePackRequest {
+  EvidenceContext context = 1;
+  // Inclusive lower bound of the range. Required.
+  google.protobuf.Timestamp range_from = 2;
+  // Inclusive upper bound of the range. Required.
+  google.protobuf.Timestamp range_to = 3;
+  // Optional repository scope. Empty covers every repository in the tenant;
+  // a pack never spans two tenants either way (SPEC-0031 AC6).
+  string repository_id = 4;
+}
+
+message RequestEvidencePackResponse {
+  // The opaque identity of the pack now assembling. Replaying the request ID
+  // returns the same pack_id and creates nothing new (SPEC-0032 AC1).
+  string pack_id = 1;
+  PackState state = 2;
+}
+
+// GetEvidencePackStatusRequest reads assembly state. The pack_id is a
+// SELECTOR, not a claim: the caller can only name a pack the server already
+// produced. Not-found, cross-tenant and unauthorized are one coarse denial
+// (SPEC-0001).
+message GetEvidencePackStatusRequest {
+  EvidenceContext context = 1;
+  string pack_id = 2;
+}
+
+// SectionStatus is one section's live assembly view: its type, its record
+// count so far, and whether a gap has been declared. Counts are observable
+// per section while assembly runs (SPEC-0031 non-functional).
+message SectionStatus {
+  SectionType type = 1;
+  // Records assembled so far; final when the pack is READY.
+  int64 record_count = 2;
+  // Gaps declared so far; stable once the pack is READY.
+  repeated SectionGap gaps = 3;
+}
+
+message GetEvidencePackStatusResponse {
+  PackState state = 1;
+  // Set only when state is PACK_STATE_FAILED: the honest reason assembly
+  // could not complete. A failed pack produces no retrievable content.
+  string failure_reason = 2;
+  // One entry per SectionType value, in assembly order.
+  repeated SectionStatus sections = 3;
+  // Attested records assembled into the appendix so far. The count is a
+  // statistic, never record content: the status surface carries no payload,
+  // source or provenance bytes (SPEC-0032 G9).
+  int64 appendix_record_count = 4;
+  // The range and scope the pack covers, echoed from the request as server
+  // facts.
+  google.protobuf.Timestamp range_from = 5;
+  google.protobuf.Timestamp range_to = 6;
+  string repository_id = 7;
+}
+
+// GetEvidencePackRequest retrieves a READY pack. Retrieval is a PDP decision
+// (evidence.pack.read); reading a pack that is not READY, does not exist, or
+// belongs to another tenant are the same coarse denial (SPEC-0001).
+message GetEvidencePackRequest {
+  EvidenceContext context = 1;
+  string pack_id = 2;
+}
+
+// GetEvidencePackResponse is one bounded chunk of a READY pack. Retrieval is
+// streamed and bounded — no operation loads a full pack into memory
+// (SPEC-0032 non-functional) — so the pack arrives as an ordered sequence of
+// chunks: the header first, then control sections in SectionType order, then
+// the appendix, then the closing chunk. A consumer concatenates chunks and
+// verifies the assembled pack exactly as it would a single response: every
+// control record against its chain anchors, and the whole against the
+// section digests (SPEC-0032 AC7).
+message GetEvidencePackResponse {
+  // The chunk's zero-based position in the pack's stream.
+  int64 chunk_index = 1;
+  // True when this chunk completes the pack. Nothing of the pack is
+  // authoritative until the final chunk arrives.
+  bool final_chunk = 2;
+  oneof content {
+    // First chunk of every pack: identity, range, scope and generation
+    // provenance.
+    EvidencePack header = 3;
+    // One control section per chunk, in SectionType order.
+    ControlSection section = 4;
+    // One appendix chunk; the appendix may span several chunks for a range
+    // with much imported history.
+    AttestedAppendix appendix = 5;
+  }
+}

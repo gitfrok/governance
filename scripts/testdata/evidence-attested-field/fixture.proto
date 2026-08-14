@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 6 (SPEC-0032 AC2, inheriting
+// T-0018 AC19 / SPEC-0011 AC14).
+//
+// It carries the one shape the real gitsaas.audit.v1 control-section record
+// must never grow: fields capable of carrying an attested imported record —
+// an import reference, a foreign handle, and attested payload bytes. The gate
+// compiles this module and asserts the descriptor DOES carry the attested
+// markers — proving the check can fail. In contracts/, an attested record is
+// representable ONLY in the labelled appendix (AttestedAppendix), with its
+// provenance blocks and the admitting HistoryImported event (ADR-0029 §6):
+// exclusion from the control sections is a type property, not an
+// assembly-time filter.
+package gitsaas.audit.v1;
+
+message ControlSectionRecord {
+  int64 chain_seq = 1;
+  string record_hash = 2;
+  // The defects under test: attested-import content on a control-section
+  // record message.
+  string import_id = 3;
+  string declared_actor = 4;
+  bytes attested_payload = 5;
+}

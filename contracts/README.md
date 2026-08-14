@@ -62,6 +62,22 @@ needs a direct response.
   permissions at query time, so no request carries a repository allow-list, permission claim, or
   authorization flag, and the response shape has no field capable of expressing an unauthorized
   total; `GetIndexStatus` reports freshness only for repositories the caller may read
+- `proto/audit/v1/evidence.proto` — Audit's first RPC surface (SPEC-0031, SPEC-0032, T-0026):
+  date-ranged evidence pack export. `RequestEvidencePack` accepts only a closed date range and an
+  optional repository scope — no record list, section filter, or retention override — and is
+  idempotent per tenant, range and request ID; `GetEvidencePackStatus` observes asynchronous
+  per-section assembly with record counts; `GetEvidencePack` streams the READY pack in bounded
+  chunks. A pack carries the four control sections — approvals, policy decisions, scan gates,
+  access changes — with per-section chain anchors (first/last sequence and hashes), explicit gap
+  markers with bounds, and embedded records (a self-contained snapshot, ADR-0055 rule 3). The
+  control-section record messages are structurally incapable of carrying an attested imported
+  record — no provenance block, foreign handle, declared time, or import reference — and
+  `scripts/check-contracts.sh` asserts that type property against the compiled descriptor
+  (SPEC-0032 AC2, inheriting T-0018 AC19 / SPEC-0011 AC14); attested history is representable
+  only in the labelled `AttestedAppendix` with its provenance blocks and the admitting
+  `HistoryImported` event. A policy decision record carries the deciding bundle revision and input
+  digest, and `ControlDecisionMode` is a closed enum with ENFORCED only, so a DRY_RUN decision is
+  not representable in a control section (SPEC-0032 AC3)
 - `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
   ADR-0016/0018/0042): shard records, fencing terms, durable-primary and sync acknowledgements,
   compare-and-swap auto-promotion, and the audited platform-operator force-promote
@@ -84,7 +100,9 @@ needs a direct response.
   (SPEC-0029 AC8, SPEC-0030) additively adds policy decision provenance — `decision_id`,
   `bundle_revision`, `input_digest` and `policy_mode` (ENFORCED|DRY_RUN) — set when the audited
   action was gated by a PDP decision, all server-produced, with a DRY_RUN decision labelled and
-  never written as an enforced control record
+  never written as an enforced control record. T-0026 (SPEC-0031, SPEC-0032) additively adds
+  `EvidencePackRequested` and `EvidencePackCompleted`: opaque identifiers, tenant scope, range
+  bounds and section counts — never record contents, source, or provenance bytes
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
   finding-resolved / finding-triaged / findings-attributed events (SPEC-0024, SPEC-0025,
   SPEC-0026, SPEC-0027, SPEC-0028); opaque identifiers, tenant and repository scope, tool and

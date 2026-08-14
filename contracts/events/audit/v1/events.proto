@@ -146,3 +146,60 @@ message DeclaredActorMapped {
   string mapped_actor_id = 7;
   google.protobuf.Timestamp occurred_at = 8;
 }
+
+// EvidencePackRequested records that a compliance owner requested a
+// date-ranged evidence pack (SPEC-0031, SPEC-0032, T-0026).
+//
+// Like every audit event it carries opaque identifiers, tenant scope and
+// counts — never record contents, source, or provenance bytes (SPEC-0032 G9):
+// a pack's control records travel in the pack, not in the event that
+// announces it. The generation decision is a PDP decision
+// (evidence.pack.generate) and this record correlates to it via decision_id
+// (SPEC-0032 AC6). Replaying a request ID produces no second pack and no
+// second event (SPEC-0032 AC1).
+message EvidencePackRequested {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The compliance owner who requested the pack, authenticated and
+  // PDP-authorized (SPEC-0031 AC5: no engineer involvement).
+  string actor_id = 3;
+  // The opaque, server-assigned pack identity.
+  string pack_id = 4;
+  // The request ID the pack is idempotent under.
+  string request_id = 5;
+  // The PDP decision that authorized generation.
+  string decision_id = 6;
+  // The closed range the pack covers.
+  google.protobuf.Timestamp range_from = 7;
+  google.protobuf.Timestamp range_to = 8;
+  // The optional repository scope; empty covers the tenant's repositories.
+  string repository_id = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}
+
+// EvidencePackCompleted records that a requested pack finished assembling —
+// ready, or failed (SPEC-0031 non-functional: generation is asynchronous and
+// observable). It carries section counts, never record contents, source, or
+// provenance bytes (SPEC-0032 G9).
+message EvidencePackCompleted {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The actor whose request produced the pack.
+  string actor_id = 3;
+  string pack_id = 4;
+  // READY or FAILED, as the string rendering of audit.v1.PackState. A string
+  // rather than an import of the RPC enum, for the same reason `action` is a
+  // string: the event keeps no dependency on the audit RPC wire shape, and a
+  // new state is additive by construction.
+  string state = 5;
+  // Control records assembled per section, keyed by the section name:
+  // "approvals", "policy_decisions", "scan_gates", "access_changes".
+  map<string, int64> section_counts = 6;
+  // Attested records assembled into the labelled appendix. A statistic only:
+  // attested content itself travels in the pack, never in this event.
+  int64 appendix_record_count = 7;
+  // The closed range the pack covers.
+  google.protobuf.Timestamp range_from = 8;
+  google.protobuf.Timestamp range_to = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}

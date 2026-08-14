@@ -1123,3 +1123,124 @@ test_deny_policy_reasons_are_indistinguishable if {
 	)
 	reader == cross_tenant
 }
+
+# --- T-0026 / SPEC-0031 / SPEC-0032: evidence pack vocabulary -----------------------------------
+
+# evidence.pack.generate is asked about the tenant (range bounds and repository
+# scope travel as server-derived context, SPEC-0032); evidence.pack.read is
+# asked about the pack itself. Both are owner-only in this vocabulary: a pack
+# is the compliance owner's dated export of the tenant's control history
+# (PR-17), and reading one is what T-0027's SPEC-0033 auditor grants will
+# later gate — so the deny cases outnumber the allow cases on purpose. The
+# mutations this section must catch are widening either action to member or
+# reader, or letting a repository, import, decision or findings grant answer a
+# pack question.
+evidence_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-evidence", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "pack-1"},
+	"context": {},
+}
+
+test_allow_owner_generates_an_evidence_pack if {
+	authz.allow with input as evidence_request("owner", "evidence.pack.generate", "tenant")
+}
+
+test_allow_owner_reads_an_evidence_pack if {
+	authz.allow with input as evidence_request("owner", "evidence.pack.read", "evidence_pack")
+}
+
+# Neither grant extends to member or reader (least privilege): a role that
+# merges code has not thereby been granted the surface that exports its
+# control evidence, nor the surface that reads a pack an auditor will later
+# be granted scoped access to (SPEC-0031 AC5, SPEC-0033).
+test_deny_member_and_reader_evidence_actions if {
+	every pair in [
+		{"role": "member", "action": "evidence.pack.generate", "resource_type": "tenant"},
+		{"role": "member", "action": "evidence.pack.read", "resource_type": "evidence_pack"},
+		{"role": "reader", "action": "evidence.pack.generate", "resource_type": "tenant"},
+		{"role": "reader", "action": "evidence.pack.read", "resource_type": "evidence_pack"},
+	] {
+		not authz.allow with input as evidence_request(pair.role, pair.action, pair.resource_type)
+	}
+}
+
+# The resource kind is load-bearing: a generation asked about a repository, or
+# a pack read asked about a tenant, is not the question those grants answer —
+# even for an owner.
+test_deny_evidence_generate_asked_about_a_repository if {
+	not authz.allow with input as evidence_request("owner", "evidence.pack.generate", "repository")
+}
+
+test_deny_evidence_read_asked_about_a_tenant if {
+	not authz.allow with input as evidence_request("owner", "evidence.pack.read", "tenant")
+}
+
+test_deny_evidence_read_asked_about_a_repository if {
+	not authz.allow with input as evidence_request("owner", "evidence.pack.read", "repository")
+}
+
+# An import grant and a policy-decision grant are not pack grants: the action
+# vocabulary and the resource pinning together keep SPEC-0011's import surface
+# and SPEC-0030's decision surface from being re-readable as evidence access.
+test_deny_evidence_read_asked_about_an_import if {
+	not authz.allow with input as evidence_request("owner", "evidence.pack.read", "import")
+}
+
+test_deny_evidence_read_asked_about_a_decision if {
+	not authz.allow with input as evidence_request("owner", "evidence.pack.read", "decision")
+}
+
+# Holding owner in another tenant does not authorize a pack here
+# (invariant 1): a pack can never span two tenants (SPEC-0031 AC6), and the
+# denial is as coarse as every other (SPEC-0001).
+test_deny_evidence_generate_from_another_tenant if {
+	not authz.allow with input as object.union(
+		evidence_request("owner", "evidence.pack.generate", "tenant"),
+		{"subject": {"id": "u-evidence", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+test_deny_evidence_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		evidence_request("owner", "evidence.pack.read", "evidence_pack"),
+		{"subject": {"id": "u-evidence", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+# No roles means no evidence surface at all: a principal without roles cannot
+# request a pack nor read one, so neither a generation nor a retrieval can
+# leak control history to it.
+test_deny_evidence_actions_with_no_roles if {
+	every pair in [
+		{"action": "evidence.pack.generate", "resource_type": "tenant"},
+		{"action": "evidence.pack.read", "resource_type": "evidence_pack"},
+	] {
+		not authz.allow with input as object.union(
+			evidence_request("owner", pair.action, pair.resource_type),
+			{"subject": {"id": "u-evidence", "roles": [], "tenant_id": "acme"}},
+		)
+	}
+}
+
+# repo.read must not carry evidence access: pinning that the repository grant
+# and the pack surface stay separable, exactly as findings.read is.
+test_deny_evidence_read_is_not_implied_by_repo_read if {
+	not authz.allow with input as object.union(
+		reader_request,
+		{"action": "evidence.pack.read", "resource": {"type": "evidence_pack", "id": "pack-1"}},
+	)
+}
+
+# Evidence denials are as indistinguishable as every other denial: a member's
+# read and a cross-tenant generation receive the same reason, so probing the
+# PDP cannot separate the causes (SPEC-0001).
+test_deny_evidence_reasons_are_indistinguishable if {
+	member_read := authz.decision.reason with input as evidence_request("member", "evidence.pack.read", "evidence_pack")
+	cross_tenant := authz.decision.reason with input as object.union(
+		evidence_request("owner", "evidence.pack.generate", "tenant"),
+		{"subject": {"id": "u-evidence", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+	member_read == cross_tenant
+}

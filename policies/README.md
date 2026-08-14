@@ -71,5 +71,9 @@ status arriving as server-derived context) and **T-0025** (security & approval p
 0030 — a `merge_request.merge` security gate that denies on an attributed-findings severity
 threshold, exempts ACCEPT/FALSE_POSITIVE triage while recording the relied-upon triage IDs on the
 `decision`, and fails closed when the findings facts a rule requires are missing; plus the
-owner-only `policy.dryrun` and `policy.decision.read` vocabulary) own extending it. A resource kind with no entry is
+owner-only `policy.dryrun` and `policy.decision.read` vocabulary) and **T-0026** (evidence pack
+export, SPEC-0031/0032 — the owner-only `evidence.pack.generate` action asked about the tenant,
+and `evidence.pack.read` asked about the `evidence_pack` resource kind; generation is the
+compliance owner's act (PR-17), and read is what T-0027's SPEC-0033 auditor grants will later
+gate) own extending it. A resource kind with no entry is
 denied, which is the correct state for a feature that does not exist yet.

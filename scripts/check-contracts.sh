@@ -20,6 +20,12 @@
 #      keyed by finding identity, and that shape — asserted against the COMPILED descriptor, not
 #      grepped out of the source — is what makes "survives a re-scan" true by construction. The
 #      paired fixture carries the defect and must be caught.
+#   6. gitsaas.audit.v1's control-section record messages carry no field capable of holding an
+#      attested imported record (SPEC-0032 AC2, inheriting T-0018 AC19 / SPEC-0011 AC14): no
+#      provenance block, foreign handle, declared time, or import reference. Attested exclusion is
+#      a TYPE PROPERTY of the schema — asserted against the COMPILED descriptor, exactly as check 5
+#      does for triage — so the control claim cannot silently degrade at assembly time. The paired
+#      fixture carries the defect and must be caught.
 #
 # The baseline is the tip of main, overridable for local use. It is deliberately not a merge base:
 # the question this asks is "does what I am about to merge break what is already released", and main
@@ -170,6 +176,62 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 6. control-section records cannot carry an attested record (SPEC-0032 AC2) -----------------
+
+# A pack's control sections are a compliance claim, and admitting an attested imported record makes
+# that claim false to an auditor (ADR-0029 §6, SPEC-0031 AC2 — the criterion T-0018 AC19 owed
+# forward). SPEC-0032 makes the exclusion a TYPE PROPERTY: the control-section record messages have
+# no field capable of carrying an attested record, and attested history is representable only in the
+# labelled appendix (AttestedAppendix). The check asks buf for the COMPILED descriptors of the five
+# control-side messages rather than grepping the source: a field shows up in the descriptor whatever
+# its name, type or spelling, and a proto that fails to compile fails this check loudly instead of
+# passing by absence. --exclude-source-info keeps comments out of the image — prose is not what is
+# under test. Imports are deliberately KEPT (unlike check 5): the records reference
+# google.protobuf.Timestamp, and keeping imports is what makes the check bite if a control record
+# type ever references the Provenance descriptor — the appendix's import then lands in the image
+# and the marker scan finds it.
+#
+# The marker list is the vocabulary of attested content in this codebase (ADR-0029 §2's provenance
+# block fields): an import reference, a provenance block, a declared foreign handle or time, or
+# anything else attested or foreign. The word "source" is deliberately absent — legitimate
+# control-side fields may speak of sources — but every shape that could carry an attested record
+# must name one of the markers to do so. The well-known Timestamp descriptor the image also carries
+# has none of the markers.
+attested_markers='attested|provenance|import_id|declared|foreign|history_imported'
+
+if image_out=$(buf build contracts \
+  --type gitsaas.audit.v1.ControlSectionRecord \
+  --type gitsaas.audit.v1.ApprovalRecord \
+  --type gitsaas.audit.v1.PolicyDecisionRecord \
+  --type gitsaas.audit.v1.ScanGateRecord \
+  --type gitsaas.audit.v1.AccessChangeRecord \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$attested_markers" <<<"$image_out"; then
+    report "gitsaas.audit.v1 control-section records carry an attested-content field — attested records are representable only in the labelled appendix (SPEC-0032 AC2, ADR-0029 §6)"
+  else
+    echo "  ok    control-section records carry no attested-content field (SPEC-0032 AC2)"
+  fi
+else
+  report "could not compile gitsaas.audit.v1 control-section records for the attested-exclusion check:"
+  indent "$image_out"
+fi
+
+# The fixture is the one shape the real control-section record must never grow: attested-import
+# fields on ControlSectionRecord itself. The same descriptor question asked of it must find the
+# markers — a check that cannot fail is not a gate (the T-0002/T-0009 pattern).
+fixture=scripts/testdata/evidence-attested-field
+if fixture_image=$(buf build "$fixture" --type gitsaas.audit.v1.ControlSectionRecord \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$attested_markers" <<<"$fixture_image"; then
+    echo "  ok    attested-field fixture caught (the control-section descriptor check can fail)"
+  else
+    report "the attested-field fixture compiled with no attested marker in its descriptor — the check is vacuous"
+  fi
+else
+  report "the attested-field fixture did not compile:"
   indent "$fixture_image"
 fi
 

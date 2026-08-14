@@ -81,6 +81,17 @@ default allow := false
 # implied by reading or writing repository text. Withholding them from member and
 # reader is the least-privilege default: a role that merges code has not thereby
 # been granted the surface that dry-runs or audits the rules gating the merge.
+#
+# evidence.pack.generate is owner-only (T-0026, SPEC-0031/0032): generating a
+# pack is the compliance owner's act (PR-17) — a dated export of the tenant's
+# control history, PDP-authorized and itself audited — and the compliance owner
+# is whoever is accountable for the tenant. A member who merges code has not
+# thereby been granted the surface that exports its control evidence.
+# evidence.pack.read is owner-only here for the same reasoning, and stays a
+# distinct action pinned to the evidence_pack resource kind: T-0027 (SPEC-0033)
+# will gate it further with scoped, time-boxed auditor grants, and that
+# extension narrows a read question this vocabulary already pins — it cannot
+# repurpose a repository, import or findings grant into pack access.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -95,6 +106,7 @@ role_actions := {
 		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
 		"policy.dryrun", "policy.decision.read",
+		"evidence.pack.generate", "evidence.pack.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -146,6 +158,14 @@ role_actions := {
 # resource kind is named in the question. policy.decision.read is asked about the decision
 # record itself — a decision is a resource of its own, and the question is about its ID, not
 # about the tenant or the action it recorded.
+#
+# evidence.pack.generate is asked about the tenant (SPEC-0032 vocabulary table): the range
+# bounds and repository scope travel as server-derived context, and a pack can never span two
+# tenants (SPEC-0031 AC6), so no other resource kind is named in the question.
+# evidence.pack.read is asked about the evidence pack itself — a pack is a resource of its
+# own, and the question is about its ID, with tenant, range bounds and pack state carried as
+# server-derived context (SPEC-0032). T-0027's SPEC-0033 auditor grants will add grant state
+# and expiry to that same context; they narrow this question rather than adding a new one.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -174,6 +194,8 @@ action_resource := {
 	"search.index.status.read": {"repository"},
 	"policy.dryrun": {"tenant"},
 	"policy.decision.read": {"decision"},
+	"evidence.pack.generate": {"tenant"},
+	"evidence.pack.read": {"evidence_pack"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
