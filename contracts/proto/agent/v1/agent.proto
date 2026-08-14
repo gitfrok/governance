@@ -232,6 +232,24 @@ message DesiredStateAck {
 message ActualStateReport {                  // observed reality, drives convergence
   int64 applied_generation = 1;
   repeated ComponentHealth components = 2;
+  // Rollout observability (SPEC-0039 AC6): the phase of the rollout that produced
+  // applied_generation. A data plane that has not reported since a rollout began sends no
+  // report at all — the control plane marks it stale, never "upgraded".
+  RolloutPhase rollout_phase = 3;
+  // Coarse prose for the phase, set on FAILED and ROLLED_BACK to carry the reason (AC5).
+  // Never carries a secret or a credential; never echoes a signing key.
+  string rollout_message = 4;
+}
+
+// The lifecycle of one reconcile-based rollout as the agent reports it (SPEC-0039 AC5/AC6).
+// Deliberately coarse: the control plane distinguishes a healthy convergence from a failure
+// that rolled back, and nothing finer is needed on the wire.
+enum RolloutPhase {
+  ROLLOUT_PHASE_UNSPECIFIED = 0;             // no rollout in flight for applied_generation
+  ROLLOUT_PHASE_IN_PROGRESS = 1;             // desired state being reconciled toward
+  ROLLOUT_PHASE_APPLIED     = 2;             // desired state converged and verified healthy
+  ROLLOUT_PHASE_FAILED      = 3;             // convergence failed; rollout_message says why
+  ROLLOUT_PHASE_ROLLED_BACK = 4;             // failed upgrade reverted to the prior release
 }
 
 // ---------------------------------------------------------------------------
