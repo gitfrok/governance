@@ -4,10 +4,17 @@ syntax = "proto3";
 // Realizes ADR-0011 (outbound-only agent) and ADR-0017 (gRPC bidi streaming over mTLS).
 //
 // Transport : a SINGLE long-lived gRPC bidirectional stream, dialed OUTBOUND by the agent.
-// AuthN     : mTLS. The trusted cluster identity is the SPIFFE ID from the verified client
-//             cert, so NO credentials are carried in-band.
+// AuthN     : mTLS. The agent's identity comes from a client certificate ISSUED BY THE
+//             CONTROL PLANE (ADR-0060): a one-time enrolment token bootstraps the first
+//             Connect (see Enrol/EnrolmentAck below), the control plane then issues and
+//             rotates short-lived client certificates ON this channel, and the certificate
+//             names the tenant and the data plane. Nothing the agent asserts in a payload
+//             field overrides the certificate's identity (invariant 2 on the agent wire).
 // Invariant : source code and secrets NEVER traverse this stream. Only control, telemetry,
-//             usage metering, and SIGNED release references.
+//             usage metering, and SIGNED release references. (The enrolment handshake below
+//             is the one deliberate exception for credentials: the issued client certificate
+//             traverses the channel it authenticates. The token and certificates are never
+//             logged, echoed into errors, or used as metric labels — SPEC-0038 AC2.)
 
 package gitsaas.agent.v1;
 
@@ -41,6 +48,8 @@ message AgentMessage {                       // agent -> control plane
     DesiredStateAck   desired_state_ack = 15;
     CommandResult     command_result    = 16;
     Diagnostics       diagnostics       = 17;
+    Enrol                  enrol                  = 18; // first Connect only (ADR-0060)
+    CertificateRotationAck certificate_rotation_ack = 19;
   }
 }
 
@@ -56,6 +65,8 @@ message ControlPlaneMessage {                // control plane -> agent
     Command      command       = 12;
     ConfigUpdate config        = 13;
     Ping         ping          = 14;
+    EnrolmentAck        enrolment_ack      = 15; // answers Enrol (ADR-0060)
+    CertificateRotation certificate_rotation = 16;
   }
 }
 
@@ -65,7 +76,8 @@ message ControlPlaneMessage {                // control plane -> agent
 enum Cloud { CLOUD_UNSPECIFIED = 0; CLOUD_GKE = 1; CLOUD_EKS = 2; CLOUD_AKS = 3; CLOUD_OTHER = 9; }
 
 message Register {
-  string cluster_id       = 1;               // informational; identity comes from mTLS SPIFFE ID
+  string cluster_id       = 1;               // informational; identity comes from the control-plane-issued
+                                             // client certificate, which names tenant + data plane (ADR-0060)
   Cloud  cloud            = 2;
   string region           = 3;
   string agent_version    = 4;
@@ -79,6 +91,76 @@ message RegisterAck {
   string reason          = 2;                // set when !accepted
   int64  resume_from_seq = 3;                // where the agent should resume its outbound seq
   google.protobuf.Duration heartbeat_interval = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Enrolment & certificate rotation  (ADR-0060, SPEC-0038)
+// ---------------------------------------------------------------------------
+// A one-time enrolment token bootstraps the FIRST Connect of a data plane; the control
+// plane answers with a client certificate naming tenant + data plane, and rotates it on
+// this channel before expiry. Every later Connect authenticates with the issued
+// certificate and uses Register, not Enrol. A data plane holding neither a valid
+// certificate nor an unspent token stays disconnected — there is no degraded mode.
+// The token and certificates are credentials: they MUST NOT appear in any log line,
+// error message, metric label, or file the install writes back (SPEC-0038 AC2).
+
+// Why an enrolment is refused. Deliberately coarse: an invalid token, an unknown token and
+// a token of another tenant are indistinguishable to the presenter (SPEC-0038 AC9/SPEC-0001).
+enum EnrolmentRefusalReason {
+  ENROLMENT_REFUSAL_REASON_UNSPECIFIED   = 0;
+  ENROLMENT_REFUSAL_REASON_TOKEN_INVALID = 1; // malformed, unknown, or of another tenant
+  ENROLMENT_REFUSAL_REASON_TOKEN_SPENT   = 2; // single-use; includes re-use after a failed first attempt
+  ENROLMENT_REFUSAL_REASON_TOKEN_EXPIRED = 3;
+  ENROLMENT_REFUSAL_REASON_TOKEN_REVOKED = 4;
+  ENROLMENT_REFUSAL_REASON_DENIED        = 5; // control-plane admission decision (e.g. quota)
+}
+
+message Enrol {                              // agent -> CP; first Connect ONLY, before any cert exists
+  string one_time_token     = 1;             // tenant-scoped, single-use, time-bounded credential
+  Cloud  cloud              = 2;
+  string region             = 3;
+  string agent_version      = 4;
+  string k8s_version        = 5;
+  repeated string capabilities = 6;          // mirrors Register; feeds the data-plane registry record
+}
+
+// A client certificate issued by the control plane. The certificate names the tenant and
+// the data plane; nothing the agent asserts in a payload overrides that identity (AC3).
+message ClientCertificate {
+  string certificate_id      = 1;            // CP-assigned ID; correlation key for rotation acks
+  bytes  certificate_pem     = 2;            // PEM chain incl. private key, issued by the control plane
+  google.protobuf.Timestamp expires_at = 3;  // rotation MUST complete before this instant (AC4)
+}
+
+message EnrolmentAck {                       // CP -> agent; answers Enrol
+  bool   accepted        = 1;
+  EnrolmentRefusalReason refusal_reason = 2; // set when !accepted
+  string detail          = 3;                // coarse prose only; NEVER echoes the token (AC2)
+  ClientCertificate issued_certificate = 4;  // set when accepted
+  string tenant_id       = 5;                // assigned identity, from the token's tenant scope
+  string data_plane_id   = 6;                // assigned identity, minted into the registry record
+  google.protobuf.Duration heartbeat_interval = 7;
+}
+
+message CertificateRotation {                // CP -> agent; delivered ON the established stream,
+  ClientCertificate certificate = 1;         // before the current certificate expires (AC4)
+}
+
+// Why the agent could not apply a rotated certificate. Surfaces failures so the control
+// plane retries and escalates rather than letting the certificate lapse silently (AC4).
+enum CertificateRotationFailureReason {
+  CERTIFICATE_ROTATION_FAILURE_REASON_UNSPECIFIED      = 0;
+  CERTIFICATE_ROTATION_FAILURE_REASON_UNPARSABLE       = 1; // PEM does not decode / is malformed
+  CERTIFICATE_ROTATION_FAILURE_REASON_UNTRUSTED        = 2; // chain does not verify against the pinned CA
+  CERTIFICATE_ROTATION_FAILURE_REASON_PERSIST_FAILED   = 3; // could not durably store the credential
+  CERTIFICATE_ROTATION_FAILURE_REASON_CLOCK_SKEW       = 4; // validity window inconsistent with local clock
+}
+
+message CertificateRotationAck {             // agent -> CP; answers CertificateRotation
+  string certificate_id = 1;                 // echoes ClientCertificate.certificate_id
+  bool   applied        = 2;
+  CertificateRotationFailureReason failure_reason = 3; // set when !applied
+  string detail         = 4;                 // coarse prose only; NEVER includes the credential (AC2)
 }
 
 // ---------------------------------------------------------------------------

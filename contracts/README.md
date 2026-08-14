@@ -16,7 +16,14 @@ needs a direct response.
 - Generated code lives under `gen/` (built in CI) — never hand-edit.
 
 ## Current contracts
-- `proto/agent/v1/agent.proto` — agent ↔ control-plane (ADR-0011, ADR-0017)
+- `proto/agent/v1/agent.proto` — agent ↔ control-plane (ADR-0011, ADR-0017). T-0030
+  (SPEC-0038, ADR-0060) adds the enrolment handshake additively inside the existing
+  `AgentMessage`/`ControlPlaneMessage` envelopes: the agent presents a one-time token on its
+  first `Connect` (`Enrol`), the control plane answers with a client certificate naming tenant
+  and data plane (`EnrolmentAck`, refusing via `EnrolmentRefusalReason`), rotates it on the
+  channel before expiry (`CertificateRotation`), and the agent surfaces application failures
+  (`CertificateRotationAck` + `CertificateRotationFailureReason`). Identity always comes from
+  the certificate; payload claims never override it. `AgentGateway.Connect` stays the single RPC
 - `proto/policy/v1/policy.proto` — the Policy Decision Point (ADR-0006, SPEC-0002). Synchronous
   against the usual preference for events, because a PEP cannot proceed without the answer; the
   rules themselves live in `../policies/` and never travel over this wire. T-0025 (SPEC-0029,
