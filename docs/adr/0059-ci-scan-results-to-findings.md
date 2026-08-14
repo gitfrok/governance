@@ -1,10 +1,10 @@
 # ADR-0059: How a CI scan's results reach the findings plane
 
-- **Status:** Proposed (2026-08-14)
+- **Status:** Accepted (2026-08-14)
 - **Deciders:** platform
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0022 (context boundaries), ADR-0025 (modular monolith), SPEC-0010, SPEC-0020,
-  SPEC-0024, SPEC-0025, T-0024 AC4, T-0028 AC4, T-0003 cluster lane
+  SPEC-0024, SPEC-0025, SPEC-0037, T-0029, T-0024 AC4, T-0028 AC4, T-0003 cluster lane
 
 ## Context
 
@@ -36,7 +36,29 @@ does not exist. T-0003's cluster lane owns those demonstrations and lists this w
 
 ## Decision
 
-**Undecided — this ADR presents the options and stops.** The recommendation is Option C.
+**Option C.** The scan step persists its raw report; a Security subscriber to `CIJobFinished`
+correlates the job, normalizes the report, and ingests it in-process. Chosen because it is the path
+the acceptance criteria already assume, it needs no contract change, and the durable report is what
+makes a finding re-derivable and a disputed scan re-checkable. Its cost — reopening SPEC-0020's
+artifact deferral — is accepted and bounded by **SPEC-0037**, which owns the report surface, its
+retention and its size limits. **T-0029** implements it.
+
+The three questions every option had to answer are settled here, because each is a boundary or an
+isolation property rather than an implementation detail:
+
+1. **The ingest runs as the job's triggering principal**, read from the `Job` record
+   (`ActorID`/`ActorRoles`), never asserted by the report or the event. The push that started the
+   pipeline is what caused the findings to exist, so that is who the audit record names, and the PDP
+   decides against a subject the server derived (invariant 2). A system principal would make every
+   ingest look self-authorized and would put a role outside the tenant's own vocabulary into
+   SPEC-0025's decision context.
+2. **A failed or cancelled job's report is still ingested when one exists.** A scanner exiting
+   non-zero *because* it found breach-level findings is the normal case, not the exception; gating
+   ingest on `SUCCEEDED` would drop exactly the findings that matter most. The job's terminal state
+   is recorded on the ingest, not used as a filter.
+3. **A job with no report is a no-op** — not an error and not an empty scan. An empty ingested scan
+   resolves every open finding for that tool (SPEC-0024 lifecycle), so defaulting to "ingest nothing
+   found" would let a pipeline without a scan step silently clear a repository's findings.
 
 ### Option A — the scan step calls the ingest RPC itself
 

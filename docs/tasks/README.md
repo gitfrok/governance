@@ -33,6 +33,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0026 | Date-ranged evidence pack export | 2 | Done — contracts governance@178d97a, backend@9cfd392, bff@3c4ebe0; carries T-0018 AC19, proven live |
 | T-0027 | Scoped, read-only, time-boxed auditor access | 2 | Done — contracts governance@a9a5c9b, backend@50bdc34 + 6e4696c, bff@77fac5e; live grant proof re-ran green |
 | T-0028 | Permission-filtered code search | 2 | Done — contracts governance@011eb2a, backend@267eaa4 (merged into stack tip 6b66da4), bff@4b93d25; AC4 host limit (cluster lane) |
+| T-0029 | CI scan report → findings ingest (`CIJobFinished` wiring) | 2 carry-over | Todo — SPEC-0037 Draft; ADR-0059 Accepted |
 
 ## Retired numbers (never reused)
 

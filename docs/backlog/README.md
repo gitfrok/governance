@@ -105,7 +105,9 @@ Carried forward out of Phase 2:
   consumer lands with whatever task needs dry-run in product.
 - T-0003's **cluster lane** remains the standing owner for the infrastructure-bound demonstrations
   (gVisor RuntimeClass under rootless podman, multi-node durability, measured freshness bounds). Its
-  Phase-2 carried set, in order: first the **`CIJobFinished`→ingest wiring, which is unbuilt** — the
+  Phase-2 carried set, in order: first the **`CIJobFinished`→ingest wiring, which is unbuilt** —
+  now decided by **ADR-0059** (the runner persists the report, a Security subscriber ingests it),
+  specified in **SPEC-0037** (Draft) and filed as **T-0029**; everything below still waits on it. The
   pinned backend has no `CIJobFinished` subscriber and scan ingest is RPC-only, so the event-driven
   ingest must be built before any freshness measurement can observe it; then **CI-dispatched scans**
   (gVisor), then the measured demonstrations — **T-0024 AC4 measured findings freshness** and

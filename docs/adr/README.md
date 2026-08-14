@@ -78,7 +78,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0056](0056-owasp-aisvs-adoption.md) | OWASP AISVS — bound to the agentic SDLC and to AI-enabled features, at L3 with one named exception | Accepted |
 | [ADR-0057](0057-ai-assisted-review-openai-compatible.md) | AI-assisted review via a tenant-configured OpenAI-compatible endpoint; AISVS L3 minus sender-constrained credentials | Accepted |
 | [ADR-0058](0058-woodpecker-pipeline-format.md) | Adopt Woodpecker's pipeline format — the syntax, not the engine | Accepted |
-| [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the `CIJobFinished` gap | **Proposed** |
+| [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the runner persists, a subscriber ingests | Accepted |
 
 ## Open follow-ups
 
@@ -103,6 +103,7 @@ the deciding ADR is the record.
 | How a non-deterministic producer's output may be cited as control evidence — until decided, AI review stays out of an evidence pack's scan-gate sections | 0057 |
 | AISVS L3 obligations that do not exist yet: agent cryptographic identity (C9.4.1), nonce-bound approvals (C9.2.8), per-execution budgets (C9.1.2), tool-definition snapshot with re-approval (C10.4.8), indirect-prompt-injection screening (C10.4.2), out-of-band kill switch (C9.6.3) | 0056, 0057 |
 | Amend SPEC-0010 and SPEC-0020 (both Approved) for the pipeline format, publish the supported-construct subset, and file the implementing task | 0058 |
+| Retention and fair-use metering of stored scan reports — SPEC-0037 bounds size and age, but nothing meters growth, and ADR-0055's retention rules do not cover a report (it is not an audit record) | 0059 |
 | Whether to adopt Woodpecker's **engine** later — headless executor or Go library inside `modules/ci`. Not foreclosed by adopting the format | 0058 |
 | Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
 | Unit-economics model per pricing tier | 0008 |

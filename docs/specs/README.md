@@ -42,3 +42,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0034 | Permission-filtered code search | Approved | T-0028 |
 | SPEC-0035 | Code search query and indexing contract | Approved | T-0028 |
 | SPEC-0036 | Modern Go idiom adoption across backend and bff | Approved | — |
+| SPEC-0037 | CI scan report handoff to the findings plane | Draft | T-0029 |
