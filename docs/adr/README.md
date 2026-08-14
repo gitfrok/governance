@@ -75,6 +75,9 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0053](0053-direct-to-main-ci-is-the-gate.md) | Work lands directly on `main`; CI on push is the only gate | Superseded by ADR-0054 |
 | [ADR-0054](0054-main-guard-only.md) | `main` is guarded against rewrite and deletion, and against nothing else | Accepted |
 | [ADR-0055](0055-audit-retention-attested-imported-records.md) | Audit retention: the chain never removes; attested history expires; a pack is a snapshot | Accepted |
+| [ADR-0056](0056-owasp-aisvs-adoption.md) | OWASP AISVS — bound to the agentic SDLC and to AI-enabled features, at L3 with one named exception | Accepted |
+| [ADR-0057](0057-ai-assisted-review-openai-compatible.md) | AI-assisted review via a tenant-configured OpenAI-compatible endpoint; AISVS L3 minus sender-constrained credentials | Accepted |
+| [ADR-0058](0058-woodpecker-pipeline-format.md) | Adopt Woodpecker's pipeline format — the syntax, not the engine | Accepted |
 
 ## Open follow-ups
 
@@ -94,6 +97,12 @@ the deciding ADR is the record.
 | Per-repo scaffolding + generated-type publishing (contracts → TS). Blocks **per-consumer** codegen gating: a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition, so freshness is gated at the super-repo pin instead | 0027, 0028, 0032 |
 | Meter audit-store and evidence-pack growth against the PRD §6 fair-use dimensions — retention is now unbounded by decision, and nothing measures it | 0055 |
 | Whether an expired attested store leaves a marker distinguishable from "never imported" | 0055 |
+| PRD revision adding AI-assisted review as **PR-24**, a roadmap placement, and an inference-volume fair-use dimension — the capability is Accepted with no requirement behind it | 0057 |
+| Platform-wide tenant secret custody, expected to **supersede** ADR-0057 decision 5 once a second consumer (webhooks, registry, mirrors) exists | 0057 |
+| How a non-deterministic producer's output may be cited as control evidence — until decided, AI review stays out of an evidence pack's scan-gate sections | 0057 |
+| AISVS L3 obligations that do not exist yet: agent cryptographic identity (C9.4.1), nonce-bound approvals (C9.2.8), per-execution budgets (C9.1.2), tool-definition snapshot with re-approval (C10.4.8), indirect-prompt-injection screening (C10.4.2), out-of-band kill switch (C9.6.3) | 0056, 0057 |
+| Amend SPEC-0010 and SPEC-0020 (both Approved) for the pipeline format, publish the supported-construct subset, and file the implementing task | 0058 |
+| Whether to adopt Woodpecker's **engine** later — headless executor or Go library inside `modules/ci`. Not foreclosed by adopting the format | 0058 |
 | Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
 | Unit-economics model per pricing tier | 0008 |
 | Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |
