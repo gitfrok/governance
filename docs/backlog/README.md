@@ -169,10 +169,24 @@ Three decisions were taken at approval and are recorded in the specs themselves:
   pack is a self-contained snapshot; neither period is tenant-configurable in v1. This closes
   ADR-0007's retention follow-up and SPEC-0011's last open item.
 
-## Phase 3 — BYO *(to be expanded)*
+## Phase 3 — BYO & commercial *(Active 2026-08-14)*
 
-Agent implementation (`contracts/proto/agent/v1`); Operator + Helm + per-cloud drivers; metering →
-billing.
+Plan: `../plans/phase-3-byo.md`. Scope is PR-20…PR-23. The architecture was already decided
+(ADR-0009/0010/0011/0013/0017); the two open decisions are settled by **ADR-0060** (enrolment token
+plus control-plane-issued certificates) and **ADR-0061** (the control plane is the metering
+authority).
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-15** BYO data plane | PR-20 | T-0030 | SPEC-0038 | Todo — gates the phase |
+| **EP-16** Packaging & lifecycle | PR-20, PR-21 | T-0031, T-0032 | SPEC-0039 | Todo |
+| **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 | Todo |
+| **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 | Todo |
+
+All four specs are **Draft**: AGDD requires Approved before RED, so nothing here may start yet.
+
+Open and able to block a sale rather than a sprint: **proxy-only egress** (ADR-0017's remaining
+follow-up) stops an install outright for a customer whose egress permits only an HTTP proxy.
 
 ## Parked — needs a human decision first
 
