@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+// Identity & Access domain events: the auditor grant lifecycle (SPEC-0033,
+// T-0027, PRD PR-18). Events carry opaque identifiers, tenant scope and the
+// grant's scope — never pack contents, source, or a policy allow flag. Each
+// lifecycle transition names BOTH the granting admin and the auditor
+// principal, because that pairing is the whole accountability story of an
+// external party reading the tenant's evidence (SPEC-0033 AC4); a consumer
+// builds its own tenant-scoped local projection from them and does not call
+// back into Identity & Access on a hot path (ADR-0022).
+//
+// These events announce the lifecycle; the immutable audit records AC4
+// requires are appended to the audit chain separately (ADR-0007), correlated
+// to the PDP decisions via decision_id where a transition was PDP-gated.
+package gitsaas.events.identity.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/identity/v1;identityeventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuditorGrantIssued records that an authorized admin issued a scoped,
+// read-only, time-boxed grant (SPEC-0033 AC4). It carries the grant's
+// identity, scope and expiry — opaque identifiers and scope only, never pack
+// contents — and names the granting admin and the auditor principal the
+// record is accountable for. Issuing is a PDP decision
+// (auditor.grant.manage); the event correlates to it via decision_id.
+// Replaying the issue request produces no second event (idempotent per
+// tenant and request ID).
+message AuditorGrantIssued {
+  string event_id = 1;
+  string tenant_id = 2;
+  // The opaque, server-assigned grant identity.
+  string grant_id = 3;
+  // The admin whose auditor.grant.manage decision issued the grant,
+  // authenticated and PDP-authorized (SPEC-0033 AC4).
+  string granted_by = 4;
+  // The auditor principal the grant authorizes.
+  string auditor_principal_id = 5;
+  // The evidence scope: the closed date range the granted packs cover.
+  google.protobuf.Timestamp range_from = 6;
+  google.protobuf.Timestamp range_to = 7;
+  // The optional repository scope; empty covers the tenant's repositories.
+  string repository_id = 8;
+  // The named packs the grant authorizes, as opaque pack identities. Scope
+  // only: a pack's contents never travel in an event (SPEC-0033).
+  repeated string pack_ids = 9;
+  // The instant the grant stops authorizing reads, as the server recognized
+  // it at issue time.
+  google.protobuf.Timestamp expires_at = 10;
+  // The PDP decision that authorized issuance.
+  string decision_id = 11;
+  google.protobuf.Timestamp occurred_at = 12;
+}
+
+// AuditorGrantUsed records that an auditor read an evidence pack under a
+// grant (SPEC-0033 AC4). Usage never mutates the grant — no renewal-on-use,
+// no expiry movement (SPEC-0033 AC8) — so the event carries the read's
+// correlation facts only: which pack, under which grant, by which auditor,
+// authorized by which decision. The decision that allowed the read is the
+// evidence.pack.read decision whose decision-time context carried the grant
+// facts; correlating to it is what makes "used" reproducible (SPEC-0033 AC7).
+message AuditorGrantUsed {
+  string event_id = 1;
+  string tenant_id = 2;
+  string grant_id = 3;
+  // The admin who issued the grant, named so every use is accountable to the
+  // issuance (SPEC-0033 AC4).
+  string granted_by = 4;
+  // The auditor principal who exercised the grant.
+  string auditor_principal_id = 5;
+  // The opaque identity of the pack that was read.
+  string pack_id = 6;
+  // The evidence.pack.read decision that authorized the read.
+  string decision_id = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// AuditorGrantRevoked records that an authorized admin terminated a grant
+// (SPEC-0033 AC4). Revocation takes effect on the next decision — grant
+// state is a decision-time fact, so there is no cache cycle to wait out
+// (SPEC-0033 AC7) — and this event records the transition itself, naming
+// the revoking admin, the granting admin and the auditor principal.
+message AuditorGrantRevoked {
+  string event_id = 1;
+  string tenant_id = 2;
+  string grant_id = 3;
+  // The admin who revoked the grant, authenticated and PDP-authorized.
+  string actor_id = 4;
+  // The admin who originally issued the grant.
+  string granted_by = 5;
+  string auditor_principal_id = 6;
+  // The PDP decision that authorized the revocation.
+  string decision_id = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// AuditorGrantExpired records that a grant passed its expiry without any
+// operator action (SPEC-0033 AC3). The actor is the platform itself, so the
+// event carries no actor identity at all — while the granting admin and the
+// auditor principal stay named, because an expiry is still a lifecycle fact
+// about their pairing (SPEC-0033 AC4). From this instant every evidence read
+// under the grant is denied by construction: expiry arrives as a
+// decision-time fact.
+message AuditorGrantExpired {
+  string event_id = 1;
+  string tenant_id = 2;
+  string grant_id = 3;
+  string granted_by = 4;
+  string auditor_principal_id = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}

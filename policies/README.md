@@ -75,5 +75,11 @@ owner-only `policy.dryrun` and `policy.decision.read` vocabulary) and **T-0026**
 export, SPEC-0031/0032 — the owner-only `evidence.pack.generate` action asked about the tenant,
 and `evidence.pack.read` asked about the `evidence_pack` resource kind; generation is the
 compliance owner's act (PR-17), and read is what T-0027's SPEC-0033 auditor grants will later
-gate) own extending it. A resource kind with no entry is
+gate) and **T-0027** (scoped auditor access, SPEC-0033 — the owner-only `auditor.grant.manage`
+action asked about the tenant, and the same `evidence.pack.read` action extended to auditor
+principals under a valid grant: grant ID, state, tenant, expiry, range bounds and named packs
+arrive as decision-time context facts the PEP supplies fresh on every request, so a revoked or
+expired grant fails the very next decision — immediacy is structural, not an invalidation race;
+the auditor role grants nothing else, so every write path and every repository read stays denied
+by construction) own extending it. A resource kind with no entry is
 denied, which is the correct state for a feature that does not exist yet.

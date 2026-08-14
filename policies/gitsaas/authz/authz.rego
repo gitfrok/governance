@@ -39,7 +39,10 @@ default allow := false
 # search.index.status.read; T-0023 (security dashboard + triage, SPEC-0026/0027)
 # adds findings.triage and findings.summary.read; T-0024 (findings on merge
 # requests, SPEC-0028) extends findings.read to the merge_request resource
-# kind — no new action, because reading an MR's findings is reading findings.
+# kind — no new action, because reading an MR's findings is reading findings;
+# T-0027 (scoped auditor access, SPEC-0033) adds auditor.grant.manage and
+# extends evidence.pack.read to auditor principals under decision-time grant
+# facts — a separate allow rule below, not a role-table entry.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -87,11 +90,20 @@ default allow := false
 # control history, PDP-authorized and itself audited — and the compliance owner
 # is whoever is accountable for the tenant. A member who merges code has not
 # thereby been granted the surface that exports its control evidence.
-# evidence.pack.read is owner-only here for the same reasoning, and stays a
-# distinct action pinned to the evidence_pack resource kind: T-0027 (SPEC-0033)
-# will gate it further with scoped, time-boxed auditor grants, and that
-# extension narrows a read question this vocabulary already pins — it cannot
-# repurpose a repository, import or findings grant into pack access.
+# evidence.pack.read stays owner-only IN THIS TABLE and stays a distinct action
+# pinned to the evidence_pack resource kind: T-0027 (SPEC-0033) extends the
+# same action to auditor principals through the grant rule below — never by
+# widening this table, so a repository, import or findings grant can still
+# never be re-read as pack access. An auditor principal reads packs only under
+# a valid grant whose facts arrive fresh at decision time.
+#
+# auditor.grant.manage is owner-only (T-0027, SPEC-0033): issuing, revoking
+# and listing auditor grants is the act that lets an external party read the
+# tenant's evidence, and whoever is accountable for the tenant is the only
+# role that may make it. A member who merges code, a reader, or the auditor
+# principal itself has not thereby been granted the surface that widens the
+# auditor's scope — widening a grant is a new auditor.grant.manage decision,
+# never a self-service operation (SPEC-0033 AC8).
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -107,6 +119,7 @@ role_actions := {
 		"search.query", "search.read", "search.index.status.read",
 		"policy.dryrun", "policy.decision.read",
 		"evidence.pack.generate", "evidence.pack.read",
+		"auditor.grant.manage",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -164,8 +177,13 @@ role_actions := {
 # tenants (SPEC-0031 AC6), so no other resource kind is named in the question.
 # evidence.pack.read is asked about the evidence pack itself — a pack is a resource of its
 # own, and the question is about its ID, with tenant, range bounds and pack state carried as
-# server-derived context (SPEC-0032). T-0027's SPEC-0033 auditor grants will add grant state
-# and expiry to that same context; they narrow this question rather than adding a new one.
+# server-derived context (SPEC-0032). T-0027's SPEC-0033 auditor grants add grant ID, state,
+# expiry and scope to that same context (see the grant rule below); they narrow this question
+# rather than adding a new one.
+#
+# auditor.grant.manage is asked about the tenant (SPEC-0033 vocabulary table): the grant's
+# scope and expiry travel as server-derived context on the decision, and a grant can never
+# span two tenants, so no other resource kind is named in the question.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -196,6 +214,7 @@ action_resource := {
 	"policy.decision.read": {"decision"},
 	"evidence.pack.generate": {"tenant"},
 	"evidence.pack.read": {"evidence_pack"},
+	"auditor.grant.manage": {"tenant"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
@@ -338,6 +357,83 @@ default relied_upon_triage := []
 relied_upon_triage := split(input.context.relied_upon_triage_ids, ",") if {
 	input.action == "merge_request.merge"
 	input.context.relied_upon_triage_ids != ""
+}
+
+# --- T-0027 / SPEC-0033: scoped, read-only, time-boxed auditor grants ---------------------------
+#
+# An auditor principal reads evidence packs under a GRANT, not a role: the grant is scoped to a
+# tenant, a date range and the packs named within it, is read-only, and expires without operator
+# action (SPEC-0033). The role table grants the auditor role NOTHING — auditor evidence access is
+# this rule and nothing else, which is what keeps a grant from being re-readable as repository
+# access, and what denies every write path by construction (SPEC-0033 AC1, AC2).
+#
+# THE DECISION-TIME DESIGN (SPEC-0033 AC7, SPEC-0002): grant state and expiry arrive as context
+# facts the PEP reads from Identity & Access FRESH ON EVERY DECISION REQUEST — never from a token,
+# a cookie, a caller claim, or a cached decision. A decision stays a pure function of its input,
+# and a cached decision is keyed over an input digest that INCLUDES these facts: revoke or expire
+# a grant and the next request's facts differ, the cache misses, and the fresh decision denies.
+# There is no cache cycle to wait out and no token to outlive the revocation — immediacy is
+# structural, not an invalidation race.
+#
+# The facts this rule consumes (all server-derived, all strings):
+#   auditor_grant_id          the grant the PEP matched to this principal and pack; absent means
+#                             no grant was assembled and the decision fails closed.
+#   auditor_grant_state       the stored state read at decision time: "ACTIVE" is the only value
+#                             this rule admits.
+#   auditor_grant_tenant      the tenant the grant was issued for; must equal the decision's
+#                             tenant — a grant for another tenant is a denial, never a match.
+#   auditor_grant_expires_at  RFC3339 instant the server recognizes; the read must happen
+#                             strictly before it (SPEC-0033 AC3).
+#   auditor_grant_range_from  RFC3339 bounds of the grant's evidence range; the pack's range
+#   auditor_grant_range_to    must sit inside them.
+#   auditor_grant_packs       comma-separated pack IDs the grant names; the requested pack must
+#                             be one of them.
+#   pack_range_from           RFC3339 bounds of the pack being read, from Audit's own records
+#   pack_range_to             (SPEC-0032 context), never a caller claim.
+#   decision_time             RFC3339 server-clock instant the decision was requested; what the
+#                             expiry is compared against.
+#
+# A malformed, missing, or tenant-mismatched fact fails CLOSED (SPEC-0033 non-functional): any
+# absent or unparseable fact leaves valid_auditor_grant undefined, and deny-by-default denies.
+
+# An auditor principal reads a pack only under a valid grant. Every conjunct is one of the spec's
+# denials: remove any one of them and the policy widens.
+allow if {
+	input.tenant_id != ""
+	input.subject.tenant_id == input.tenant_id
+	input.action == "evidence.pack.read"
+	input.resource.type in action_resource[input.action]
+	"auditor" in input.subject.roles
+	valid_auditor_grant
+	not deny
+}
+
+# valid_auditor_grant is the grant's validity, derived only from decision-time facts. The PEP
+# supplies them fresh per decision; the policy reads no clock of its own, keeping the decision a
+# pure function of its input (SPEC-0002 AC3).
+valid_auditor_grant if {
+	# A grant exists and the PEP matched it to this decision.
+	input.context.auditor_grant_id != ""
+
+	# ACTIVE is the only state that reads: a revoked or expired grant fails the very next
+	# decision, because its state arrives here fresh rather than living in a cache or a token
+	# (SPEC-0033 AC7).
+	input.context.auditor_grant_state == "ACTIVE"
+
+	# The grant is scoped to this tenant, and to this tenant only (invariant 1).
+	input.context.auditor_grant_tenant == input.tenant_id
+
+	# The read happens strictly before the expiry the server recognizes — expiry takes effect
+	# without an operator action, because decision_time is supplied per decision (SPEC-0033 AC3).
+	time.parse_rfc3339_ns(input.context.decision_time) < time.parse_rfc3339_ns(input.context.auditor_grant_expires_at)
+
+	# The requested pack is one the grant names; an unnamed pack is out of scope whatever its
+	# range (SPEC-0033 AC6).
+	input.resource.id in split(input.context.auditor_grant_packs, ",")
+
+	# The pack's range sits inside the grant's range.
+	time.parse_rfc3339_ns(input.context.auditor_grant_range_from) <= time.parse_rfc3339_ns(input.context.pack_range_from)
+	time.parse_rfc3339_ns(input.context.pack_range_to) <= time.parse_rfc3339_ns(input.context.auditor_grant_range_to)
 }
 
 # reason explains the outcome in terms that are safe to return to the caller.

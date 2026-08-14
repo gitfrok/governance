@@ -38,6 +38,13 @@ needs a direct response.
   Flow with PKCE (ADR-0045, SPEC-0006): the BFF hands over the artifacts the browser flow produced,
   and gets back a tenant-scoped principal or nothing. Issuer, audience, and role vocabulary are
   per-environment configuration and cannot be named by a caller
+- `proto/identity/v1/auditor_grant.proto` — auditor grant lifecycle (SPEC-0033, T-0027, PR-18):
+  `CreateAuditorGrant`, `RevokeAuditorGrant` and `ListAuditorGrants` over a grant scoped to a
+  tenant, a closed date range and the named packs within it. A grant carries scope and expiry only
+  — no repository permission, no role that implies one, no renewal-on-use — and no request carries
+  grant state: state and expiry are server facts read at decision time and supplied as
+  decision-context facts, which is what makes revocation immediate (SPEC-0033 AC7). Not-found,
+  cross-tenant and unauthorized are the same coarse denial (SPEC-0001)
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git. `GetMergeBase` (SPEC-0028) computes the
   merge base of two refs or commits — the comparison anchor introduction attribution needs,
@@ -103,6 +110,9 @@ needs a direct response.
   never written as an enforced control record. T-0026 (SPEC-0031, SPEC-0032) additively adds
   `EvidencePackRequested` and `EvidencePackCompleted`: opaque identifiers, tenant scope, range
   bounds and section counts — never record contents, source, or provenance bytes
+- `events/identity/v1/events.proto` — Identity & Access auditor-grant issued / used / revoked /
+  expired events (SPEC-0033, T-0027); opaque identifiers and scope only, every transition naming
+  the granting admin and the auditor principal (SPEC-0033 AC4) — never pack contents
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
   finding-resolved / finding-triaged / findings-attributed events (SPEC-0024, SPEC-0025,
   SPEC-0026, SPEC-0027, SPEC-0028); opaque identifiers, tenant and repository scope, tool and

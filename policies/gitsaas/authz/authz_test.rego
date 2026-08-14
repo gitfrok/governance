@@ -1244,3 +1244,263 @@ test_deny_evidence_reasons_are_indistinguishable if {
 	)
 	member_read == cross_tenant
 }
+
+# --- T-0027 / SPEC-0033: scoped, read-only, time-boxed auditor grants ---------------------------
+
+# An auditor reads a pack under a GRANT, not a role: the grant's validity — ID,
+# state, tenant, expiry, range bounds, named packs — arrives as decision-time
+# context facts the PEP supplies fresh on every request (SPEC-0033 AC7). Each
+# deny test below mutates exactly one of those facts, so a failure names the
+# dimension responsible. The deny cases outnumber the allow case on purpose:
+# the mutation this section must catch is any rule that lets a revoked, expired,
+# out-of-scope or cross-tenant grant answer a pack read, or that lets the
+# auditor principal reach a repository or a write path.
+auditor_grant_context := {
+	"auditor_grant_id": "grant-1",
+	"auditor_grant_state": "ACTIVE",
+	"auditor_grant_tenant": "acme",
+	"auditor_grant_expires_at": "2026-09-01T00:00:00Z",
+	"auditor_grant_range_from": "2026-01-01T00:00:00Z",
+	"auditor_grant_range_to": "2026-06-30T23:59:59Z",
+	"auditor_grant_packs": "pack-1,pack-2",
+	"pack_range_from": "2026-02-01T00:00:00Z",
+	"pack_range_to": "2026-03-31T23:59:59Z",
+	"decision_time": "2026-08-14T12:00:00Z",
+}
+
+auditor_pack_request(context) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+	"action": "evidence.pack.read",
+	"resource": {"type": "evidence_pack", "id": "pack-1"},
+	"context": context,
+}
+
+# The one thing an auditor principal may do: read a named pack, inside the
+# grant's range, before its expiry, in the grant's tenant (SPEC-0033 AC1/AC5).
+test_allow_auditor_reads_pack_under_valid_grant if {
+	authz.allow with input as auditor_pack_request(auditor_grant_context)
+}
+
+# A second named pack reads too; the grant names it.
+test_allow_auditor_reads_every_named_pack if {
+	authz.allow with input as object.union(
+		auditor_pack_request(auditor_grant_context),
+		{"resource": {"type": "evidence_pack", "id": "pack-2"}},
+	)
+}
+
+# The owner's pack read is unchanged: the role path needs no grant context, and
+# the grant rule extends the same action rather than replacing it (SPEC-0033).
+test_allow_owner_pack_read_is_unaffected_by_the_grant_rule if {
+	authz.allow with input as evidence_request("owner", "evidence.pack.read", "evidence_pack")
+}
+
+# Expiry is a decision-time comparison, not a timer contract: once decision_time
+# reaches the expiry the read is denied — without any operator action
+# (SPEC-0033 AC3).
+test_deny_auditor_pack_read_at_expiry if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"decision_time": "2026-09-01T00:00:00Z"}),
+	)
+}
+
+test_deny_auditor_pack_read_after_expiry if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"decision_time": "2026-09-02T12:00:00Z"}),
+	)
+}
+
+# The server-rendered EXPIRED state is a denial too, whichever fact lands first.
+test_deny_auditor_pack_read_with_expired_state if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"auditor_grant_state": "EXPIRED"}),
+	)
+}
+
+# Revocation is immediate (SPEC-0033 AC7): the state arrives fresh at decision
+# time, so a revoked grant fails this decision — no cache cycle, no token.
+test_deny_auditor_pack_read_with_revoked_grant if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"auditor_grant_state": "REVOKED"}),
+	)
+}
+
+# A pack the grant does not name is out of scope, whatever its range
+# (SPEC-0033 AC6).
+test_deny_auditor_pack_read_of_unnamed_pack if {
+	not authz.allow with input as object.union(
+		auditor_pack_request(auditor_grant_context),
+		{"resource": {"type": "evidence_pack", "id": "pack-3"}},
+	)
+}
+
+# A pack whose range escapes the grant's range is out of scope, even when
+# named: the grant's bounds are a conjunct, not a suggestion.
+test_deny_auditor_pack_read_with_out_of_scope_range if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"pack_range_to": "2026-07-31T23:59:59Z"}),
+	)
+}
+
+test_deny_auditor_pack_read_with_out_of_scope_range_start if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"pack_range_from": "2025-12-01T00:00:00Z"}),
+	)
+}
+
+# Grant absent: no facts assembled means fail closed (SPEC-0033 non-functional).
+test_deny_auditor_pack_read_with_no_grant if {
+	not authz.allow with input as auditor_pack_request({})
+}
+
+# Fail CLOSED on malformed facts: a missing decision_time or an unparseable
+# expiry is a denial, never a fail-open default.
+test_deny_auditor_pack_read_with_missing_decision_time if {
+	not authz.allow with input as auditor_pack_request(
+		json.remove(auditor_grant_context, ["decision_time"]),
+	)
+}
+
+test_deny_auditor_pack_read_with_malformed_expiry if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"auditor_grant_expires_at": "not-an-instant"}),
+	)
+}
+
+# A grant issued for another tenant authorizes nothing here (invariant 1),
+# even when every other fact is valid.
+test_deny_auditor_pack_read_with_grant_for_another_tenant if {
+	not authz.allow with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"auditor_grant_tenant": "globex"}),
+	)
+}
+
+# Holding the auditor role in another tenant is not holding it here.
+test_deny_auditor_pack_read_from_another_tenant_subject if {
+	not authz.allow with input as object.union(
+		auditor_pack_request(auditor_grant_context),
+		{"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "globex"}},
+	)
+}
+
+# The grant confers NO repository read (SPEC-0033 AC1): the coarse denial is
+# the proof, and it is the same denial as every other.
+test_deny_auditor_repo_read if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+		"action": "repo.read",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {},
+	}
+}
+
+# The grant is read-only (SPEC-0033 AC2): every write path — repository,
+# triage, import, pack generation, grant management itself — is denied for an
+# auditor principal. Each pair asks the action about the resource kind it is
+# pinned to, so every denial holds for the right reason.
+test_deny_auditor_every_write_path if {
+	every pair in [
+		{"action": "repo.write", "resource_type": "repository"},
+		{"action": "merge_request.open", "resource_type": "repository"},
+		{"action": "findings.ingest", "resource_type": "repository"},
+		{"action": "findings.triage", "resource_type": "finding"},
+		{"action": "repository.import", "resource_type": "repository"},
+		{"action": "evidence.pack.generate", "resource_type": "tenant"},
+		{"action": "auditor.grant.manage", "resource_type": "tenant"},
+	] {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+			"action": pair.action,
+			"resource": {"type": pair.resource_type, "id": "acme"},
+			"context": {},
+		}
+	}
+}
+
+# A valid grant changes nothing about the write paths: grant facts ride on
+# evidence.pack.read decisions only, and cannot widen any other question.
+test_deny_auditor_writes_even_with_grant_context if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+		"action": "auditor.grant.manage",
+		"resource": {"type": "tenant", "id": "acme"},
+		"context": auditor_grant_context,
+	}
+}
+
+# auditor.grant.manage is asked about the tenant; the resource kind is
+# load-bearing, even for an owner.
+test_deny_grant_manage_asked_about_a_repository if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-owner", "roles": ["owner"], "tenant_id": "acme"},
+		"action": "auditor.grant.manage",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {},
+	}
+}
+
+# Grant management is owner-only: issuing, revoking and listing grants is the
+# act that widens an auditor's scope, and only the tenant's accountable role
+# may make it (SPEC-0033 AC8 — no self-extension).
+test_allow_owner_manages_auditor_grants if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-owner", "roles": ["owner"], "tenant_id": "acme"},
+		"action": "auditor.grant.manage",
+		"resource": {"type": "tenant", "id": "acme"},
+		"context": {},
+	}
+}
+
+test_deny_non_owner_grant_management if {
+	every role in ["member", "reader", "auditor"] {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-nonowner", "roles": [role], "tenant_id": "acme"},
+			"action": "auditor.grant.manage",
+			"resource": {"type": "tenant", "id": "acme"},
+			"context": {},
+		}
+	}
+}
+
+test_deny_grant_management_from_another_tenant if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-owner", "roles": ["owner"], "tenant_id": "globex"},
+		"action": "auditor.grant.manage",
+		"resource": {"type": "tenant", "id": "acme"},
+		"context": {},
+	}
+}
+
+# Auditor denials are as indistinguishable as every other denial (SPEC-0001,
+# SPEC-0033 AC6): a revoked grant, an absent grant, an out-of-scope pack and a
+# repository read all receive the same reason, so probing the PDP cannot
+# separate "grant existed but was revoked" from "no such grant" — the very
+# distinction that would enumerate grants.
+test_deny_auditor_reasons_are_indistinguishable if {
+	revoked := authz.decision.reason with input as auditor_pack_request(
+		object.union(auditor_grant_context, {"auditor_grant_state": "REVOKED"}),
+	)
+	absent := authz.decision.reason with input as auditor_pack_request({})
+	unnamed_pack := authz.decision.reason with input as object.union(
+		auditor_pack_request(auditor_grant_context),
+		{"resource": {"type": "evidence_pack", "id": "pack-3"}},
+	)
+	repo_read := authz.decision.reason with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+		"action": "repo.read",
+		"resource": {"type": "repository", "id": "repo-1"},
+		"context": {},
+	}
+	revoked == absent
+	absent == unnamed_pack
+	unnamed_pack == repo_read
+}
