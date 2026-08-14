@@ -44,7 +44,8 @@ default allow := false
 # extends evidence.pack.read to auditor principals under decision-time grant
 # facts — a separate allow rule below, not a role-table entry; T-0030 (agent
 # enrolment, SPEC-0038) adds the owner-only agent.enrolment_token.* and
-# agent.dataplane.* actions.
+# agent.dataplane.* actions; T-0033 (residency pinning, SPEC-0040) adds the
+# owner-only residency.declaration.set action.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -120,6 +121,14 @@ default allow := false
 # region, version, last-seen), not repository content, and a role that pushes
 # code or reads text has not thereby been granted the surface that lists the
 # tenant's data planes.
+#
+# residency.declaration.set is owner-only too (T-0033, SPEC-0040 AC1): the
+# tenant's residency declaration — the cloud and region its work is pinned
+# to — is control-plane state recorded by an operator act. It is never
+# asserted by a data plane or a request (AC1), and changing it is a
+# compliance-bearing decision the accountable principal must own; a member
+# who pushes code has not thereby been granted the surface that moves where
+# the tenant's data must live.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -138,6 +147,7 @@ role_actions := {
 		"auditor.grant.manage",
 		"agent.enrolment_token.issue", "agent.enrolment_token.revoke",
 		"agent.dataplane.revoke", "agent.dataplane.read",
+		"residency.declaration.set",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -209,6 +219,10 @@ role_actions := {
 # agent.dataplane.revoke and agent.dataplane.read are asked about the data plane itself
 # — the registry record keyed by data-plane ID — which is the question AC5's revocation
 # and AC8's operator visibility are both about.
+#
+# residency.declaration.set is asked about the tenant (T-0033, SPEC-0040 AC1): the
+# declaration is tenant state, and the cloud and region it sets travel as server-derived
+# context on the decision, so no other resource kind is named in the question.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -244,6 +258,7 @@ action_resource := {
 	"agent.enrolment_token.revoke": {"enrolment_token"},
 	"agent.dataplane.revoke": {"data_plane"},
 	"agent.dataplane.read": {"data_plane"},
+	"residency.declaration.set": {"tenant"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the

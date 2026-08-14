@@ -1643,3 +1643,70 @@ test_deny_agent_reasons_are_indistinguishable if {
 	)
 	member_issue == cross_tenant
 }
+
+# --- T-0033 / SPEC-0040: residency declaration is an owner-only control-plane act ---------------
+
+# The residency declaration is control-plane state (SPEC-0040 AC1): setting it
+# is asked about the tenant, with the cloud and region it sets carried as
+# server-derived context.
+residency_request(role, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-residency", "roles": [role], "tenant_id": "acme"},
+	"action": "residency.declaration.set",
+	"resource": {"type": resource_type, "id": "acme"},
+	"context": {"cloud": "gke", "region": "europe-west1"},
+}
+
+# The owner sets the tenant's residency declaration.
+test_allow_owner_residency_declaration_set if {
+	authz.allow with input as residency_request("owner", "tenant")
+}
+
+# No grant extends to member, reader or the auditor principal: a role that
+# pushes code, reads text or audits evidence has not thereby been granted the
+# surface that moves where the tenant's data must live (SPEC-0040 AC1, AC7 —
+# the same principal the declaration must never be self-serviceable by is the
+# customer itself).
+test_deny_member_reader_auditor_residency_declaration_set if {
+	every role in {"member", "reader", "auditor"} {
+		not authz.allow with input as residency_request(role, "tenant")
+	}
+}
+
+# The resource kind is load-bearing: a declaration asked about a repository or
+# a data plane is not the question this grant answers — even for an owner.
+test_deny_residency_declaration_set_asked_about_a_repository if {
+	not authz.allow with input as residency_request("owner", "repository")
+}
+
+test_deny_residency_declaration_set_asked_about_a_data_plane if {
+	not authz.allow with input as residency_request("owner", "data_plane")
+}
+
+# Holding owner in another tenant does not authorize a declaration here
+# (invariant 1), and a principal without roles sets nothing.
+test_deny_residency_declaration_set_from_another_tenant if {
+	not authz.allow with input as object.union(
+		residency_request("owner", "tenant"),
+		{"subject": {"id": "u-residency", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+test_deny_residency_declaration_set_with_no_roles if {
+	not authz.allow with input as object.union(
+		residency_request("owner", "tenant"),
+		{"subject": {"id": "u-residency", "roles": [], "tenant_id": "acme"}},
+	)
+}
+
+# Denials stay coarse: a member's declaration attempt and a cross-tenant one
+# receive the same reason, so probing the PDP cannot separate the causes
+# (SPEC-0001).
+test_deny_residency_reasons_are_indistinguishable if {
+	member_set := authz.decision.reason with input as residency_request("member", "tenant")
+	cross_tenant := authz.decision.reason with input as object.union(
+		residency_request("owner", "tenant"),
+		{"subject": {"id": "u-residency", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+	member_set == cross_tenant
+}

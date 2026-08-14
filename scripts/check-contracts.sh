@@ -185,14 +185,16 @@ fi
 # that claim false to an auditor (ADR-0029 §6, SPEC-0031 AC2 — the criterion T-0018 AC19 owed
 # forward). SPEC-0032 makes the exclusion a TYPE PROPERTY: the control-section record messages have
 # no field capable of carrying an attested record, and attested history is representable only in the
-# labelled appendix (AttestedAppendix). The check asks buf for the COMPILED descriptors of the five
+# labelled appendix (AttestedAppendix). The check asks buf for the COMPILED descriptors of the six
 # control-side messages rather than grepping the source: a field shows up in the descriptor whatever
 # its name, type or spelling, and a proto that fails to compile fails this check loudly instead of
 # passing by absence. --exclude-source-info keeps comments out of the image — prose is not what is
 # under test. Imports are deliberately KEPT (unlike check 5): the records reference
 # google.protobuf.Timestamp, and keeping imports is what makes the check bite if a control record
 # type ever references the Provenance descriptor — the appendix's import then lands in the image
-# and the marker scan finds it.
+# and the marker scan finds it. T-0033 adds ResidencyRecord to the checked set: SPEC-0040 AC7's
+# first-party-only residency section holds by the same type property, so its record message must
+# satisfy the same marker scan.
 #
 # The marker list is the vocabulary of attested content in this codebase (ADR-0029 §2's provenance
 # block fields): an import reference, a provenance block, a declared foreign handle or time, or
@@ -208,6 +210,7 @@ if image_out=$(buf build contracts \
   --type gitsaas.audit.v1.PolicyDecisionRecord \
   --type gitsaas.audit.v1.ScanGateRecord \
   --type gitsaas.audit.v1.AccessChangeRecord \
+  --type gitsaas.audit.v1.ResidencyRecord \
   --exclude-source-info -o -#format=json 2>&1); then
   if grep -Eiq "$attested_markers" <<<"$image_out"; then
     report "gitsaas.audit.v1 control-section records carry an attested-content field — attested records are representable only in the labelled appendix (SPEC-0032 AC2, ADR-0029 §6)"

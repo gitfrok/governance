@@ -7,10 +7,13 @@ syntax = "proto3";
 // resolved package-creation question).
 //
 // A pack is the compliance-owner's answer to "assemble the audit evidence by
-// hand" (PRD PR-17): one closed date range, four control sections —
-// approvals, policy decisions, scan gates, access changes — and one labelled
-// appendix for attested imported history. Enough for a SOC 2 Type II control
-// walkthrough without engineer involvement (SPEC-0031).
+// hand" (PRD PR-17): one closed date range, five control sections —
+// approvals, policy decisions, scan gates, access changes and residency — and
+// one labelled appendix for attested imported history. Enough for a SOC 2
+// Type II control walkthrough without engineer involvement (SPEC-0031). The
+// residency section is the additive T-0033 / SPEC-0040 addition: it answers
+// "where was this tenant's work during the range" with control-plane-observed
+// facts only.
 //
 // The two structural commitments this schema encodes:
 //
@@ -84,10 +87,11 @@ message EvidenceContext {
   string request_id = 4;
 }
 
-// SectionType names the four control sections a pack always carries
-// (SPEC-0031 AC1). The labelled appendix is not a control section and is
-// deliberately not a member: it is a distinct shape (AttestedAppendix), so a
-// section type can never be widened to render attested history as a control.
+// SectionType names the five control sections a pack always carries
+// (SPEC-0031 AC1, extended by SPEC-0040 AC4). The labelled appendix is not a
+// control section and is deliberately not a member: it is a distinct shape
+// (AttestedAppendix), so a section type can never be widened to render
+// attested history as a control.
 enum SectionType {
   SECTION_TYPE_UNSPECIFIED = 0;
   // Approvals witnessed by Code Review.
@@ -98,6 +102,14 @@ enum SectionType {
   SECTION_TYPE_SCAN_GATES = 3;
   // Access changes witnessed by Identity & Access.
   SECTION_TYPE_ACCESS_CHANGES = 4;
+  // Residency facts witnessed by the control plane (SPEC-0040, T-0033): the
+  // pinning in force during the range, the observed placement of every data
+  // plane that served the tenant, the placement refusals and the observed-vs-
+  // pinning contradictions the control plane detected. Every fact is one the
+  // control plane recorded itself; a customer-supplied assertion about its
+  // own cluster is representable only in the labelled appendix, never here
+  // (SPEC-0040 AC7).
+  SECTION_TYPE_RESIDENCY = 5;
 }
 
 // PackState is the lifecycle of an asynchronous assembly (SPEC-0031
@@ -133,6 +145,12 @@ enum GapReason {
   // Assembly of the section's records failed; nothing is guessed or
   // substituted for the missing part.
   GAP_REASON_ASSEMBLY_FAILED = 3;
+  // No placement reports from a data plane reached the control plane for a
+  // bounded part of the range (SPEC-0040 AC5, T-0033): placement is UNKNOWN
+  // there — a disconnected data plane or a telemetry silence. The interval
+  // renders as a gap, never as compliance: absence of contradiction is not
+  // evidence of pinning (SPEC-0031 AC10 applied to residency).
+  GAP_REASON_PLACEMENT_SILENT = 4;
 }
 
 // ControlDecisionMode is the only evaluation mode a policy decision may carry
@@ -240,6 +258,70 @@ message AccessChangeRecord {
   string grant_id = 3;
 }
 
+// ResidencyFactKind names which residency fact one ResidencyRecord carries.
+// It is a CLOSED enum: widening it is a reviewed contracts change, exactly as
+// ControlDecisionMode's comment says. The kinds mirror the facts SPEC-0040
+// requires the section to cite (AC2, AC3, AC4, AC6).
+enum ResidencyFactKind {
+  RESIDENCY_FACT_KIND_UNSPECIFIED = 0;
+  // The control plane recording or changing the tenant's residency pinning —
+  // the cloud and region in force from occurred_at onward (SPEC-0040 AC1,
+  // AC6). A change inside the pack's range appears as its own record with
+  // its effective time, never flattened into the current value (AC6).
+  RESIDENCY_FACT_KIND_PINNING = 1;
+  // The control plane witnessing a data plane's placement — the cloud and
+  // region the data plane reports itself running in (SPEC-0040 AC4,
+  // "Data owned": the data plane reports observed placement; it never pins
+  // its own residency).
+  RESIDENCY_FACT_KIND_PLACEMENT = 2;
+  // The control plane refusing work that would place tenant data or compute
+  // outside the pinning (SPEC-0040 AC2). The record carries the pinning and
+  // the attempted placement, and ControlSectionRecord.allowed is false.
+  RESIDENCY_FACT_KIND_PLACEMENT_REFUSED = 3;
+  // The control plane detecting an observed placement that contradicts the
+  // pinning (SPEC-0040 AC1, AC3): a violation, not a redefinition. The
+  // record carries both placements.
+  RESIDENCY_FACT_KIND_PLACEMENT_CONTRADICTION = 4;
+}
+
+// ResidencyRecord is one residency fact witnessed by the control plane
+// (SPEC-0040, T-0033). The section it populates answers "where was this
+// tenant's work during the range" (AC4): the pinning in force, the observed
+// placement of every data plane that served the tenant, the refusals and the
+// contradictions. Two invariants shape the message:
+//
+// 1. FIRST-PARTY ONLY (SPEC-0040 AC7). Every fact here is one the control
+//    plane recorded itself — its own pinning act, or a placement it observed
+//    through the agent channel. A customer-supplied attestation about its
+//    own cluster is representable only in the labelled appendix, never in
+//    this section.
+// 2. ATTESTED EXCLUSION IS A TYPE PROPERTY (SPEC-0032 AC2), as for every
+//    control-section record message: no provenance block, no foreign handle,
+//    no source-asserted time, no import reference — scripts/check-contracts.sh
+//    asserts the absence against the compiled descriptor. occurred_at on the
+//    carrying ControlSectionRecord is the platform's own witnessed time.
+message ResidencyRecord {
+  // Which residency fact this record carries.
+  ResidencyFactKind fact_kind = 1;
+  // The data plane the fact is about. Set for the placement kinds
+  // (PLACEMENT, PLACEMENT_REFUSED, PLACEMENT_CONTRADICTION); empty for a
+  // PINNING record, which is tenant state, not data-plane state.
+  string data_plane_id = 2;
+  // The cloud and region the control plane's pinning names for the tenant at
+  // the record's time — the constraint in force (PINNING: the new value
+  // taking effect; the placement kinds: the pinning the fact is evaluated
+  // against). Empty when no pinning was in force yet: a fact before the
+  // first pinning is witnessed as-is, never judged.
+  string pinned_cloud = 3;
+  string pinned_region = 4;
+  // The cloud and region the control plane OBSERVED — the placement a data
+  // plane reported (PLACEMENT), the placement refused (PLACEMENT_REFUSED,
+  // where ControlSectionRecord.allowed is false), or the placement that
+  // contradicted the pinning (PLACEMENT_CONTRADICTION). Empty for PINNING.
+  string observed_cloud = 5;
+  string observed_region = 6;
+}
+
 // ControlSectionRecord is one cited record of a control section. Every record
 // shares its chain position, actor, resource, action, outcome and timestamp —
 // all first-party facts witnessed by the platform (SPEC-0032) — and carries
@@ -281,11 +363,12 @@ message ControlSectionRecord {
     PolicyDecisionRecord policy_decision = 9;
     ScanGateRecord scan_gate = 10;
     AccessChangeRecord access_change = 11;
+    ResidencyRecord residency = 12;
   }
 }
 
-// ControlSection is one of the four sections a pack always carries
-// (SPEC-0031 AC1). It embeds its records — a self-contained snapshot, not a
+// ControlSection is one of the five sections a pack always carries
+// (SPEC-0031 AC1, SPEC-0040 AC4). It embeds its records — a self-contained snapshot, not a
 // view (ADR-0055 rule 3) — together with the anchors that tie them to the
 // chain and explicit gap markers where the source was incomplete. A section
 // whose records sit inside a reported gap is absent, never partially
@@ -404,8 +487,8 @@ message EvidencePack {
   string requested_by = 6;
   string decision_id = 7;
   google.protobuf.Timestamp generated_at = 8;
-  // Always four, one per SectionType value: approvals, policy decisions,
-  // scan gates, access changes (SPEC-0031 AC1).
+  // Always five, one per SectionType value: approvals, policy decisions,
+  // scan gates, access changes, residency (SPEC-0031 AC1, SPEC-0040 AC4).
   repeated ControlSection sections = 9;
   // The labelled appendix. Always present, possibly empty of records
   // (SPEC-0031 AC2).
