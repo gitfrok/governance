@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+// The customer-visible fair-use usage view (SPEC-0041, T-0034).
+//
+// The control plane is the metering authority (ADR-0061): the counters this
+// surface returns are the SAME counters every envelope decision is made from —
+// there is no second, internal number (SPEC-0041 AC10). Coverage is explicit:
+// every PRD §6 dimension is either METERED or DEFERRED with its reason, and a
+// deferred dimension renders as "not metered", never as zero or
+// within-envelope (AC2). Missing telemetry renders as a visible gap over the
+// affected interval, never as zero usage (AC3). Divergence between a data
+// plane's own report and the control plane's counters is a health finding
+// carrying BOTH numbers, never an adjustment (AC1).
+package gitsaas.usage.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/usage/v1;usagev1";
+
+import "google/protobuf/timestamp.proto";
+import "proto/agent/v1/agent.proto";
+
+service UsageService {
+  // GetUsageView returns the tenant's fair-use usage view: one entry per PRD
+  // §6 dimension with its coverage, envelope condition, and the counters and
+  // interval the condition was derived from (SPEC-0041 AC10). Not-found,
+  // cross-tenant, and unauthorized are the same coarse denial (SPEC-0001).
+  rpc GetUsageView(GetUsageViewRequest) returns (GetUsageViewResponse);
+}
+
+// UsageContext is derived from an authenticated principal by the PEP. The
+// actor ID and roles are verified server-side; a caller cannot assert them.
+// An empty or cross-tenant context is a coarse denial that does not
+// distinguish nonexistent from unauthorized (SPEC-0001).
+message UsageContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+  repeated string actor_roles = 3;
+  string request_id = 4;
+}
+
+// Whether the control plane meters a dimension in this phase (SPEC-0041 AC2).
+// DEFERRED means the dimension cannot yet be derived from received telemetry;
+// it is listed with its reason and never shown as zero or within-envelope.
+enum DimensionCoverage {
+  DIMENSION_COVERAGE_UNSPECIFIED = 0;
+  DIMENSION_COVERAGE_METERED     = 1;
+  DIMENSION_COVERAGE_DEFERRED    = 2;
+}
+
+// One telemetry-less interval for a metered dimension (SPEC-0041 AC3): the
+// data plane was silent here, and absence of events is never rendered as
+// absence of usage — the same rule the evidence pack applies to truncation
+// (SPEC-0031 AC10).
+message UsageGap {
+  google.protobuf.Timestamp window_start = 1;
+  google.protobuf.Timestamp window_end = 2;
+  string reason = 3;                       // coarse prose, e.g. "no telemetry received"
+}
+
+// UsageDimensionView is one dimension's row in the usage view. Numeric fields
+// are meaningful ONLY when coverage is METERED and telemetry_gap is false:
+// the shape deliberately cannot represent "unmeasured" as a number, so a
+// renderer that shows a zero for a deferred or gapped dimension is wrong by
+// construction (SPEC-0041 AC2, AC3).
+message UsageDimensionView {
+  gitsaas.agent.v1.FairUseDimension dimension = 1;
+  DimensionCoverage coverage = 2;
+  // Meaningful only when coverage is METERED.
+  gitsaas.agent.v1.EnvelopeState state = 3;
+  double current_value = 4;                // the control plane's authoritative counter
+  double envelope_value = 5;               // per-tenant configuration, never compiled in
+  double notification_value = 6;           // the AC4 threshold, below envelope_value
+  string unit = 7;                         // coarse unit prose, e.g. "minutes", "bytes"
+  google.protobuf.Timestamp window_start = 8; // the interval the counter was derived from
+  google.protobuf.Timestamp window_end = 9;
+  // True when the CURRENT interval is a gap: telemetry was not received, so
+  // the value is unknown — never zero (SPEC-0041 AC3).
+  bool telemetry_gap = 10;
+  repeated UsageGap gaps = 11;             // the gaps observed in the view's range
+  // Set only when coverage is DEFERRED: the honest reason the dimension is
+  // not metered in this phase (SPEC-0041 AC2).
+  string deferred_reason = 12;
+}
+
+// UsageDivergence is one health finding (SPEC-0041 AC1, ADR-0061 §2): a data
+// plane's self-reported total and the control plane's authoritative counter
+// disagree over one interval. Both numbers are shown; the control plane's
+// counter is never adjusted, and the divergence never changes an envelope
+// decision.
+message UsageDivergence {
+  gitsaas.agent.v1.FairUseDimension dimension = 1;
+  string data_plane_id = 2;
+  double control_plane_value = 3;          // authoritative (ADR-0061 §1)
+  double data_plane_reported_value = 4;    // operational input only
+  google.protobuf.Timestamp window_start = 5;
+  google.protobuf.Timestamp window_end = 6;
+}
+
+message GetUsageViewRequest {
+  UsageContext context = 1;
+}
+
+message GetUsageViewResponse {
+  // One entry per PRD §6 dimension — the list itself is the coverage
+  // statement (SPEC-0041 AC2).
+  repeated UsageDimensionView dimensions = 1;
+  repeated UsageDivergence divergences = 2;
+  google.protobuf.Timestamp generated_at = 3;
+}

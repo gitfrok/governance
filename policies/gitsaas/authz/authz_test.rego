@@ -1710,3 +1710,53 @@ test_deny_residency_reasons_are_indistinguishable if {
 	)
 	member_set == cross_tenant
 }
+
+# --- T-0034 / SPEC-0041: the fair-use usage view is a tenant-scoped read -------------------------
+
+# The usage view is the tenant's own commercial state (PR-23): the counters
+# and envelope conditions the control plane derives from received telemetry.
+# It is a read granted to owner and member, asked about the tenant.
+usage_request(role, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-usage", "roles": [role], "tenant_id": "acme"},
+	"action": "usage.view.read",
+	"resource": {"type": resource_type, "id": "acme"},
+	"context": {},
+}
+
+# Owner and member read the usage view; the roles whose work the usage
+# describes see it before an envelope is reached (PR-23, SPEC-0041 AC4).
+test_allow_owner_and_member_usage_view_read if {
+	every role in {"owner", "member"} {
+		authz.allow with input as usage_request(role, "tenant")
+	}
+}
+
+# Reader and auditor do not: a role granted to read repository text or to
+# read evidence under a grant has not thereby been granted the tenant's
+# metering (least privilege).
+test_deny_reader_and_auditor_usage_view_read if {
+	every role in {"reader", "auditor"} {
+		not authz.allow with input as usage_request(role, "tenant")
+	}
+}
+
+# The resource kind is load-bearing: a usage view read asked about a
+# repository or a data plane is not the question this grant answers — even
+# for an owner.
+test_deny_usage_view_read_asked_about_a_repository if {
+	not authz.allow with input as usage_request("owner", "repository")
+}
+
+test_deny_usage_view_read_asked_about_a_data_plane if {
+	not authz.allow with input as usage_request("owner", "data_plane")
+}
+
+# Holding member in another tenant does not authorize a usage view read here
+# (invariant 1): usage is tenant-bound metering state.
+test_deny_usage_view_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		usage_request("member", "tenant"),
+		{"subject": {"id": "u-usage", "roles": ["member"], "tenant_id": "globex"}},
+	)
+}

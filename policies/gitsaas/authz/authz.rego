@@ -129,6 +129,17 @@ default allow := false
 # compliance-bearing decision the accountable principal must own; a member
 # who pushes code has not thereby been granted the surface that moves where
 # the tenant's data must live.
+#
+# usage.view.read reaches the tenant's fair-use usage view (T-0034,
+# SPEC-0041): the counters and envelope conditions the control plane derives
+# from received telemetry, shown to the customer BEFORE an envelope is reached
+# (PR-23). It is a read of the tenant's own commercial state, granted to
+# owner and member — the roles whose work the usage describes — and withheld
+# from reader on the same least-privilege reasoning as the rest of the
+# control-plane surface: a role granted to read repository text has not
+# thereby been granted the tenant's metering. It changes nothing: there is
+# no usage write action, because enforcement is throttle-and-notify computed
+# in the control plane, never a caller decision (ADR-0061 §4).
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -148,6 +159,7 @@ role_actions := {
 		"agent.enrolment_token.issue", "agent.enrolment_token.revoke",
 		"agent.dataplane.revoke", "agent.dataplane.read",
 		"residency.declaration.set",
+		"usage.view.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -162,6 +174,7 @@ role_actions := {
 		"findings.ingest", "findings.read",
 		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
+		"usage.view.read",
 	},
 	# A reader reads the repository. LFS is deliberately not included: pulling every
 	# large object in a repository is a different cost from reading its text, and a
@@ -223,6 +236,10 @@ role_actions := {
 # residency.declaration.set is asked about the tenant (T-0033, SPEC-0040 AC1): the
 # declaration is tenant state, and the cloud and region it sets travel as server-derived
 # context on the decision, so no other resource kind is named in the question.
+#
+# usage.view.read is asked about the tenant (T-0034, SPEC-0041): the usage view is the
+# tenant's own fair-use state, and the counters, envelope conditions and gaps travel in
+# the response, so no other resource kind is named in the question.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -259,6 +276,7 @@ action_resource := {
 	"agent.dataplane.revoke": {"data_plane"},
 	"agent.dataplane.read": {"data_plane"},
 	"residency.declaration.set": {"tenant"},
+	"usage.view.read": {"tenant"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the

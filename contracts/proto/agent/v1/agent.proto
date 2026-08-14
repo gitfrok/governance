@@ -50,6 +50,7 @@ message AgentMessage {                       // agent -> control plane
     Diagnostics       diagnostics       = 17;
     Enrol                  enrol                  = 18; // first Connect only (ADR-0060)
     CertificateRotationAck certificate_rotation_ack = 19;
+    EnvelopeStateAck       envelope_state_ack     = 20; // answers EnvelopeStateUpdate (SPEC-0041 AC9)
   }
 }
 
@@ -67,6 +68,7 @@ message ControlPlaneMessage {                // control plane -> agent
     Ping         ping          = 14;
     EnrolmentAck        enrolment_ack      = 15; // answers Enrol (ADR-0060)
     CertificateRotation certificate_rotation = 16;
+    EnvelopeStateUpdate envelope_state     = 17; // fair-use desired state (SPEC-0041 AC9)
   }
 }
 
@@ -193,6 +195,13 @@ message TelemetrySample {
 }
 
 // Fair-use metering for flat-rate cost governance (ADR-0008).
+//
+// The control plane is the metering authority (ADR-0061): it counts from the
+// TelemetrySample events it RECEIVES on this channel. This message is the data
+// plane's OWN view of its totals — operational input, never the billing
+// number. Where the two diverge, the divergence is a health finding with both
+// numbers shown, not an adjustment to the control plane's counters
+// (SPEC-0041 AC1).
 message UsageSample {
   google.protobuf.Timestamp window_start = 1;
   google.protobuf.Timestamp window_end   = 2;
@@ -200,6 +209,75 @@ message UsageSample {
   double storage_bytes = 4;
   double egress_bytes  = 5;
   int64  seat_count    = 6;
+  // Additive operational signals (T-0034, SPEC-0041): sizes and peaks the
+  // control plane cannot yet derive from received telemetry events. Reporting
+  // them never changes a control-plane counter (ADR-0061 §2).
+  double ci_concurrency_peak = 7;            // peak concurrent CI jobs in the window
+  double scan_bytes          = 8;            // bytes scanned in the window
+  int64  repository_count    = 9;            // repositories hosted at window end
+  double index_bytes         = 10;           // code-search index size at window end
+}
+
+// ---------------------------------------------------------------------------
+// Fair-use envelopes  (SPEC-0041, ADR-0061: throttle and notify, never git)
+// ---------------------------------------------------------------------------
+// The PRD §6 fair-use dimensions. Coverage is explicit per phase (SPEC-0041
+// AC2): a dimension the control plane cannot derive from received telemetry is
+// DEFERRED and renders as "not metered" — never as zero or within-envelope.
+enum FairUseDimension {
+  FAIR_USE_DIMENSION_UNSPECIFIED        = 0;
+  FAIR_USE_DIMENSION_SEATS              = 1;
+  FAIR_USE_DIMENSION_REPOSITORY_COUNT   = 2;
+  FAIR_USE_DIMENSION_REPOSITORY_STORAGE = 3;
+  FAIR_USE_DIMENSION_CI_MINUTES         = 4;
+  FAIR_USE_DIMENSION_CI_CONCURRENCY     = 5;
+  FAIR_USE_DIMENSION_SCAN_VOLUME        = 6;
+  FAIR_USE_DIMENSION_INDEX_SIZE         = 7;
+  FAIR_USE_DIMENSION_EGRESS             = 8;
+}
+
+// The envelope condition of one dimension, computed in the control plane.
+// NEAR is the notification threshold BEFORE breach (SPEC-0041 AC4); EXCEEDED
+// throttles and notifies, and git push, fetch, clone and all reads stay fully
+// available in every state (SPEC-0041 AC7, ADR-0061 §4).
+enum EnvelopeState {
+  ENVELOPE_STATE_UNSPECIFIED = 0;
+  ENVELOPE_STATE_WITHIN      = 1;
+  ENVELOPE_STATE_NEAR        = 2;            // notification threshold reached, pre-breach
+  ENVELOPE_STATE_EXCEEDED    = 3;
+}
+
+// One dimension's envelope condition with the counters the decision was made
+// from: the customer and the control plane read the same numbers (SPEC-0041
+// AC10), and the interval is recorded, not inferred (G6 evidence).
+message DimensionEnvelope {
+  FairUseDimension dimension      = 1;
+  EnvelopeState    state          = 2;
+  double current_value            = 3;       // the control plane's authoritative counter
+  double envelope_value           = 4;       // per-tenant configuration, never compiled in
+  double notification_value       = 5;       // the AC4 threshold, below envelope_value
+  string unit                     = 6;       // coarse unit prose, e.g. "minutes", "bytes"
+  google.protobuf.Timestamp window_start = 7; // the interval the counter was derived from
+  google.protobuf.Timestamp window_end   = 8;
+  string message                  = 9;       // coarse prose; never carries a secret
+}
+
+// Envelope state reaches the data plane as DESIRED STATE on this channel; the
+// control plane never reaches into the cluster to enforce it (SPEC-0041 AC9).
+// Enforcement is throttle-and-notify only: reduced CI concurrency and a queue
+// depth cap whose delays are visible on the job (AC5). No field here can make
+// a repository read-only or block a git operation (AC7, AC8).
+message EnvelopeStateUpdate {                // CP -> agent
+  int64 generation = 1;                      // monotonic; the agent applies the newest
+  repeated DimensionEnvelope dimensions = 2;
+  int32 max_ci_concurrency = 3;              // set on a CI-dimension breach; 0 = unchanged
+  int64 queue_depth_cap    = 4;              // queued jobs are delayed, never dropped (AC5)
+}
+
+message EnvelopeStateAck {                   // agent -> CP; answers EnvelopeStateUpdate
+  int64  generation = 1;                     // echoes EnvelopeStateUpdate.generation
+  bool   applied    = 2;
+  string error      = 3;                     // coarse prose only
 }
 
 // ---------------------------------------------------------------------------
