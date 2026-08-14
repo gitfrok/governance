@@ -21,7 +21,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0012 | Sync-replica write path + failover | 1 | Done — backend #30; demonstration needs the cluster lane |
 | T-0013 | Identity & access: Zitadel + PATs | 1 | Done — backend #21/#37/#50, bff #22 |
 | T-0014 | Repository read APIs + BFF aggregation | 1 | Done — backend #22/#24, bff #18 |
-| T-0015 | Web: repo browser + file/diff + palette | 1 | Done — bff #22, webfrontend #20, super-repo #77 |
+| T-0015 | Web: repo browser + file/diff + palette | 1 | Done — bff #22, webfrontend #20, super-repo #77; SPEC-0021 AC6 closed out at webfrontend@2fa6ffe |
 | T-0016 | Merge requests + protected branches + approval policy | 1 | Done — backend #31/#33/#34/#35 |
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Done — backend #29/#32, super-repo #76; dispatch needs a gVisor RuntimeClass |
 | T-0018 | Repository & review-history import | 1 | Done — 23 of 24 criteria; AC19 moved to Phase 2 |
