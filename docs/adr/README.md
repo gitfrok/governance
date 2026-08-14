@@ -79,6 +79,8 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0057](0057-ai-assisted-review-openai-compatible.md) | AI-assisted review via a tenant-configured OpenAI-compatible endpoint; AISVS L3 minus sender-constrained credentials | Accepted |
 | [ADR-0058](0058-woodpecker-pipeline-format.md) | Adopt Woodpecker's pipeline format — the syntax, not the engine | Accepted |
 | [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the runner persists, a subscriber ingests | Accepted |
+| [ADR-0060](0060-agent-enrolment-identity.md) | Agent identity: one-time enrolment token, control-plane-issued short-lived certificates | Accepted |
+| [ADR-0061](0061-metering-authority.md) | The control plane is the authority for fair-use metering | Accepted |
 
 ## Open follow-ups
 
@@ -105,8 +107,10 @@ the deciding ADR is the record.
 | Amend SPEC-0010 and SPEC-0020 (both Approved) for the pipeline format, publish the supported-construct subset, and file the implementing task | 0058 |
 | Retention and fair-use metering of stored scan reports — SPEC-0037 bounds size and age, but nothing meters growth, and ADR-0055's retention rules do not cover a report (it is not an audit record) | 0059 |
 | Whether to adopt Woodpecker's **engine** later — headless executor or Go library inside `modules/ci`. Not foreclosed by adopting the format | 0058 |
-| Cert issuance and rotation (SPIFFE/SPIRE) + HTTP/2 proxy fallback | 0017 |
-| Unit-economics model per pricing tier | 0008 |
+| HTTP/2 proxy fallback for a customer whose egress permits only a proxy — the remaining half of ADR-0017's follow-up; cert issuance closed by 0060 | 0017 |
+| Unit-economics model per pricing tier — dimensions and derivation now fixed by 0061, prices still open | 0008 |
+| Which PRD §6 dimensions are centrally derivable (storage and index size are sizes, not events) — SPEC-0041 states coverage; the rest is deferred and must not read as metered | 0061 |
+| Agent CA key custody, shared with the platform-secrets question ADR-0057 carries | 0060 |
 | Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |
 | Whether a red `main` should notify anything beyond whoever pushed it | 0053 |
 | First-party images are pinned by tag, not digest, in `deploy/dev` | 0035 |
