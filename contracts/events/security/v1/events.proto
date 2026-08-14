@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-// Security/Findings domain events (SPEC-0024, SPEC-0025). Events carry
-// opaque identifiers, tenant and repository scope, tool and rule identity,
-// and severity; they never carry provenance bytes, scanner credentials,
-// source code, or a policy allow flag. A consumer builds its own
-// tenant-scoped local projection from them and does not call back into
-// Security/Findings on a hot path (ADR-0022).
+// Security/Findings domain events (SPEC-0024, SPEC-0025, SPEC-0026,
+// SPEC-0027). Events carry opaque identifiers, tenant and repository scope,
+// tool and rule identity, and severity; they never carry provenance bytes,
+// scanner credentials, source code, justification text, or a policy allow
+// flag. A consumer builds its own tenant-scoped local projection from them
+// and does not call back into Security/Findings on a hot path (ADR-0022).
 package gitsaas.events.security.v1;
 
 option go_package = "github.com/yourorg/gitsaas/gen/events/security/v1;securityeventsv1";
@@ -33,6 +33,17 @@ enum FindingSeverity {
   FINDING_SEVERITY_MEDIUM = 2;
   FINDING_SEVERITY_HIGH = 3;
   FINDING_SEVERITY_CRITICAL = 4;
+}
+
+// TriageState mirrors proto/security/v1's triage decision vocabulary
+// (SPEC-0026). UNSPECIFIED names the absence of a prior state in a
+// FindingTriaged event, never a state a record holds.
+enum TriageState {
+  TRIAGE_STATE_UNSPECIFIED = 0;
+  TRIAGE_STATE_ACCEPT = 1;
+  TRIAGE_STATE_FALSE_POSITIVE = 2;
+  TRIAGE_STATE_FIX = 3;
+  TRIAGE_STATE_DEFER = 4;
 }
 
 // ScanIngested records that a completed scan's results were ingested. It is
@@ -82,4 +93,25 @@ message FindingResolved {
   string rule_id = 8;
   FindingSeverity severity = 9;
   google.protobuf.Timestamp occurred_at = 10;
+}
+
+// FindingTriaged records that an authorized actor set a triage state on a
+// finding identity (SPEC-0026, SPEC-0027). It carries prior and new state
+// so a consumer can project transitions without reading back; prior_state
+// is UNSPECIFIED for the first decision on a finding. It never carries
+// justification text, provenance bytes, source code, or a policy outcome —
+// the decision that authorized the transition lives in the audit record
+// (SPEC-0026 AC4), not in this event.
+message FindingTriaged {
+  string event_id = 1;
+  string finding_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  // The opaque identity of the triage record this transition wrote.
+  string triage_id = 5;
+  TriageState prior_state = 6;
+  TriageState new_state = 7;
+  // The verified actor who recorded the decision.
+  string actor_id = 8;
+  google.protobuf.Timestamp occurred_at = 9;
 }

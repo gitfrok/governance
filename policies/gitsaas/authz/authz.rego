@@ -36,7 +36,8 @@ default allow := false
 # branch-protection actions below; T-0018 (import) adds repository.import.*;
 # T-0022 (findings, SPEC-0025) adds findings.ingest and findings.read;
 # T-0028 (code search, SPEC-0034/0035) adds search.query, search.read and
-# search.index.status.read.
+# search.index.status.read; T-0023 (security dashboard + triage, SPEC-0026/0027)
+# adds findings.triage and findings.summary.read.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -51,6 +52,19 @@ default allow := false
 # the same reasoning as LFS: a tenant that grants reading a repository's text
 # has not granted feeding scanner output into its findings plane, and a scan
 # adapter ingests with the roles of the principal it runs for.
+#
+# findings.triage is granted to owner and member and withheld from reader
+# (SPEC-0026): triage is a control action — an accepted risk is a claim an
+# auditor may later read (PR-17) — and a role that may not even read findings
+# cannot record decisions on them.
+#
+# findings.summary.read is granted exactly as widely as findings.read — to
+# owner and member, not reader — and that equality is the decision. A count
+# or a facet is an aggregate over findings, and a summary the caller could
+# read while the findings themselves stayed unreadable would be the
+# aggregate leakage SPEC-0026 AC6 forbids: a number that changes with an
+# unreadable repository's findings leaks existence just as a list does
+# (SPEC-0027 AC4). A summary can never be wider than the list it summarizes.
 #
 # The import actions are owner-only, and that is the decision, not an omission.
 # An import writes history the platform did not witness, and mapping a foreign
@@ -68,6 +82,7 @@ role_actions := {
 		"repository.import.map_actor",
 		"repo.lfs.read", "repo.lfs.write",
 		"findings.ingest", "findings.read",
+		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
 	},
 	"member": {
@@ -81,6 +96,7 @@ role_actions := {
 		# able to grant repository access without granting either.
 		"repo.lfs.read", "repo.lfs.write",
 		"findings.ingest", "findings.read",
+		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
 	},
 	# A reader reads the repository. LFS is deliberately not included: pulling every
@@ -105,6 +121,12 @@ role_actions := {
 # searchable repository set is server-derived, so no repository is named in the question.
 # search.read and search.index.status.read are asked about a repository — the per-repository
 # re-check that binds a revocation to the next query (SPEC-0034 AC6, SPEC-0035 AC5).
+#
+# findings.triage is asked about the finding the record is keyed to (SPEC-0027): triage is a
+# resource of its own, and the question is about its key, not about the repository it sits in.
+# findings.summary.read is asked about a repository, exactly as SPEC-0027's table pins it; an
+# org-wide summary decomposes into per-repository decisions server-side, so no tenant-kind
+# question exists for it.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -126,6 +148,8 @@ action_resource := {
 	"repo.lfs.write": {"repository"},
 	"findings.ingest": {"repository"},
 	"findings.read": {"repository", "finding"},
+	"findings.triage": {"finding"},
+	"findings.summary.read": {"repository"},
 	"search.query": {"tenant"},
 	"search.read": {"repository"},
 	"search.index.status.read": {"repository"},

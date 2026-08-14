@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 5 (SPEC-0027 AC7).
+//
+// It carries the one shape the real gitsaas.security.v1.Finding must never grow: a triage field
+// on the finding message itself. The gate compiles this module and asserts the descriptor DOES
+// carry the triage marker — proving the check can fail. In contracts/, triage is a separate
+// resource keyed by finding identity (TriageRecord), which is what lets a triage state survive
+// a re-scan by construction (SPEC-0026 AC3).
+package gitsaas.security.v1;
+
+message Finding {
+  string finding_id = 1;
+  // The defect under test: triage state living on the finding message.
+  string triage_state = 2;
+}

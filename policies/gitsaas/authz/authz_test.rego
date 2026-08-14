@@ -82,6 +82,14 @@ denied_pairs := [
 	# are not implied by reading a repository's text (SPEC-0025, T-0022).
 	{"role": "reader", "action": "findings.ingest"},
 	{"role": "reader", "action": "findings.read"},
+	# A summary is an aggregate over findings; it can never be wider than the
+	# list it summarizes (SPEC-0026 AC6, SPEC-0027 AC4, T-0023). The matrix
+	# resource is a repository — exactly the kind findings.summary.read is
+	# asked about — so this row catches a widening to reader for the right
+	# reason. findings.triage is deliberately NOT here: the matrix resource
+	# is the wrong kind for it, a denial would hold for the wrong reason, and
+	# the dedicated section below tests it with the finding kind instead.
+	{"role": "reader", "action": "findings.summary.read"},
 ]
 
 test_role_matrix_denies_everything_not_granted if {
@@ -111,6 +119,11 @@ granted_pairs := [
 	{"role": "member", "action": "findings.read"},
 	{"role": "owner", "action": "findings.ingest"},
 	{"role": "owner", "action": "findings.read"},
+	# Dashboard summaries are granted exactly as widely as findings.read
+	# (SPEC-0026 AC6); the matrix repository resource is the kind the action
+	# is asked about, so these rows are meaningful in both directions.
+	{"role": "member", "action": "findings.summary.read"},
+	{"role": "owner", "action": "findings.summary.read"},
 ]
 
 test_role_matrix_grants_what_the_table_says if {
@@ -573,6 +586,120 @@ test_deny_findings_read_is_not_implied_by_repo_read if {
 		reader_request,
 		{"action": "findings.read", "resource": {"type": "finding", "id": "finding-1"}},
 	)
+}
+
+# --- T-0023 / SPEC-0026 / SPEC-0027: triage and dashboard summary --------------------------------
+
+# findings.triage is asked about the finding the record is keyed to; a triage
+# decision is a control action an auditor may later read (PR-17), so the deny
+# cases outnumber the allow cases on purpose — the mutation this section must
+# catch is granting a reader any write on the findings plane, or letting a
+# repository grant answer a finding-keyed question.
+triage_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-triage", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "finding-1"},
+	"context": {},
+}
+
+test_allow_owner_and_member_triage_a_finding if {
+	every role in ["owner", "member"] {
+		authz.allow with input as triage_request(role, "findings.triage", "finding")
+	}
+}
+
+# A reader reads repository text; triage is a decision on a finding, and a
+# role that may not read findings cannot record decisions on them
+# (SPEC-0026 AC3/AC4).
+test_deny_reader_triages_a_finding if {
+	not authz.allow with input as triage_request("reader", "findings.triage", "finding")
+}
+
+# Triage is pinned to the finding kind: asking it about the repository the
+# finding sits in is not the same question and must not be answered by the
+# repository grant — even for an owner.
+test_deny_triage_asked_about_a_repository if {
+	not authz.allow with input as triage_request("owner", "findings.triage", "repository")
+}
+
+test_deny_triage_asked_about_an_import if {
+	not authz.allow with input as triage_request("owner", "findings.triage", "import")
+}
+
+# Holding member in another tenant does not authorize a triage transition
+# here (invariant 1); the denial is as coarse as every other (SPEC-0001).
+test_deny_triage_from_another_tenant if {
+	not authz.allow with input as object.union(
+		triage_request("member", "findings.triage", "finding"),
+		{"subject": {"id": "u-triage", "roles": ["member"], "tenant_id": "globex"}},
+	)
+}
+
+# No roles means no triage: a denial creates no triage record, no event and
+# no audit entry (SPEC-0027 AC5).
+test_deny_triage_with_no_roles if {
+	not authz.allow with input as object.union(
+		triage_request("member", "findings.triage", "finding"),
+		{"subject": {"id": "u-triage", "roles": [], "tenant_id": "acme"}},
+	)
+}
+
+# findings.summary.read is asked about a repository, exactly as SPEC-0027's
+# table pins it. Counts and facets are aggregates over findings, so the
+# summary can never be wider than findings.read: reader is denied here
+# because it is denied there (SPEC-0026 AC6, SPEC-0027 AC4).
+summary_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-summary", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "repo-1"},
+	"context": {},
+}
+
+test_allow_owner_and_member_read_findings_summary if {
+	every role in ["owner", "member"] {
+		authz.allow with input as summary_request(role, "findings.summary.read", "repository")
+	}
+}
+
+test_deny_reader_reads_findings_summary if {
+	not authz.allow with input as summary_request("reader", "findings.summary.read", "repository")
+}
+
+# The resource kind is load-bearing: a summary asked about a finding, a
+# tenant, or an unrelated kind is not the per-repository question the grant
+# answers. An org-wide summary decomposes into per-repository decisions
+# server-side; no tenant-kind question exists for this action.
+test_deny_summary_read_asked_about_a_finding if {
+	not authz.allow with input as summary_request("owner", "findings.summary.read", "finding")
+}
+
+test_deny_summary_read_asked_about_a_tenant if {
+	not authz.allow with input as summary_request("owner", "findings.summary.read", "tenant")
+}
+
+test_deny_summary_read_asked_about_an_import if {
+	not authz.allow with input as summary_request("member", "findings.summary.read", "import")
+}
+
+test_deny_summary_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		summary_request("owner", "findings.summary.read", "repository"),
+		{"subject": {"id": "u-summary", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+# Triage and summary denials are as indistinguishable as every other denial:
+# a cross-tenant triage and a reader's summary request receive the same
+# reason, so probing the PDP cannot separate the causes (SPEC-0001).
+test_deny_triage_reasons_are_indistinguishable if {
+	cross_tenant := authz.decision.reason with input as object.union(
+		triage_request("member", "findings.triage", "finding"),
+		{"subject": {"id": "u-triage", "roles": ["member"], "tenant_id": "globex"}},
+	)
+	reader_summary := authz.decision.reason with input as summary_request("reader", "findings.summary.read", "repository")
+	cross_tenant == reader_summary
 }
 
 # --- T-0028 / SPEC-0034 / SPEC-0035: code search ------------------------------------------------

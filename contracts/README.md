@@ -34,10 +34,15 @@ needs a direct response.
   per-environment configuration and cannot be named by a caller
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git
-- `proto/security/v1/findings.proto` — Security/Findings ingest and read surface (SPEC-0024,
-  SPEC-0025): completed-scan ingestion with server-computed finding identity and lifecycle,
-  opaque scanner provenance, and tenant-scoped, cursor-paginated reads; no request carries an
-  identity, lifecycle, first-seen value, or authorization outcome
+- `proto/security/v1/findings.proto` — Security/Findings ingest, read, triage and dashboard
+  surface (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027): completed-scan ingestion with
+  server-computed finding identity and lifecycle, opaque scanner provenance, and tenant-scoped,
+  cursor-paginated reads; no request carries an identity, lifecycle, first-seen value, or
+  authorization outcome. Triage is a separate resource keyed by finding identity — `SetTriage`
+  (expected-version guarded, idempotent per request ID) and `GetTriage` (history included) —
+  and the finding message gains no triage field; `GetFindingsSummary` returns counts and facets
+  computed under the caller's authorization, and `ListFindings` filters extend to severity,
+  scanner class, age range, lifecycle and owning team
 - `proto/search/v1/search.proto` — Code Search query and index-status surface (SPEC-0034,
   SPEC-0035, ADR-0014): tenant-scoped substring/regex/symbol queries with verified context and
   signed, tenant-bound cursors; the searchable repository set is server-derived from the caller's
@@ -62,8 +67,9 @@ needs a direct response.
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
-  finding-resolved events (SPEC-0024, SPEC-0025); opaque identifiers, tenant and repository
-  scope, tool and rule identity and severity — never provenance bytes or a policy outcome
+  finding-resolved / finding-triaged events (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027);
+  opaque identifiers, tenant and repository scope, tool and rule identity, severity, and prior /
+  new triage state — never provenance bytes, justification text, or a policy outcome
 - `events/search/v1/events.proto` — Code Search repository-indexed / index-lagged events
   (SPEC-0034, SPEC-0035); opaque identifiers, tenant scope, revision and measured lag — never
   matched content or a permission fact
