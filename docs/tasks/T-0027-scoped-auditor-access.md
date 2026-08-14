@@ -1,6 +1,6 @@
 # T-0027: Scoped, read-only, time-boxed auditor access
 
-- **Status:** In progress (contracts + backend auditor grant lifecycle done; BFF auditor access pending)
+- **Status:** In progress (contracts + backend auditor grant lifecycle + BFF auditor access routes done; backend GrantFacts composition into evidence.pack.read pending)
 - **Phase / Epic:** 2 / EP-13 Evidence & auditor access
 - **Repo(s):** governance (policies) + backend + bff
 - **Spec:** docs/specs/SPEC-0033-scoped-auditor-access.md — **Approved 2026-08-14**; RED may start (AGDD)
@@ -70,6 +70,25 @@ See `../process/definition-of-done.md`.
   matrix against this bundle: owner-only issuance, read allowed under
   fresh ACTIVE facts, denied unnamed/factless/revoked/expired and for
   every repository action (AC1/AC2/AC5).
+- BFF auditor access routes committed as `gitfrok/bff@77fac5e` on
+  `feat/t-0027-bff-auditor-grants` (pushed, stacked on
+  `feat/t-0026-bff-evidence-pack`): POST/GET/DELETE
+  `/api/v1/audit/auditor-grants` forwarding the session's verified
+  identity as the contract AuditorGrantContext to Identity & Access's
+  AuditorGrantService — issue, revoke and list only, zero BFF-side
+  permission logic, every refusal one coarse 404 (SPEC-0001). A request
+  carries only the scope the contract names; no grant identity, state,
+  extension or renewal has a field to travel in (SPEC-0033 AC8). The
+  auditor's pack read needs no new route — GET
+  `/api/v1/audit/evidence-packs/{pack_id}` already forwards the
+  session's identity to the evidence surface, where evidence.pack.read
+  is decided. Handler + adapter tests green under the boundary and
+  inline-authz fitness gates. gen/ regenerated from this branch's
+  contracts; policy/v1 regen staleness (T-0025) deliberately left to
+  the policy-consuming BFF work. Open: grant facts are not yet composed
+  into the audit app's evidence.pack.read decisions — that PEP hook
+  lives in backend, not BFF, and is tracked separately before the
+  auditor read path can be proven live end-to-end.
 
 ## Notes / open questions
 Depends on T-0026 having a pack to scope. The same **retention** gate applies: the audit retention
