@@ -105,14 +105,13 @@ Carried forward out of Phase 2:
   consumer lands with whatever task needs dry-run in product.
 - T-0003's **cluster lane** remains the standing owner for the infrastructure-bound demonstrations
   (gVisor RuntimeClass under rootless podman, multi-node durability, measured freshness bounds). Its
-  Phase-2 carried set, in order: first the **`CIJobFinished`→ingest wiring, which is unbuilt** —
-  now decided by **ADR-0059** (the runner persists the report, a Security subscriber ingests it),
-  specified in **SPEC-0037** (Approved) and filed as **T-0029**; everything below still waits on it. The
-  pinned backend has no `CIJobFinished` subscriber and scan ingest is RPC-only, so the event-driven
-  ingest must be built before any freshness measurement can observe it; then **CI-dispatched scans**
-  (gVisor), then the measured demonstrations — **T-0024 AC4 measured findings freshness** and
-  **T-0028 AC4 measured index freshness** — and the **exit-scenario live-cluster walk** the dev host
-  could not host.
+  Phase-2 carried set, in order: first the **`CIJobFinished`→ingest wiring — DONE** (backend@49d6bfa,
+  closed by **T-0029** / SPEC-0037 / ADR-0059: the runner persists the report and a Security
+  subscriber ingests it off `CIJobFinished`), so the event-driven path the freshness measurements
+  observe now exists. Everything below still waits on the cluster: **CI-dispatched scans** (gVisor),
+  then the measured demonstrations — **T-0024 AC4 measured findings freshness** and **T-0028 AC4
+  measured index freshness** — and the **exit-scenario live-cluster walk** the dev host could not
+  host.
 - **Dataplane door auth posture (code-review H2).** The dataplane gRPC door
   (`backend/cmd/dataplane-app/gitfront.go`) is unauthenticated — no transport credentials, no auth
   interceptor, no tenant-pinning interceptor — and the Phase-2 services on it take tenant/actor/roles
