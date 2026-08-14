@@ -154,6 +154,16 @@ satisfy `codegen-check` although the pinned BFF work consumes only `Decide`; and
 bound steps (CI-dispatched scans, measured freshness bounds, live-cluster scenario walk) remain
 against T-0003's cluster lane.
 
+**Operational notes recorded at exit** (full detail in the super-repo's `deploy/MVP-RUNBOOK.md` §4a):
+(a) the security merge gate engages on every storage-backed plane once the security migrations are
+applied and denies merges whose head or base lacks an ingested scan — rollout prerequisite is scan
+coverage before enabling it on existing repositories, and no scan-dispatch path exists in dev yet;
+(b) the MR-findings projection is in-process memory, so a dataplane restart merge-blocks MRs opened
+before the restart until a new push/retarget re-emits the events — startup seeding from the durable
+stores is a follow-up against the findings plane; (c) the decision-record append sits on the `Decide`
+hot path and fails closed — an operational availability contract: monitor decision-record append
+failures, because a failing append reads as a plane that denies everything.
+
 ## Risks
 
 - **Host limits carry forward from Phase 1.** Scans ride CI v0, and the dev cluster has no gVisor

@@ -57,4 +57,11 @@ Phase-2 exit (task #23, 2026-08-14):
   lane: the push → index → query freshness measurement needs the dev cluster's event pipeline live
   end to end, and cluster bring-up on this host is infrastructure-bound (Phase-1 recorded the same
   shape). The incremental indexing path itself is tested; only the measured bound is deferred.
+- Engine note: **Zoekt was evaluated and rejected** for this plane — ~110 transitive module
+  requirements via `sourcegraph/zoekt` (language detection, roaring bitmaps, Prometheus, opentracing,
+  a wasm RE2 runtime, a cloud gRPC stack), `google/zoekt` is an empty stub, its builder is disk-bound
+  while this module's shards live in-process and swap atomically, and it offers no ctags-free SYMBOL
+  mode — in favor of the in-module trigram engine behind the same ContentSource/engine port, so a
+  later Zoekt swap is an engine change, not a module change (rationale recorded at
+  `backend/modules/codesearch/internal/engine/engine.go`).
 - Super-repo pointer lands with the phase-exit pin bump.

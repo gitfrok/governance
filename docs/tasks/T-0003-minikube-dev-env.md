@@ -83,6 +83,12 @@ is only as good as the search, and the first version of this record claimed `sta
   second *physical* node running SPEC-0018's production coordinator with an attached volume rather than a
   local partition (T-0012/T-0018's durability quorum and failover demonstration), and a node offering a
   **gVisor RuntimeClass**, which no rootless-podman driver provides (T-0017's CI dispatch).
+  Phase 2 delegated its carried demonstrations here too: **T-0024 AC4 measured findings freshness**,
+  **T-0028 AC4 measured index freshness**, **CI-dispatched scans** on an MR, and the **exit-scenario
+  live-cluster walk** the dev host could not host. Ordering note from T-0024's corrected exit record:
+  the `CIJobFinished`→ingest wiring is unbuilt at the pinned backend (scan ingest is RPC-only, no
+  `CIJobFinished` subscriber exists), so it is part of what this lane must first deliver — distinct
+  from the scan-dispatch host limit.
 - **The ADR-0051 FUSE mount does not propagate on this driver**, so the cluster runs the S3 adapter
   ADR-0050 decision 6 keeps for that case. Measured, with the evidence in `deploy/dev/README.md`.
 - Smaller, all in `deploy/dev/README.md`: no CI wires the Minikube flow itself (an ADR-0024 intent),

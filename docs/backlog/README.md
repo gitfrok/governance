@@ -95,7 +95,13 @@ Carried forward out of Phase 2:
   `Decide`, so the T-0025 EvaluateDryRun/provenance surfaces have no BFF consumer yet; their first
   consumer lands with whatever task needs dry-run in product.
 - T-0003's **cluster lane** remains the standing owner for the infrastructure-bound demonstrations
-  (gVisor RuntimeClass under rootless podman, multi-node durability, measured freshness bounds).
+  (gVisor RuntimeClass under rootless podman, multi-node durability, measured freshness bounds). Its
+  Phase-2 carried set, in order: first the **`CIJobFinished`→ingest wiring, which is unbuilt** — the
+  pinned backend has no `CIJobFinished` subscriber and scan ingest is RPC-only, so the event-driven
+  ingest must be built before any freshness measurement can observe it; then **CI-dispatched scans**
+  (gVisor), then the measured demonstrations — **T-0024 AC4 measured findings freshness** and
+  **T-0028 AC4 measured index freshness** — and the **exit-scenario live-cluster walk** the dev host
+  could not host.
 
 **EP-11 gates the phase.** T-0022 fixes the normalized findings model and, harder, the rule for
 **stable finding identity across scans**; triage that survives a re-scan (T-0023), MR attribution

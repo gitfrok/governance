@@ -12,20 +12,20 @@ An external auditor is granted scoped, read-only, time-boxed access to evidence 
 access** (PR-18). This is a distinct grant, not a role that happens to be able to read less.
 
 ## Acceptance criteria (test-first)
-- [ ] AC1: an auditor grant is scoped to named evidence — a tenant, a date range, and the packs within
+- [x] AC1: an auditor grant is scoped to named evidence — a tenant, a date range, and the packs within
       it — and confers **no repository read**, proven by an auditor attempting a repo read and being
       denied and audited.
-- [ ] AC2: the grant is **read-only**: every write path, including triage and policy authoring, is
+- [x] AC2: the grant is **read-only**: every write path, including triage and policy authoring, is
       denied for an auditor principal.
-- [ ] AC3: the grant is **time-boxed** and expires without an operator action; after expiry every
+- [x] AC3: the grant is **time-boxed** and expires without an operator action; after expiry every
       evidence read is denied.
-- [ ] AC4: granting, using, and expiring the grant are first-party audit events naming the granting
+- [x] AC4: granting, using, and expiring the grant are first-party audit events naming the granting
       admin and the auditor principal (ADR-0007).
-- [ ] AC5: the grant is expressed in `governance/policies` and enforced by the PDP (ADR-0006), not by
+- [x] AC5: the grant is expressed in `governance/policies` and enforced by the PDP (ADR-0006), not by
       a UI role toggle.
-- [ ] AC6: an auditor principal is tenant-scoped and cannot enumerate the existence of tenants,
+- [x] AC6: an auditor principal is tenant-scoped and cannot enumerate the existence of tenants,
       repositories, or packs outside the grant (SPEC-0001).
-- [ ] AC7: revocation is immediate — a revoked grant fails the next read, not the next cache cycle
+- [x] AC7: revocation is immediate — a revoked grant fails the next read, not the next cache cycle
       (bundle-revision invalidation, SPEC-0002).
 
 ## Tests to write first

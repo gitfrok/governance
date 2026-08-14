@@ -50,5 +50,8 @@ git-storaged. The webfrontend ships the three render states (attributed / triage
 UNAVAILABLE banner, never "no findings") with unit tests for all three (12 tests in
 `mr-findings-render`). AC4 (freshness measured on a real pipeline) cannot be demonstrated while
 CI scan dispatch needs the gVisor RuntimeClass the dev host lacks — recorded against T-0003's
-cluster lane per this file's own note, not as a met criterion; the event-driven path (ingest off
-`CIJobFinished`, pre-materialized attribution) is what the measurement will observe there.
+cluster lane per this file's own note, not as a met criterion. The event-driven path the
+measurement will observe there — ingest off `CIJobFinished` with pre-materialized attribution — is
+**not yet built**: at the pinned backend no `CIJobFinished` subscriber exists and scan ingest is
+RPC-only, so the `CIJobFinished`→ingest wiring is itself part of what the cluster lane must first
+deliver, distinct from (and preceding) the scan-dispatch host limit above.
