@@ -128,8 +128,12 @@ returns results filtered to the caller's permissions.**
 
 ### Exit verdict (2026-08-14)
 
-**Scenario evidence mapping.** The exit scenario passed at the exit pins — backend **6b66da4**, bff
-**b7c3763**, webfrontend **7997c7c**, governance at the status-docs commit atop 450cded:
+**Scenario evidence mapping.** The exit scenario passed at the exit pins — backend **0a2097c**, bff
+**b7c3763**, webfrontend **7997c7c**, governance at the status-docs commit atop 450cded. All four
+pins are commits on each submodule's `main`: the Phase-2 stacks landed on `main` by fast-forward
+(ADR-0053/0054 direct-to-main workflow) before the super-repo re-pinned — backend main 0a2097c
+contains the T-0028 merge commit 6b66da4's content, bff main b7c3763, webfrontend main 7997c7c,
+and governance main carries this verdict:
 
 | Scenario step | Evidence at the pins |
 |---|---|
@@ -147,6 +151,15 @@ Postgres integration suite) green; bff go build + go vet + full suite green; web
 **Pin note:** T-0028's independent backend branch (267eaa4) was merged into the findings-plane stack
 tip (merge commit 6b66da4) because the super-repo holds one pointer per submodule; the full suite
 re-ran green on the merge target.
+
+**Re-pin note (fix wave, 2026-08-14):** the exit review found super-repo commit 1f2f453 pointed all
+four pins (backend 6b66da4, bff b7c3763, webfrontend 7997c7c, governance 06f7256) at commits
+reachable only via feature branches, violating the "merged commits only" rule (super-repo AGENTS.md
+§5). The fix wave merged each stack into its submodule's `main` — governance c0cc78b→e0be758,
+backend 29a9914→0a2097c, bff 4693eae→b7c3763, webfrontend 5bb110a→7997c7c, all fast-forward, no
+force-push — and the super-repo re-pins to those merged `main` tips. The provisioning fix that
+preceded this (super-repo 827afa5) made dev-provision.sh apply the full 9-migration set, re-verified
+here against a throwaway Postgres with every Phase-2 table and the audit evidence indexes present.
 
 **Carried forward:** the `/api/v1` vs bare `/v1` BFF route-prefix deviation (routing hygiene, not a
 correctness gap — see `../backlog/README.md`); bff `gen/proto/policy/v1` was regenerated at exit to
