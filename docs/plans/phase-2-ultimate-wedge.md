@@ -256,6 +256,42 @@ limits at 3313a42, and the remaining 15 were code fixes, merged to backend `main
   grant's repository scope against the pack's.
 - **L17** — code-search and findings cursors are bound to the issuing actor.
 
+**Fix wave 3 (review wave-2 findings N1–N7, backend `90bf1a1`, super-repo `086c965`, 2026-08-14)** —
+the re-review of fix wave 2 (super-repo `phase-2-code-review-wave2.md`) reported seven findings.
+Three were code defects, three were records the code had outgrown, and one was a reviewer error:
+
+- **N2** — the ingest audit claim marker keys `security.scan_chunks` rows by `"audit:" + request_id`,
+  and the request ID comes off the wire. A caller could squat that namespace to suppress the M10
+  backfill or forge a replay. The boundary now refuses a request ID carrying the reserved prefix
+  (`ErrMalformed`), with a regression test per attack shape.
+- **N5** — the marker is claimed in the SAME transaction as the chunk commit, so "committed" and
+  "marker present" can no longer diverge. Whether the audit RECORD landed is now a trail question,
+  asked through a new audit-witness port; the backfill fires only when the record is genuinely
+  absent. Exactly-once (SPEC-0025 AC5) restored with no schema change.
+- **N6** — a policy decision missing its input digest was excluded silently. It now produces a
+  visible exclusion gap (`GapRecordsExcluded`) and marks the section incomplete. **Residual A**,
+  found in the same pass and fixed after it: the marker keyed only on `policy_mode == ENFORCED`, so
+  a decision record that lost its mode still vanished. Exclusions now cover three shapes — ENFORCED
+  with incomplete provenance, a mode outside the vocabulary, and no mode alongside a policy revision
+  or input digest. A bare `decision_id` is deliberately not treated as decision provenance: every
+  audited action carries that key, so reading it as one would gap healthy packs.
+- **N1 / N3 / N7** — records, not code. H1 is restated above as deferred behind limit (d); note (c)
+  and MVP-RUNBOOK §4a now describe the async decision-record contract and its lag alert; the
+  store-before-PDP read ordering in `GetFinding`/`GetTriage` is recorded as a decision.
+- **N4** — withdrawn: `AssembleSections` already iterated every section type, so truncation always
+  marked them all. A pinning test now holds that shape.
+
+**Correction to the M11 record above:** the threshold-parity test never ran in backend CI. It reads
+the reviewed rego through a relative path that resolves only beside a governance checkout and skips
+itself otherwise, and backend's workflow checks out no governance tree. It runs in the super-repo
+fitness lane now (`make threshold-parity`), where `submodules: recursive` puts both trees on disk —
+the same boundary `codegen-check` and `policy-check` sit behind. The PDP-driven threshold remains
+the carried follow-up.
+
+**SPEC-0036 sweep completed** at the same pins: the remaining handwritten sites in `backend/` adopt
+`slices.Clone`, `strings.CutPrefix` and `errors.Is`; `bff/` needed no further change. Behaviour
+preserving, gates green in both repos.
+
 ## Risks
 
 - **Host limits carry forward from Phase 1.** Scans ride CI v0, and the dev cluster has no gVisor
