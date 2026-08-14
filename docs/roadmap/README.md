@@ -25,20 +25,39 @@ rather than open code: CI dispatch needs a gVisor RuntimeClass no rootless-podma
 (T-0017), and the durability-quorum/failover demonstration needs a second physical node (T-0012 and
 T-0018 both prove it in their suites). Detail: `../plans/phase-1-mvp.md`.
 
-## Phase 2 — the Ultimate wedge · **next**
+## Phase 2 — the Ultimate wedge · **Complete (2026-08-14)**
 
 Security scanners → normalized findings → **unified dashboard**; security/approval policies as code;
-audit UI + evidence export; code search.
-**Exit:** the differentiating governance/security surface is usable end-to-end.
+audit trail + evidence pack export under scoped auditor grants; permission-filtered code search.
 
-The plan is `../plans/phase-2-ultimate-wedge.md` (Active 2026-08-14); epics **EP-11…EP-14** and tasks
-**T-0022…T-0028** are filed in `../backlog/` and `../tasks/`. Every task has its spec — **SPEC-0024…SPEC-0035**, all
-**Approved 2026-08-14** (next free: SPEC-0036), so every Phase-2 task may go RED. **ADR-0055**
-(Accepted) settles audit retention, closing ADR-0007's follow-up and SPEC-0011's last open item. The
-phase inherits T-0018's AC19 — an evidence pack must carry zero attested records in its control
-sections (ADR-0029 §4, SPEC-0011 AC14) — now owned by T-0026 AC2.
+**Exit (met):** the differentiating governance/security surface runs end to end. Every scenario step
+was executed against live scanners, the real BFF → PDP → Rego path, and live pack/grant proofs — the
+evidence mapping is in `../plans/phase-2-ultimate-wedge.md`. Epics **EP-11…EP-14** closed; tasks
+**T-0022…T-0028** all Done against **SPEC-0024…SPEC-0035**; **ADR-0055** (Accepted) settled audit
+retention, closing ADR-0007's follow-up and SPEC-0011's last open item. T-0018's AC19 — an evidence
+pack carries zero attested records in its control sections (ADR-0029 §4, SPEC-0011 AC14) — was
+carried verbatim as T-0026 AC2 and proven live.
 
-## Phase 3 — BYO
+Three review waves followed the exit and are recorded in the plan: seventeen findings (H1–L17), then
+seven on the fixes themselves (N1–N7), then the two residuals. The code that came out of them is
+pinned at backend `90bf1a1` / super-repo `086c965`.
+
+**Two deployment-posture limits are carried, not closed** — both recorded in the plan with
+follow-ups, and both bounded by the single-tenant dev posture the phase ships under:
+
+- **(d) the dataplane gRPC door is unauthenticated**, so every Phase-2 RPC takes tenant, actor and
+  roles off the wire and the PDP decides correctly about a caller-asserted subject. Security rests on
+  network isolation of that port plus RLS as the backstop. H1's tenant guard on the decision-record
+  reads is implemented and tested but degenerates to a consistency check until a tenant-pinning
+  interceptor gives it a verified caller. Recorded in SPEC-0002's open questions.
+- **(e) Phase-2 in-process state does not survive a restart** — the attribution projection, pack
+  assembly state and the code-search index — and the index has no per-tenant or global cap. Recorded
+  against SPEC-0031 AC8 and SPEC-0034 AC4/AC5.
+
+Also carried: the PDP-driven merge-gate severity threshold and the two new gap-reason wire enums,
+both additive contract changes tracked in `../backlog/`.
+
+## Phase 3 — BYO · **next**
 
 Agent (implements `contracts/proto/agent/v1`), Operator + Helm, per-cloud drivers, usage metering →
 billing + fair-use.
