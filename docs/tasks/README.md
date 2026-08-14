@@ -26,13 +26,13 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0017 | CI v0: gVisor sandbox runner + KEDA | 1 | Done — backend #29/#32, super-repo #76; dispatch needs a gVisor RuntimeClass |
 | T-0018 | Repository & review-history import | 1 | Done — 23 of 24 criteria; AC19 moved to Phase 2 |
 | T-0021 | Container images for both planes | 1 | Done — backend #19/#25, bff #16/#19, webfrontend #16/#18 |
-| T-0022 | Normalized findings model + scanner ingestion | 2 | Todo — gates the phase; SPEC-0024/0025 **Approved**, ready for RED |
-| T-0023 | Unified security dashboard + triage state | 2 | Todo — SPEC-0026/0027 **Approved** |
-| T-0024 | Findings inline on the merge request | 2 | Todo — SPEC-0028 **Approved** |
-| T-0025 | Security & approval policy: versioned, dry-run, enforced | 2 | Todo — SPEC-0029/0030 **Approved** (reading A) |
-| T-0026 | Date-ranged evidence pack export | 2 | Todo — SPEC-0031/0032 **Approved**; carries T-0018 AC19 |
-| T-0027 | Scoped, read-only, time-boxed auditor access | 2 | Todo — SPEC-0033 **Approved** |
-| T-0028 | Permission-filtered code search | 2 | Todo — SPEC-0034/0035 **Approved**; independent |
+| T-0022 | Normalized findings model + scanner ingestion | 2 | Done — contracts governance@8b4dac2, backend@acebf68; live identity proof re-ran green at the exit pins |
+| T-0023 | Unified security dashboard + triage state | 2 | Done — contracts governance@bcd37c9, backend@acb4a9c, bff@d290e14, webfrontend@5b53c36 |
+| T-0024 | Findings inline on the merge request | 2 | Done — contracts governance@6fa2a24, backend@c64e6a3, bff@47360c2, webfrontend@92804eb; AC4 host limit (cluster lane) |
+| T-0025 | Security & approval policy: versioned, dry-run, enforced | 2 | Done — contracts governance@e412eb4, backend@67b0224 + e475683; merge gate composed in the live policy stack (composition harness) |
+| T-0026 | Date-ranged evidence pack export | 2 | Done — contracts governance@178d97a, backend@9cfd392, bff@3c4ebe0; carries T-0018 AC19, proven live |
+| T-0027 | Scoped, read-only, time-boxed auditor access | 2 | Done — contracts governance@a9a5c9b, backend@50bdc34 + 6e4696c, bff@77fac5e; live grant proof re-ran green |
+| T-0028 | Permission-filtered code search | 2 | Done — contracts governance@011eb2a, backend@267eaa4 (merged into stack tip 6b66da4), bff@4b93d25; AC4 host limit (cluster lane) |
 
 ## Retired numbers (never reused)
 

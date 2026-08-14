@@ -59,16 +59,43 @@ attested history confined to a labelled appendix carrying its provenance blocks 
 §4 binds whoever builds that surface whether or not the criterion is copied into their task.** It is
 now owned by **EP-13 / T-0026 (AC2)**, which carries the criterion verbatim.
 
-## Phase 2 — Ultimate wedge · all epics OPEN
+## Phase 2 — Ultimate wedge · all epics CLOSED
 
-Plan: `../plans/phase-2-ultimate-wedge.md` (Active 2026-08-14). Scope is exactly PR-13…PR-19.
+Plan: `../plans/phase-2-ultimate-wedge.md` (Active 2026-08-14; exited 2026-08-14). Scope was exactly
+PR-13…PR-19.
 
-| Epic | Tasks | Status |
+| Epic | Tasks | Landed |
 |---|---|---|
-| **EP-11** Findings plane | T-0022, T-0023, T-0024 | Open — specs Approved, ready for RED |
-| **EP-12** Policy-as-code | T-0025 | Open — specs Approved, ready for RED |
-| **EP-13** Evidence & auditor access | T-0026, T-0027 | Open — specs Approved, ready for RED |
-| **EP-14** Code search | T-0028 | Open — specs Approved, ready for RED |
+| **EP-11** Findings plane | T-0022, T-0023, T-0024 | contracts governance@8b4dac2/bcd37c9/6fa2a24; backend acb4a9c→c64e6a3; bff d290e14/47360c2; webfrontend 5b53c36+92804eb |
+| **EP-12** Policy-as-code | T-0025 | contracts governance@e412eb4; backend 67b0224 + e475683; super-repo composition harness (merge-gate ALLOW/DENY pair) |
+| **EP-13** Evidence & auditor access | T-0026, T-0027 | contracts governance@178d97a/a9a5c9b; backend 9cfd392 + 50bdc34/6e4696c; bff 3c4ebe0/77fac5e |
+| **EP-14** Code search | T-0028 | contracts governance@011eb2a; backend 267eaa4 (merged into the stack tip at 6b66da4 for the single super-repo pointer); bff 4b93d25 |
+
+Super-repo exit pins (task #23, 2026-08-14): backend **6b66da4**, bff **b7c3763**, webfrontend
+**7997c7c**, governance at the exit status-docs commit atop 450cded.
+
+**EP-8's owed-forward criterion is discharged.** T-0018 AC19 — a pack spanning an import carries zero
+attested records in its control sections — shipped verbatim as T-0026 AC2 and was proven live
+(TestLiveEvidencePackProof at the exit pins).
+
+Two classes of limits are recorded against the phase rather than left open (see
+`../plans/phase-2-ultimate-wedge.md` exit verdict): the **gVisor/host-bound steps** — CI-dispatched
+scan on an MR, measured scan freshness (T-0024 AC4) and measured index freshness (T-0028 AC4) — sit
+against T-0003's cluster lane exactly as Phase 1 recorded them; and the exit e2e scenario's
+live-cluster steps were demonstrable only up to the host limit (dev-cluster bring-up blocked at the
+interactive mkcert/ingress step on this host).
+
+Carried forward out of Phase 2:
+
+- **`/api/v1` route-prefix deviation.** Every Phase-2 BFF surface shipped under `/api/v1` (as filed in
+  T-0023…T-0027), while Phase-1 surfaces use bare `/v1`. Both are live and tenant-scoped; unifying
+  them is a routing-hygiene item for a future task, not a correctness gap.
+- **bff `gen/proto/policy/v1` was regenerated at exit** (bff@b7c3763, webfrontend@7997c7c) because
+  the super-repo `codegen-check` gate hard-fails on drift — the pinned BFF work itself consumes only
+  `Decide`, so the T-0025 EvaluateDryRun/provenance surfaces have no BFF consumer yet; their first
+  consumer lands with whatever task needs dry-run in product.
+- T-0003's **cluster lane** remains the standing owner for the infrastructure-bound demonstrations
+  (gVisor RuntimeClass under rootless podman, multi-node durability, measured freshness bounds).
 
 **EP-11 gates the phase.** T-0022 fixes the normalized findings model and, harder, the rule for
 **stable finding identity across scans**; triage that survives a re-scan (T-0023), MR attribution

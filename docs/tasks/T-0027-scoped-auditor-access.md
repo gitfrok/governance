@@ -1,6 +1,6 @@
 # T-0027: Scoped, read-only, time-boxed auditor access
 
-- **Status:** In progress (contracts + backend auditor grant lifecycle + backend PEP grant-facts hook + BFF auditor access routes done; super-repo pointer bump reserved for the final task)
+- **Status:** Done (2026-08-14) — contracts governance@a9a5c9b; backend@50bdc34 + 6e4696c; bff@77fac5e; super-repo pointers bumped at phase exit (task #23)
 - **Phase / Epic:** 2 / EP-13 Evidence & auditor access
 - **Repo(s):** governance (policies) + backend + bff
 - **Spec:** docs/specs/SPEC-0033-scoped-auditor-access.md — **Approved 2026-08-14**; RED may start (AGDD)
@@ -109,6 +109,12 @@ See `../process/definition-of-done.md`.
   now witnesses pack reads END-TO-END through decide() against this
   bundle: allowed under fresh ACTIVE facts, denied
   unnamed/factless/revoked/expired, member reads unaffected.
+- Phase-2 exit (task #23, 2026-08-14): the live auditor-grant proof
+  re-ran green at the exit pins — auditor opens the pack under a live
+  ACTIVE grant, is denied every repository action (audited), and is
+  denied after expiry/revocation with the next decision (grant facts
+  composed fresh per decision, never cached). AC1–AC7 all hold; the
+  super-repo pin bump this task reserved lands with the phase exit.
 
 ## Notes / open questions
 Depends on T-0026 having a pack to scope. The same **retention** gate applies: the audit retention
