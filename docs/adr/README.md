@@ -78,6 +78,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0056](0056-owasp-aisvs-adoption.md) | OWASP AISVS — bound to the agentic SDLC and to AI-enabled features, at L3 with one named exception | Accepted |
 | [ADR-0057](0057-ai-assisted-review-openai-compatible.md) | AI-assisted review via a tenant-configured OpenAI-compatible endpoint; AISVS L3 minus sender-constrained credentials | Accepted |
 | [ADR-0058](0058-woodpecker-pipeline-format.md) | Adopt Woodpecker's pipeline format — the syntax, not the engine | Accepted |
+| [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the `CIJobFinished` gap | **Proposed** |
 
 ## Open follow-ups
 
