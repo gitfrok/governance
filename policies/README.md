@@ -67,5 +67,9 @@ SPEC-0034/0035), **T-0023** (findings triage + dashboard summary, SPEC-0026/0027
 control action withheld from reader, and a summary can never be wider than the findings.read it
 aggregates) and **T-0024** (findings on merge requests, SPEC-0028 — no new action: `findings.read`
 becomes askable about a `merge_request` resource, with repository, head revision and attribution
-status arriving as server-derived context) own extending it. A resource kind with no entry is
+status arriving as server-derived context) and **T-0025** (security & approval policy, SPEC-0029/
+0030 — a `merge_request.merge` security gate that denies on an attributed-findings severity
+threshold, exempts ACCEPT/FALSE_POSITIVE triage while recording the relied-upon triage IDs on the
+`decision`, and fails closed when the findings facts a rule requires are missing; plus the
+owner-only `policy.dryrun` and `policy.decision.read` vocabulary) own extending it. A resource kind with no entry is
 denied, which is the correct state for a feature that does not exist yet.

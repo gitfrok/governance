@@ -19,7 +19,13 @@ needs a direct response.
 - `proto/agent/v1/agent.proto` — agent ↔ control-plane (ADR-0011, ADR-0017)
 - `proto/policy/v1/policy.proto` — the Policy Decision Point (ADR-0006, SPEC-0002). Synchronous
   against the usual preference for events, because a PEP cannot proceed without the answer; the
-  rules themselves live in `../policies/` and never travel over this wire
+  rules themselves live in `../policies/` and never travel over this wire. T-0025 (SPEC-0029,
+  SPEC-0030) adds decision provenance and dry-run additively: `DecideResponse` gains `input_digest`
+  and `mode` (ENFORCED|DRY_RUN) alongside the existing `policy_revision` and `decision_id`; the
+  new `EvaluateDryRun` RPC evaluates a candidate bundle reference over a bounded historical range
+  and returns would-be decisions labelled DRY_RUN, and `GetDecision` retrieves a decision record by
+  ID. All provenance is server-produced — no request message carries a decision_id, mode,
+  input_digest, bundle revision, or allowed flag, so a caller cannot assert an outcome
 - `proto/git/v1/git.proto` — internal packet-stream transport between the smart-HTTP/SSH front
   doors and `git-storaged` (ADR-0004, SPEC-0015); tenant and authorization are enforced server-side.
   It also carries `MergeRef`, the single-ref compare-and-swap move Code Review uses to complete an
@@ -74,7 +80,11 @@ needs a direct response.
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)
-- `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
+- `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003). T-0025
+  (SPEC-0029 AC8, SPEC-0030) additively adds policy decision provenance — `decision_id`,
+  `bundle_revision`, `input_digest` and `policy_mode` (ENFORCED|DRY_RUN) — set when the audited
+  action was gated by a PDP decision, all server-produced, with a DRY_RUN decision labelled and
+  never written as an enforced control record
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
   finding-resolved / finding-triaged / findings-attributed events (SPEC-0024, SPEC-0025,
   SPEC-0026, SPEC-0027, SPEC-0028); opaque identifiers, tenant and repository scope, tool and

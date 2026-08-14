@@ -50,6 +50,25 @@ message AuditEvent {
   map<string, string> detail = 7;
 
   google.protobuf.Timestamp occurred_at = 8;
+
+  // Policy decision provenance (SPEC-0029 AC8, SPEC-0030). Set when the audited
+  // action was gated by a PDP decision; empty otherwise. All four are
+  // server-produced by the Policy context from the decision it recorded — none
+  // is a caller claim, and a DRY_RUN decision is labelled by policy_mode and is
+  // never written as an enforced control record (SPEC-0029 AC2).
+  //
+  // decision_id correlates the audit record with the decision the PDP assigned
+  // (policy.v1.DecideResponse.decision_id). bundle_revision is the deciding
+  // policy version (DecideResponse.policy_revision). input_digest is the digest
+  // over the canonicalized input the decision was made over. policy_mode is the
+  // string rendering of policy.v1.EvaluationMode — "ENFORCED" or "DRY_RUN". A
+  // string rather than an import of the policy enum, for the same reason
+  // `action` is a string: the audit event keeps no dependency on the policy wire
+  // shape, and a new mode is additive by construction.
+  string decision_id = 9;
+  string bundle_revision = 10;
+  string input_digest = 11;
+  string policy_mode = 12;
 }
 
 // Outcome distinguishes a completed action from a refused one. Refusals are the more interesting

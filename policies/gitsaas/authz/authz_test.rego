@@ -896,3 +896,230 @@ test_deny_merge_request_findings_reasons_are_indistinguishable if {
 	reader_mr := authz.decision.reason with input as mr_findings_request("reader")
 	cross_tenant == reader_mr
 }
+
+# --- T-0025 / SPEC-0029 / SPEC-0030: security merge gate on attributed findings -----------------
+
+# merge_gate_request builds a merge_request.merge request that already satisfies
+# the SPEC-0019 approval gate (2 of 1 required) and engages the security findings
+# gate (findings_gate="true"). The caller merges in the findings facts under test,
+# so a failure names the findings dimension responsible. With approvals already
+# sufficient, any denial below is attributable to the security gate itself.
+merge_gate_request(findings_context) := object.union(
+	{
+		"tenant_id": "acme",
+		"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "acme"},
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "2", "required_approvals": "1", "findings_gate": "true"},
+	},
+	{"context": findings_context},
+)
+
+# Severity-threshold boundary (threshold is HIGH). Below the threshold an
+# attributed finding does not block...
+test_allow_merge_below_severity_threshold if {
+	every sev in ["LOW", "MEDIUM"] {
+		authz.allow with input as merge_gate_request({"findings_highest_severity": sev})
+	}
+}
+
+# ...a gate engaged with a clean scan (no attributed findings) does not block...
+test_allow_merge_findings_gate_with_no_attributed_findings if {
+	authz.allow with input as merge_gate_request({"findings_highest_severity": "NONE"})
+}
+
+# ...and AT or ABOVE the threshold it blocks (SPEC-0029 AC3). HIGH is the
+# boundary itself: it must deny, and CRITICAL above it must deny too.
+test_deny_merge_at_severity_threshold if {
+	not authz.allow with input as merge_gate_request({"findings_highest_severity": "HIGH"})
+}
+
+test_deny_merge_above_severity_threshold if {
+	not authz.allow with input as merge_gate_request({"findings_highest_severity": "CRITICAL"})
+}
+
+# The block is attributable to the security gate, not to approvals: approvals are
+# sufficient, so only the findings breach can explain the denial (SPEC-0029 AC3).
+test_deny_merge_approvals_sufficient_but_findings_breach if {
+	not authz.allow with input as merge_gate_request({"findings_highest_severity": "HIGH"})
+}
+
+# ACCEPT/FALSE_POSITIVE triage exemption (SPEC-0029 AC4): a breach covered by the
+# relied-upon triage records does not block...
+test_allow_merge_triage_exempts_a_breach if {
+	authz.allow with input as merge_gate_request({
+		"findings_highest_severity": "HIGH",
+		"relied_upon_triage_ids": "triage-1",
+	})
+}
+
+# ...and the decision records WHICH triage record it relied on.
+test_decision_records_relied_upon_triage if {
+	d := authz.decision with input as merge_gate_request({
+		"findings_highest_severity": "HIGH",
+		"relied_upon_triage_ids": "triage-1,triage-2",
+	})
+	d.allow == true
+	d.relied_upon_triage == ["triage-1", "triage-2"]
+}
+
+# Without an exemption the decision records no relied-upon triage.
+test_decision_relied_upon_triage_empty_without_exemption if {
+	d := authz.decision with input as merge_gate_request({"findings_highest_severity": "MEDIUM"})
+	d.relied_upon_triage == []
+}
+
+# Fail CLOSED (SPEC-0029 AC9, SPEC-0030 AC4): the gate engaged but its facts did
+# not assemble. A missing findings_highest_severity...
+test_deny_merge_findings_gate_missing_facts if {
+	not authz.allow with input as merge_gate_request({})
+}
+
+# ...and a malformed one (not in the severity vocabulary) are both denials,
+# never a fail-open default.
+test_deny_merge_findings_gate_malformed_severity if {
+	not authz.allow with input as merge_gate_request({"findings_highest_severity": "NOT_A_SEVERITY"})
+}
+
+# Composition with the approval gate (SPEC-0029 AC5): neither replaces the other.
+# Findings clear, but no approvals -> still denied by the approval rule.
+test_deny_merge_findings_clear_but_insufficient_approvals if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "acme"},
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {
+			"valid_approvals": "0",
+			"required_approvals": "1",
+			"findings_gate": "true",
+			"findings_highest_severity": "NONE",
+		},
+	}
+}
+
+# An imported approval never satisfies the requirement (ADR-0029 §4, SPEC-0029
+# AC6): valid_approvals counts FIRST-PARTY approvals only, so a merge whose only
+# approval is imported presents valid_approvals=0 and is denied. This is the
+# structural proof — no context fact makes an imported approval count.
+test_deny_merge_whose_only_approval_is_imported if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "acme"},
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "0", "required_approvals": "1"},
+	}
+}
+
+# No findings gate engaged: the SPEC-0019 approval behaviour is unchanged
+# (backward compatibility — the security gate only applies when engaged).
+test_allow_merge_without_findings_gate_unchanged if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "acme"},
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "1", "required_approvals": "1"},
+	}
+}
+
+# Holding member in another tenant does not authorize the merge here
+# (invariant 1); the denial is as coarse as every other (SPEC-0001).
+test_deny_merge_gate_from_another_tenant if {
+	not authz.allow with input as object.union(
+		merge_gate_request({"findings_highest_severity": "MEDIUM"}),
+		{"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "globex"}},
+	)
+}
+
+# Security-gate denials are as indistinguishable as every other denial: a
+# threshold breach and a fail-closed missing-fact receive the same reason.
+test_deny_merge_gate_reasons_are_indistinguishable if {
+	breach := authz.decision.reason with input as merge_gate_request({"findings_highest_severity": "HIGH"})
+	fail_closed := authz.decision.reason with input as merge_gate_request({})
+	breach == fail_closed
+}
+
+# --- T-0025 / SPEC-0030: policy dry-run and decision-read vocabulary ----------------------------
+
+# policy.dryrun is asked about the tenant; policy.decision.read is asked about
+# the decision record. Both are owner-only; the deny cases outnumber the allow
+# cases on purpose — the mutation this section must catch is widening either to
+# member or reader, or letting a repository grant answer a policy question.
+policy_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-policy", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "acme"},
+	"context": {},
+}
+
+test_allow_owner_policy_dryrun if {
+	authz.allow with input as policy_request("owner", "policy.dryrun", "tenant")
+}
+
+test_allow_owner_policy_decision_read if {
+	authz.allow with input as policy_request("owner", "policy.decision.read", "decision")
+}
+
+# Neither grant extends to member or reader (least privilege): a role that merges
+# code has not thereby been granted the surface that dry-runs or audits the rules.
+test_deny_member_and_reader_policy_actions if {
+	every pair in [
+		{"role": "member", "action": "policy.dryrun", "resource_type": "tenant"},
+		{"role": "member", "action": "policy.decision.read", "resource_type": "decision"},
+		{"role": "reader", "action": "policy.dryrun", "resource_type": "tenant"},
+		{"role": "reader", "action": "policy.decision.read", "resource_type": "decision"},
+	] {
+		not authz.allow with input as policy_request(pair.role, pair.action, pair.resource_type)
+	}
+}
+
+# The resource kind is load-bearing: a dry-run asked about a repository, or a
+# decision read asked about a tenant, is not the question those grants answer —
+# even for an owner.
+test_deny_policy_dryrun_asked_about_a_repository if {
+	not authz.allow with input as policy_request("owner", "policy.dryrun", "repository")
+}
+
+test_deny_policy_decision_read_asked_about_a_tenant if {
+	not authz.allow with input as policy_request("owner", "policy.decision.read", "tenant")
+}
+
+test_deny_policy_decision_read_asked_about_a_merge_request if {
+	not authz.allow with input as policy_request("owner", "policy.decision.read", "merge_request")
+}
+
+# Holding owner in another tenant does not authorize a dry-run here
+# (invariant 1); the denial is as coarse as every other (SPEC-0001).
+test_deny_policy_dryrun_from_another_tenant if {
+	not authz.allow with input as object.union(
+		policy_request("owner", "policy.dryrun", "tenant"),
+		{"subject": {"id": "u-policy", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+# No roles means no policy surface at all.
+test_deny_policy_actions_with_no_roles if {
+	every pair in [
+		{"action": "policy.dryrun", "resource_type": "tenant"},
+		{"action": "policy.decision.read", "resource_type": "decision"},
+	] {
+		not authz.allow with input as object.union(
+			policy_request("owner", pair.action, pair.resource_type),
+			{"subject": {"id": "u-policy", "roles": [], "tenant_id": "acme"}},
+		)
+	}
+}
+
+# Policy denials are as indistinguishable as every other denial: a reader's
+# decision-read and a cross-tenant dry-run receive the same reason.
+test_deny_policy_reasons_are_indistinguishable if {
+	reader := authz.decision.reason with input as policy_request("reader", "policy.decision.read", "decision")
+	cross_tenant := authz.decision.reason with input as object.union(
+		policy_request("owner", "policy.dryrun", "tenant"),
+		{"subject": {"id": "u-policy", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+	reader == cross_tenant
+}

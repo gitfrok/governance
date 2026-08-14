@@ -73,6 +73,14 @@ default allow := false
 # handle to a platform identity is the one act that can make imported history
 # read as ours (SPEC-0011 AC10). Both belong to whoever is accountable for the
 # tenant, not to everyone who can push.
+#
+# The policy actions are owner-only too (T-0025, SPEC-0029/0030). policy.dryrun
+# evaluates a candidate bundle against history before it binds, and
+# policy.decision.read retrieves a recorded decision with its provenance; both
+# are governance/accountability operations on the policy surface, and neither is
+# implied by reading or writing repository text. Withholding them from member and
+# reader is the least-privilege default: a role that merges code has not thereby
+# been granted the surface that dry-runs or audits the rules gating the merge.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -86,6 +94,7 @@ role_actions := {
 		"findings.ingest", "findings.read",
 		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
+		"policy.dryrun", "policy.decision.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -131,6 +140,12 @@ role_actions := {
 # findings.summary.read is asked about a repository, exactly as SPEC-0027's table pins it; an
 # org-wide summary decomposes into per-repository decisions server-side, so no tenant-kind
 # question exists for it.
+#
+# policy.dryrun is asked about the tenant (SPEC-0030): the dry-run is tenant-scoped, and its
+# candidate bundle reference and range bounds travel as server-derived context, so no other
+# resource kind is named in the question. policy.decision.read is asked about the decision
+# record itself — a decision is a resource of its own, and the question is about its ID, not
+# about the tenant or the action it recorded.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -157,6 +172,8 @@ action_resource := {
 	"search.query": {"tenant"},
 	"search.read": {"repository"},
 	"search.index.status.read": {"repository"},
+	"policy.dryrun": {"tenant"},
+	"policy.decision.read": {"decision"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
@@ -196,6 +213,13 @@ deny if {
 # Deny a merge that lacks the required number of valid approvals (SPEC-0019 AC5).
 # valid_approvals and required_approvals are server-derived from the review log and
 # the protection rule respectively; the caller cannot assert its own counts.
+#
+# An imported approval never satisfies this requirement (ADR-0029 §4, SPEC-0029
+# AC6): valid_approvals counts FIRST-PARTY approvals only. An imported review is
+# ATTESTED_IMPORT — history the platform did not witness — and is never folded
+# into the first-party approval count, so a merge whose only approval is imported
+# presents valid_approvals=0 and is denied here. This is structural: there is no
+# fact a caller can supply that makes an imported approval count.
 deny if {
 	input.action == "merge_request.merge"
 	not sufficient_approvals
@@ -203,6 +227,95 @@ deny if {
 
 sufficient_approvals if {
 	to_number(input.context.valid_approvals) >= to_number(input.context.required_approvals)
+}
+
+# --- T-0025 / SPEC-0029 / SPEC-0030: the security merge gate on attributed findings ---
+#
+# A security rule may block a merge on the findings SPEC-0028 attributes to it.
+# The block is a PDP decision over server-derived findings context — never UI
+# logic, a caller assertion, or a BFF check (SPEC-0029 AC3). The facts arrive on
+# context exactly the way valid_approvals does: assembled by the calling context
+# from its own state (ADR-0022), so a fact that cannot be assembled fails closed
+# rather than being replaced by a fail-open default or a synchronous cross-context
+# read (SPEC-0029 AC9, SPEC-0030 AC4).
+#
+# The facts this gate consumes (SPEC-0030):
+#   findings_gate              "true" when a security rule requires findings facts
+#                              for this merge; absent otherwise. Its absence leaves
+#                              the SPEC-0019 approval gate unchanged.
+#   findings_highest_severity  highest severity among the merge's attributed
+#                              findings that no ACCEPT/FALSE_POSITIVE triage
+#                              exempts: NONE / LOW / MEDIUM / HIGH / CRITICAL.
+#   findings_low|medium|high|critical  attributed counts by severity.
+#   relied_upon_triage_ids     the ACCEPT/FALSE_POSITIVE triage record IDs the
+#                              exemption relied on (recorded on the decision).
+
+# The severity threshold a merge's attributed findings must stay below
+# (SPEC-0029 AC3). Authored in reviewed policy; a tenant-specific threshold is a
+# governance PR under reading A. "HIGH" denies a merge whose highest attributed
+# severity is HIGH or CRITICAL.
+security_severity_threshold := "HIGH"
+
+# severity_rank orders the FindingSeverity vocabulary (contracts/proto/security/v1
+# FindingSeverity), plus NONE for "no attributed finding". Numeric so a threshold
+# comparison is a single >= rather than a case table.
+severity_rank := {
+	"NONE": 0,
+	"LOW": 1,
+	"MEDIUM": 2,
+	"HIGH": 3,
+	"CRITICAL": 4,
+}
+
+# Deny a merge whose attributed findings breach the severity threshold
+# (SPEC-0029 AC3). findings_highest_severity is server-derived; the caller cannot
+# assert it. The breach stands unless an ACCEPT/FALSE_POSITIVE triage exempts it.
+deny if {
+	input.action == "merge_request.merge"
+	input.context.findings_gate == "true"
+	security_findings_breach
+}
+
+security_findings_breach if {
+	findings_facts_present
+	severity_rank[input.context.findings_highest_severity] >= severity_rank[security_severity_threshold]
+	not security_triage_exempt
+}
+
+# An ACCEPT or FALSE_POSITIVE triage exempts the breach it covers (SPEC-0029 AC4).
+# relied_upon_triage_ids is a server-derived fact (SPEC-0026/0028): the context
+# provider populates it with the IDs of the ACCEPT/FALSE_POSITIVE triage records
+# covering the findings that breach the threshold, and only when they fully cover
+# the breach. Its presence is therefore both the exemption and the record of what
+# the decision relied on — the PDP surfaces those IDs via relied_upon_triage so
+# the decision (and its audit record) names the triage that exempted it.
+security_triage_exempt if {
+	input.context.relied_upon_triage_ids != ""
+}
+
+# Fail CLOSED when the findings gate is engaged but its facts did not assemble
+# (SPEC-0029 AC9). A missing or malformed findings_highest_severity — absent, or
+# not in the severity vocabulary — is a denial, never a fail-open default and
+# never a synchronous cross-context table read to recover it.
+deny if {
+	input.action == "merge_request.merge"
+	input.context.findings_gate == "true"
+	not findings_facts_present
+}
+
+findings_facts_present if {
+	_ = severity_rank[input.context.findings_highest_severity]
+}
+
+# relied_upon_triage is the list of ACCEPT/FALSE_POSITIVE triage record IDs the
+# security gate relied on (SPEC-0029 AC4). Convention: the PDP adapter records
+# this on the decision's audit detail, so an auditor can see which triage record
+# exempted a blocking finding. Empty when no exemption was applied.
+default relied_upon_triage := []
+
+relied_upon_triage := split(input.context.relied_upon_triage_ids, ",") if {
+	input.action == "merge_request.merge"
+	input.context.relied_upon_triage_ids != ""
 }
 
 # reason explains the outcome in terms that are safe to return to the caller.
@@ -218,11 +331,12 @@ reason := "allowed: subject holds a role granting this action" if allow
 
 # decision is what the PDP queries — one total document rather than two rules read separately.
 #
-# Totality is the point. Both members have defaults, so `decision` is defined for every conceivable
+# Totality is the point. Every member has a default, so `decision` is defined for every conceivable
 # input including an empty one, and the Go adapter never has to decide what an undefined result
 # means. The only safe answer to that question is "deny", and a policy that can always answer for
 # itself is better than an adapter that has to guess correctly forever.
 decision := {
 	"allow": allow,
 	"reason": reason,
+	"relied_upon_triage": relied_upon_triage,
 }
