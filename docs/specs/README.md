@@ -41,3 +41,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0033 | Scoped, read-only, time-boxed auditor access | Approved | T-0027 |
 | SPEC-0034 | Permission-filtered code search | Approved | T-0028 |
 | SPEC-0035 | Code search query and indexing contract | Approved | T-0028 |
+| SPEC-0036 | Modern Go idiom adoption across backend and bff | Approved | — |
