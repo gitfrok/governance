@@ -3,7 +3,7 @@
 - **Status:** Todo
 - **Phase / Epic:** 3 / EP-17 (residency and evidence)
 - **Repo(s):** governance (pack-contract addition, ADR-0027 order), then backend
-- **Spec:** docs/specs/SPEC-0040-residency-pinning-evidence.md (Draft — Approved before RED)
+- **Spec:** docs/specs/SPEC-0040-residency-pinning-evidence.md (Approved 2026-08-14 — RED may begin)
 - **ADRs:** 0009, 0010, 0029, 0055
 - **Owner:** unassigned
 

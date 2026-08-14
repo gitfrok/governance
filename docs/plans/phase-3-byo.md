@@ -36,6 +36,8 @@ Two decisions were open and blocked honest specs. Both are now settled:
 | **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 |
 | **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 |
 
+All four specs are Approved (2026-08-14); RED may begin, starting with T-0030.
+
 ## Sequence and critical path
 
 **EP-15 gates the phase.** Nothing can be shipped to, upgraded on, or metered from a data plane that

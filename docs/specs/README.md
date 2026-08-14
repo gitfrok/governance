@@ -43,7 +43,7 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0035 | Code search query and indexing contract | Approved | T-0028 |
 | SPEC-0036 | Modern Go idiom adoption across backend and bff | Approved | — |
 | SPEC-0037 | CI scan report handoff to the findings plane | Approved | T-0029 |
-| SPEC-0038 | Agent enrolment and data-plane self-registration | Draft | T-0030 |
-| SPEC-0039 | BYO packaging, per-cloud drivers, signed reconcile upgrades | Draft | T-0031, T-0032 |
-| SPEC-0040 | Region and cloud pinning, demonstrable in the evidence pack | Draft | T-0033 |
-| SPEC-0041 | Fair-use metering and envelope behaviour | Draft | T-0034 |
+| SPEC-0038 | Agent enrolment and data-plane self-registration | Approved | T-0030 |
+| SPEC-0039 | BYO packaging, per-cloud drivers, signed reconcile upgrades | Approved | T-0031, T-0032 |
+| SPEC-0040 | Region and cloud pinning, demonstrable in the evidence pack | Approved | T-0033 |
+| SPEC-0041 | Fair-use metering and envelope behaviour | Approved | T-0034 |

@@ -1,6 +1,6 @@
 # SPEC-0040: Region and cloud pinning, demonstrable in the evidence pack
 
-- **Status:** Draft
+- **Status:** Approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Control plane (declares and enforces) · Audit (evidences) — ADR-0022
 - **ADRs:** 0009, 0010, 0029, 0055, 0060; SPEC-0031/0032 (evidence pack)

@@ -183,7 +183,8 @@ authority).
 | **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 | Todo |
 | **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 | Todo |
 
-All four specs are **Draft**: AGDD requires Approved before RED, so nothing here may start yet.
+All four specs are **Approved (2026-08-14)**, so every Phase-3 task may go RED. T-0030 is the one to
+start: EP-15 gates the phase.
 
 Open and able to block a sale rather than a sprint: **proxy-only egress** (ADR-0017's remaining
 follow-up) stops an install outright for a customer whose egress permits only an HTTP proxy.

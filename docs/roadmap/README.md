@@ -64,7 +64,7 @@ billing + fair-use.
 **Exit:** a customer runs the data plane in their own GKE/EKS/AKS under a flat plan.
 
 Plan: `../plans/phase-3-byo.md`. Scope PR-20…PR-23 as epics **EP-15…EP-18**, tasks **T-0030…T-0034**,
-specs **SPEC-0038…SPEC-0041** (all Draft — Approved before RED). The architecture was decided in
+specs **SPEC-0038…SPEC-0041** (all Approved 2026-08-14). The architecture was decided in
 Phase 0/1 (ADR-0009/0010/0011/0013/0017); the two decisions that were open are settled by **ADR-0060**
 (one-time enrolment token, control-plane-issued short-lived certificates — closing ADR-0017's
 cert-issuance follow-up) and **ADR-0061** (the control plane is the metering authority; a customer's

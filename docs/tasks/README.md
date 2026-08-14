@@ -34,11 +34,11 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0027 | Scoped, read-only, time-boxed auditor access | 2 | Done — contracts governance@a9a5c9b, backend@50bdc34 + 6e4696c, bff@77fac5e; live grant proof re-ran green |
 | T-0028 | Permission-filtered code search | 2 | Done — contracts governance@011eb2a, backend@267eaa4 (merged into stack tip 6b66da4), bff@4b93d25; AC4 host limit (cluster lane) |
 | T-0029 | CI scan report → findings ingest (`CIJobFinished` wiring) | 2 carry-over | Todo — SPEC-0037 Approved; ADR-0059 Accepted |
-| T-0030 | Agent enrolment, self-registration, certificate rotation | 3 | Todo — SPEC-0038 Draft |
-| T-0031 | Helm chart, Operator, per-cloud driver seam | 3 | Todo — SPEC-0039 Draft |
-| T-0032 | Signed releases, reconcile rollout, rollback | 3 | Todo — SPEC-0039 Draft |
-| T-0033 | Residency pinning and its evidence-pack section | 3 | Todo — SPEC-0040 Draft |
-| T-0034 | Fair-use metering, envelopes, usage view | 3 | Todo — SPEC-0041 Draft |
+| T-0030 | Agent enrolment, self-registration, certificate rotation | 3 | Todo — SPEC-0038 Approved |
+| T-0031 | Helm chart, Operator, per-cloud driver seam | 3 | Todo — SPEC-0039 Approved |
+| T-0032 | Signed releases, reconcile rollout, rollback | 3 | Todo — SPEC-0039 Approved |
+| T-0033 | Residency pinning and its evidence-pack section | 3 | Todo — SPEC-0040 Approved |
+| T-0034 | Fair-use metering, envelopes, usage view | 3 | Todo — SPEC-0041 Approved |
 
 ## Retired numbers (never reused)
 

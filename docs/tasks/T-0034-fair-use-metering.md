@@ -4,7 +4,7 @@
 - **Phase / Epic:** 3 / EP-18 (commercial)
 - **Repo(s):** governance (additive telemetry/envelope messages), backend, bff, webfrontend — ADR-0027
   order, one commit per repo
-- **Spec:** docs/specs/SPEC-0041-fair-use-metering.md (Draft — Approved before RED)
+- **Spec:** docs/specs/SPEC-0041-fair-use-metering.md (Approved 2026-08-14 — RED may begin)
 - **ADRs:** 0061, 0008, 0018, 0011, 0017
 - **Owner:** unassigned
 
