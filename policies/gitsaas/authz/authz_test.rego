@@ -1504,3 +1504,142 @@ test_deny_auditor_reasons_are_indistinguishable if {
 	absent == unnamed_pack
 	unnamed_pack == repo_read
 }
+
+# --- T-0030 / SPEC-0038: agent enrolment and data-plane operator actions -----------------------
+
+# The control-plane operator surface asks the PDP about four actions (invariant
+# 2): enrolment-token issue/revoke are asked about the enrolment token, and
+# dataplane revoke/read are asked about the data-plane registry record. All
+# four are owner-only: token issuance mints a data-plane certificate and
+# revocation is what makes a revoked certificate stop connecting (SPEC-0038
+# AC5), so the deny cases outnumber the allow cases on purpose — the mutation
+# this section must catch is widening any of them to member or reader, or
+# letting a repository, PAT, or evidence grant answer an agent question.
+agent_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-agent", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "dp-1"},
+	"context": {},
+}
+
+# The owner administers the whole agent lifecycle: issuing and revoking
+# enrolment tokens, revoking a data plane, and reading the registry states
+# AC8's operator visibility is about.
+test_allow_owner_agent_enrolment_token_lifecycle if {
+	every action in {"agent.enrolment_token.issue", "agent.enrolment_token.revoke"} {
+		authz.allow with input as agent_request("owner", action, "enrolment_token")
+	}
+}
+
+test_allow_owner_agent_dataplane_lifecycle if {
+	every action in {"agent.dataplane.revoke", "agent.dataplane.read"} {
+		authz.allow with input as agent_request("owner", action, "data_plane")
+	}
+}
+
+# No grant extends to member or reader (least privilege): a role that pushes
+# code or reads text has not thereby been granted the surface that mints or
+# revokes machine identity (SPEC-0038 AC5), nor the registry the operator
+# reads (SPEC-0038 AC8).
+test_deny_member_and_reader_agent_actions if {
+	every pair in [
+		{"role": "member", "action": "agent.enrolment_token.issue", "resource_type": "enrolment_token"},
+		{"role": "member", "action": "agent.enrolment_token.revoke", "resource_type": "enrolment_token"},
+		{"role": "member", "action": "agent.dataplane.revoke", "resource_type": "data_plane"},
+		{"role": "member", "action": "agent.dataplane.read", "resource_type": "data_plane"},
+		{"role": "reader", "action": "agent.enrolment_token.issue", "resource_type": "enrolment_token"},
+		{"role": "reader", "action": "agent.enrolment_token.revoke", "resource_type": "enrolment_token"},
+		{"role": "reader", "action": "agent.dataplane.revoke", "resource_type": "data_plane"},
+		{"role": "reader", "action": "agent.dataplane.read", "resource_type": "data_plane"},
+	] {
+		not authz.allow with input as agent_request(pair.role, pair.action, pair.resource_type)
+	}
+}
+
+# The auditor principal reaches nothing of the agent surface either: the grant
+# rule reads evidence packs and nothing else (SPEC-0033 AC1/AC2).
+test_deny_auditor_agent_actions if {
+	every pair in [
+		{"action": "agent.enrolment_token.issue", "resource_type": "enrolment_token"},
+		{"action": "agent.dataplane.revoke", "resource_type": "data_plane"},
+		{"action": "agent.dataplane.read", "resource_type": "data_plane"},
+	] {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": {"id": "u-auditor", "roles": ["auditor"], "tenant_id": "acme"},
+			"action": pair.action,
+			"resource": {"type": pair.resource_type, "id": "dp-1"},
+			"context": {},
+		}
+	}
+}
+
+# The resource kind is load-bearing: a token issue asked about the tenant, or
+# a dataplane read asked about a repository, is not the question those grants
+# answer — even for an owner.
+test_deny_token_issue_asked_about_a_tenant if {
+	not authz.allow with input as agent_request("owner", "agent.enrolment_token.issue", "tenant")
+}
+
+test_deny_token_revoke_asked_about_a_personal_access_token if {
+	not authz.allow with input as agent_request("owner", "agent.enrolment_token.revoke", "personal_access_token")
+}
+
+test_deny_dataplane_revoke_asked_about_a_repository if {
+	not authz.allow with input as agent_request("owner", "agent.dataplane.revoke", "repository")
+}
+
+test_deny_dataplane_read_asked_about_a_tenant if {
+	not authz.allow with input as agent_request("owner", "agent.dataplane.read", "tenant")
+}
+
+# Holding owner in another tenant does not authorize an enrolment act here
+# (invariant 1); a data plane's certificate is tenant-bound (SPEC-0038 AC3,
+# AC9), and the denial is as coarse as every other (SPEC-0001).
+test_deny_agent_actions_from_another_tenant if {
+	every pair in [
+		{"action": "agent.enrolment_token.issue", "resource_type": "enrolment_token"},
+		{"action": "agent.dataplane.revoke", "resource_type": "data_plane"},
+	] {
+		not authz.allow with input as object.union(
+			agent_request("owner", pair.action, pair.resource_type),
+			{"subject": {"id": "u-agent", "roles": ["owner"], "tenant_id": "globex"}},
+		)
+	}
+}
+
+# No roles means no agent surface at all: a principal without roles can mint
+# no token and read no registry state.
+test_deny_agent_actions_with_no_roles if {
+	every pair in [
+		{"action": "agent.enrolment_token.issue", "resource_type": "enrolment_token"},
+		{"action": "agent.dataplane.read", "resource_type": "data_plane"},
+	] {
+		not authz.allow with input as object.union(
+			agent_request("owner", pair.action, pair.resource_type),
+			{"subject": {"id": "u-agent", "roles": [], "tenant_id": "acme"}},
+		)
+	}
+}
+
+# repo.read must not carry agent access: a reader's repository grant cannot
+# be re-read as a dataplane registry read.
+test_deny_dataplane_read_is_not_implied_by_repo_read if {
+	not authz.allow with input as object.union(
+		reader_request,
+		{"action": "agent.dataplane.read", "resource": {"type": "data_plane", "id": "dp-1"}},
+	)
+}
+
+# Agent denials are as indistinguishable as every other denial: a member's
+# token issue and a cross-tenant dataplane revoke receive the same reason,
+# so probing the PDP cannot separate the causes (SPEC-0001).
+test_deny_agent_reasons_are_indistinguishable if {
+	member_issue := authz.decision.reason with input as agent_request("member", "agent.enrolment_token.issue", "enrolment_token")
+	cross_tenant := authz.decision.reason with input as object.union(
+		agent_request("owner", "agent.dataplane.revoke", "data_plane"),
+		{"subject": {"id": "u-agent", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+	member_issue == cross_tenant
+}

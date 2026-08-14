@@ -42,7 +42,9 @@ default allow := false
 # kind — no new action, because reading an MR's findings is reading findings;
 # T-0027 (scoped auditor access, SPEC-0033) adds auditor.grant.manage and
 # extends evidence.pack.read to auditor principals under decision-time grant
-# facts — a separate allow rule below, not a role-table entry.
+# facts — a separate allow rule below, not a role-table entry; T-0030 (agent
+# enrolment, SPEC-0038) adds the owner-only agent.enrolment_token.* and
+# agent.dataplane.* actions.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -104,6 +106,20 @@ default allow := false
 # principal itself has not thereby been granted the surface that widens the
 # auditor's scope — widening a grant is a new auditor.grant.manage decision,
 # never a self-service operation (SPEC-0033 AC8).
+#
+# The agent enrolment actions are owner-only too (T-0030, SPEC-0038). Issuing
+# or revoking an enrolment token and revoking a data plane are control-plane
+# acts on machine identity: a spent token mints a data-plane certificate, so
+# issuing one is a credential act exactly like identity.pat.issue, and
+# revocation is what makes an expired or revoked certificate stop connecting
+# at the next attempt with no access to the customer's cluster (SPEC-0038
+# AC5). agent.dataplane.read is the operator-visibility read behind AC8 —
+# never-connected, connected, stale and revoked states — and it is withheld
+# from member and reader on the same least-privilege reasoning as the rest of
+# this surface: registry records are control-plane inventory (tenant, cloud,
+# region, version, last-seen), not repository content, and a role that pushes
+# code or reads text has not thereby been granted the surface that lists the
+# tenant's data planes.
 role_actions := {
 	"owner": {
 		"repo.read", "repo.write", "repo.admin",
@@ -120,6 +136,8 @@ role_actions := {
 		"policy.dryrun", "policy.decision.read",
 		"evidence.pack.generate", "evidence.pack.read",
 		"auditor.grant.manage",
+		"agent.enrolment_token.issue", "agent.enrolment_token.revoke",
+		"agent.dataplane.revoke", "agent.dataplane.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -184,6 +202,13 @@ role_actions := {
 # auditor.grant.manage is asked about the tenant (SPEC-0033 vocabulary table): the grant's
 # scope and expiry travel as server-derived context on the decision, and a grant can never
 # span two tenants, so no other resource kind is named in the question.
+#
+# agent.enrolment_token.issue and agent.enrolment_token.revoke are asked about the
+# enrolment token (T-0030, SPEC-0038): issue names the token it mints and revoke names
+# the token it revokes, with tenant, expiry and spent state carried as server facts.
+# agent.dataplane.revoke and agent.dataplane.read are asked about the data plane itself
+# — the registry record keyed by data-plane ID — which is the question AC5's revocation
+# and AC8's operator visibility are both about.
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -215,6 +240,10 @@ action_resource := {
 	"evidence.pack.generate": {"tenant"},
 	"evidence.pack.read": {"evidence_pack"},
 	"auditor.grant.manage": {"tenant"},
+	"agent.enrolment_token.issue": {"enrolment_token"},
+	"agent.enrolment_token.revoke": {"enrolment_token"},
+	"agent.dataplane.revoke": {"data_plane"},
+	"agent.dataplane.read": {"data_plane"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the

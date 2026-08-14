@@ -81,5 +81,11 @@ principals under a valid grant: grant ID, state, tenant, expiry, range bounds an
 arrive as decision-time context facts the PEP supplies fresh on every request, so a revoked or
 expired grant fails the very next decision — immediacy is structural, not an invalidation race;
 the auditor role grants nothing else, so every write path and every repository read stays denied
-by construction) own extending it. A resource kind with no entry is
+by construction) and **T-0030** (agent enrolment, SPEC-0038 — the owner-only
+`agent.enrolment_token.issue`/`agent.enrolment_token.revoke` actions asked about the
+`enrolment_token` resource kind and `agent.dataplane.revoke`/`agent.dataplane.read` asked about
+`data_plane`; token issuance and revocation are control-plane acts on machine identity
+(SPEC-0038 AC5), and the dataplane read is the operator visibility behind AC8, withheld from
+member and reader because registry records are control-plane inventory, not repository content)
+own extending it. A resource kind with no entry is
 denied, which is the correct state for a feature that does not exist yet.
