@@ -103,3 +103,13 @@ Additive export surface, specified in **SPEC-0032**.
   anchors rather than referencing them.
 - **Assumption:** SOC 2 Type II control mapping is a product responsibility expressed in the section
   set above; a framework addition is a PRD revision, not a spec amendment.
+- **Recorded deployment-posture limit (Phase-2 code review M13, 2026-08-14).** Pack assembly state is
+  in-process only: requested packs are held in memory, and the idempotency reservations that by design
+  stay registered forever do not survive a dataplane restart. A restart discards requested packs (they
+  must be re-requested) and leaves a pack interrupted mid-assembly stuck in ASSEMBLING with no owner,
+  since assembly runs on a detached context. **AC8** (time-to-evidence measured in hours) holds under
+  this posture because the hours bound includes a re-request after restart in the single-tenant dev
+  posture, and assembly remains reproducible for an unchanged range — but the limit is recorded rather
+  than left silent. Follow-up: startup seeding or a persistent store for pack state and idempotency
+  reservations. Recorded alongside the phase exit verdict
+  (`../plans/phase-2-ultimate-wedge.md`, note (e)); this records a limit, not a decision — no ADR.

@@ -59,3 +59,13 @@ Decision p99 < a few ms cached; policy reload without downtime.
   agent and the operator as separate processes, so the PDP is a module in the plane binary and the
   bundle reaches it as configuration (invariant 13) rather than being compiled in — a bundle baked
   into a consumer's binary would fork the policy away from governance (invariant 21).
+- **Recorded deployment-posture limit (Phase-2 code review H2, 2026-08-14).** `Decide` is served on
+  the dataplane gRPC door (`backend/cmd/dataplane-app/gitfront.go`), which is unauthenticated — no
+  transport credentials, no authentication interceptor, no tenant-pinning interceptor — so the subject
+  a decision is made about is the caller's assertion. For `Decide` this is inherent to a PDP call and
+  was the Phase-1 posture (the BFF is the only intended client); Phase 2 widened the same door to the
+  findings, evidence, grant and search services, which likewise take tenant/actor/roles from the
+  request body. What mitigates it today is network isolation of the port plus the single-tenant dev
+  posture. Follow-up: door authentication and a server-derived tenant-pinning interceptor before any
+  deployment posture that does not isolate the port. Recorded alongside the phase exit verdict
+  (`../plans/phase-2-ultimate-wedge.md`, note (d)); this records a limit, not a decision — no ADR.

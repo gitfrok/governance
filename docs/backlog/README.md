@@ -83,7 +83,9 @@ Two classes of limits are recorded against the phase rather than left open (see
 scan on an MR, measured scan freshness (T-0024 AC4) and measured index freshness (T-0028 AC4) — sit
 against T-0003's cluster lane exactly as Phase 1 recorded them; and the exit e2e scenario's
 live-cluster steps were demonstrable only up to the host limit (dev-cluster bring-up blocked at the
-interactive mkcert/ingress step on this host).
+interactive mkcert/ingress step on this host). The Phase-2 code review added a third class —
+**deployment-posture limits** (unauthenticated dataplane door, in-process-only restart state) —
+recorded in the carried-forward list below and in the specs they bound.
 
 Carried forward out of Phase 2:
 
@@ -107,6 +109,20 @@ Carried forward out of Phase 2:
   (gVisor), then the measured demonstrations — **T-0024 AC4 measured findings freshness** and
   **T-0028 AC4 measured index freshness** — and the **exit-scenario live-cluster walk** the dev host
   could not host.
+- **Dataplane door auth posture (code-review H2).** The dataplane gRPC door
+  (`backend/cmd/dataplane-app/gitfront.go`) is unauthenticated — no transport credentials, no auth
+  interceptor, no tenant-pinning interceptor — and the Phase-2 services on it take tenant/actor/roles
+  from the request body, so security rests on network isolation of the port plus the single-tenant dev
+  posture. Phase 1's `Decide` had the same posture by PDP-call nature; Phase 2 widened the surface.
+  Recorded as a deployment-posture limit (SPEC-0002's open questions, exit plan note (d)). Follow-up:
+  door authentication + server-derived tenant-pinning interceptor before any posture that does not
+  isolate the port.
+- **In-process Phase-2 state (code-review M13).** The attribution MR projection + materialized
+  comparisons, the evidence-pack assembly state + idempotency reservations, and the code-search index
+  are in-process only — none survives a dataplane restart, and the index has per-repo bounds but no
+  per-tenant or global cap. Recorded as limits against SPEC-0031 AC8 and SPEC-0034 AC4/AC5, holding
+  under the single-tenant dev posture with restart re-announcement as the recovery path. Follow-up:
+  startup seeding or persistent stores for packs, the projection and the index; per-tenant index caps.
 
 **EP-11 gates the phase.** T-0022 fixes the normalized findings model and, harder, the rule for
 **stable finding identity across scans**; triage that survives a re-scan (T-0023), MR attribution

@@ -177,6 +177,37 @@ stores is a follow-up against the findings plane; (c) the decision-record append
 hot path and fails closed — an operational availability contract: monitor decision-record append
 failures, because a failing append reads as a plane that denies everything.
 
+**Deployment-posture limits recorded from the Phase-2 code review (H2/M13, 2026-08-14)** — these are
+recorded limits, not coded gaps: the ACs hold under the stated posture, and each carries an explicit
+follow-up.
+
+- **(d) The dataplane gRPC door is unauthenticated (review H2).** The door built in
+  `backend/cmd/dataplane-app/gitfront.go` has no transport credentials, no authentication interceptor
+  and no tenant-pinning interceptor, and all four Phase-2 services registered on it
+  (`FindingsService`, `EvidenceService`, `SearchService`, `AuditorGrantService`) take tenant, actor
+  and roles from the request body — the PDP decides correctly about a caller-asserted subject. Phase 1
+  already served `Decide` on this door with the same posture (a caller-supplied subject is inherent to
+  a PDP call; the BFF is the only intended client), and Phase 2 widened the surface to findings reads,
+  triage writes, evidence packs, grant administration and code search. **What is true today:**
+  security relies on network isolation of that port plus the single-tenant dev posture (SPEC-0001's
+  backstop RLS still bounds any forged tenant to that tenant's own rows). **Mitigates:** keep the port
+  unreachable outside the plane; treat the dev posture as single-tenant. **Follow-up:** door
+  authentication plus a server-derived tenant-pinning interceptor (subject from verified caller, not
+  from the request body), before any deployment posture that does not isolate the port. Recorded in
+  SPEC-0002's open questions.
+- **(e) Phase-2 in-process state does not survive a dataplane restart (review M13).** Three stores are
+  in-process only: the attribution merge-request projection and materialized comparisons, the
+  evidence-pack assembly state and idempotency reservations, and the whole code-search index (bounded
+  per repository — 20 000 files × 1 MiB — but with **no per-tenant or global cap**). **What is true
+  today:** after a restart every MR renders UNAVAILABLE / head-scan-not-run until Code Review
+  re-announces (extends note (b)); a requested pack does not survive and must be re-requested, and a
+  pack interrupted mid-assembly is stuck in ASSEMBLING with no owner; the index rebuilds from
+  backfill. This is a recorded limit against **SPEC-0031 AC8** (time-to-evidence measured in hours)
+  and **SPEC-0034 AC4/AC5** (measured freshness bound; reindex without downtime), which hold under the
+  single-tenant dev posture with restart re-announcement as the recovery path. **Follow-up:** startup
+  seeding or persistent stores for pack state, the attribution projection and the search index, and
+  per-tenant/global caps on the index. Recorded in SPEC-0031's and SPEC-0034's open questions.
+
 ## Risks
 
 - **Host limits carry forward from Phase 1.** Scans ride CI v0, and the dev cluster has no gVisor

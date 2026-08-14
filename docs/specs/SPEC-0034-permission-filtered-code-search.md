@@ -93,3 +93,13 @@ which reach the query path as server-derived facts. Code Search reads no other c
   path. If they are not, the resolution is a projection with a fail-closed staleness rule — never a
   post-filter over an unfiltered result set, and never an index that encodes permissions at write
   time only.
+- **Recorded deployment-posture limit (Phase-2 code review M13, 2026-08-14).** The search index is
+  in-process only: nothing of it survives a dataplane restart, and it rebuilds from backfill and
+  re-announced repository events. **AC4**'s stated, measured freshness bound and **AC5**'s
+  no-downtime reindex are therefore bounded by restarts under the single-tenant dev posture — a
+  restart is a freshness-bound event and repositories go unserved-as-indexed until rebuilt, which is
+  fail-closed for AC5 (unindexed content is not served as authorized). The index is bounded per
+  repository (20 000 files × 1 MiB) but has **no per-tenant or global cap**, so AC7's fair-use
+  dimension is measured but uncapped today. Follow-up: startup seeding or a persistent index, and
+  per-tenant/global caps. Recorded alongside the phase exit verdict
+  (`../plans/phase-2-ultimate-wedge.md`, note (e)); this records a limit, not a decision — no ADR.
