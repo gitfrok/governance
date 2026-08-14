@@ -61,5 +61,6 @@ everything — and the role matrix in `authz_test.rego` exists because a mutatio
 ## Scope today
 
 T-0005 ships the skeleton: the repository action vocabulary the PDP needs to be real. **T-0013**
-(identity) and **T-0016** (merge requests + protected branches) own extending it. A resource kind
-with no entry is denied, which is the correct state for a feature that does not exist yet.
+(identity), **T-0016** (merge requests + protected branches), **T-0018** (import), LFS (SPEC-0023)
+and **T-0022** (findings ingest/read, SPEC-0025) own extending it. A resource kind with no entry is
+denied, which is the correct state for a feature that does not exist yet.

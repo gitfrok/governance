@@ -78,6 +78,10 @@ denied_pairs := [
 	# A reader reads text, not every large object the repository references.
 	{"role": "reader", "action": "repo.lfs.read"},
 	{"role": "reader", "action": "repo.lfs.write"},
+	# Feeding scanner output into the findings plane, and reading its findings,
+	# are not implied by reading a repository's text (SPEC-0025, T-0022).
+	{"role": "reader", "action": "findings.ingest"},
+	{"role": "reader", "action": "findings.read"},
 ]
 
 test_role_matrix_denies_everything_not_granted if {
@@ -103,6 +107,10 @@ granted_pairs := [
 	{"role": "owner", "action": "repo.lfs.write"},
 	{"role": "member", "action": "repo.lfs.read"},
 	{"role": "member", "action": "repo.lfs.write"},
+	{"role": "member", "action": "findings.ingest"},
+	{"role": "member", "action": "findings.read"},
+	{"role": "owner", "action": "findings.ingest"},
+	{"role": "owner", "action": "findings.read"},
 ]
 
 test_role_matrix_grants_what_the_table_says if {
@@ -476,4 +484,93 @@ test_deny_lfs_action_asked_about_an_import if {
 		"resource": {"type": "import", "id": "import-1"},
 		"context": {},
 	}
+}
+
+# --- T-0022 / SPEC-0025: findings ingest and read -----------------------------------------------
+
+# findings.ingest is asked about a repository; findings.read is asked about
+# either a repository (listing) or the finding itself (GetFinding). The deny
+# cases outnumber the allow cases on purpose: widening the findings grants is
+# the mutation this suite must catch.
+findings_request(role, action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-find", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "finding-1"},
+	"context": {},
+}
+
+test_allow_member_ingests_scan_results if {
+	authz.allow with input as findings_request("member", "findings.ingest", "repository")
+}
+
+test_allow_owner_ingests_scan_results if {
+	authz.allow with input as findings_request("owner", "findings.ingest", "repository")
+}
+
+# Reading covers both resource kinds the SPEC names: listing is asked about
+# the repository, reading one finding is asked about the finding.
+test_allow_member_reads_findings_on_both_resource_kinds if {
+	every resource_type in ["repository", "finding"] {
+		authz.allow with input as findings_request("member", "findings.read", resource_type)
+	}
+}
+
+test_allow_owner_reads_findings_on_both_resource_kinds if {
+	every resource_type in ["repository", "finding"] {
+		authz.allow with input as findings_request("owner", "findings.read", resource_type)
+	}
+}
+
+# A reader reads repository text; the findings plane is its own permission.
+test_deny_reader_ingests_scan_results if {
+	not authz.allow with input as findings_request("reader", "findings.ingest", "repository")
+}
+
+test_deny_reader_reads_findings if {
+	every resource_type in ["repository", "finding"] {
+		not authz.allow with input as findings_request("reader", "findings.read", resource_type)
+	}
+}
+
+# Ingest is pinned to the repository kind: asking it about a finding is not
+# the same question and must not be answered by the repository grant.
+test_deny_ingest_asked_about_a_finding if {
+	not authz.allow with input as findings_request("owner", "findings.ingest", "finding")
+}
+
+# A findings action asked about an unrelated resource kind is denied, whatever
+# the role — the action/resource pinning is load-bearing here as everywhere.
+test_deny_findings_read_asked_about_an_import if {
+	not authz.allow with input as findings_request("owner", "findings.read", "import")
+}
+
+test_deny_findings_ingest_asked_about_a_merge_request if {
+	not authz.allow with input as findings_request("member", "findings.ingest", "merge_request")
+}
+
+# Holding member in another tenant does not authorize an ingest here
+# (invariant 1), and the denial does not say why (SPEC-0001).
+test_deny_ingest_from_another_tenant if {
+	not authz.allow with input as object.union(
+		findings_request("member", "findings.ingest", "repository"),
+		{"subject": {"id": "u-find", "roles": ["member"], "tenant_id": "globex"}},
+	)
+}
+
+test_deny_finding_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		findings_request("owner", "findings.read", "finding"),
+		{"subject": {"id": "u-find", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+# repo.read must not carry findings access: the grant tables are the whole of
+# the system's authorization logic, and this pins that the two surfaces
+# stay separable.
+test_deny_findings_read_is_not_implied_by_repo_read if {
+	not authz.allow with input as object.union(
+		reader_request,
+		{"action": "findings.read", "resource": {"type": "finding", "id": "finding-1"}},
+	)
 }

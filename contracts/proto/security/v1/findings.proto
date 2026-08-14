@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+// Internal Security/Findings surface for ingesting completed scan results and
+// reading findings (SPEC-0024, SPEC-0025).
+//
+// Security/Findings owns findings, their identities, scan records, provenance
+// blobs, and idempotency keys. A finding's identity is computed server-side
+// from a fixed input set (SPEC-0024); no request carries a finding identity,
+// a lifecycle state, or a first-seen value, and no request carries an
+// authorization outcome. Ingest and read are PDP decisions with
+// server-derived context (ADR-0006); scanner-native payloads cross this
+// boundary only as opaque provenance bytes (SPEC-0025 AC6).
+package gitsaas.security.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/security/v1;securityv1";
+
+import "google/protobuf/timestamp.proto";
+
+service FindingsService {
+  // IngestScanResults ingests one bounded, chunkable batch of a completed
+  // scan's normalized findings. Idempotent per tenant, scan, and request ID:
+  // replaying a request creates no duplicate finding, event, or audit record
+  // (SPEC-0025 AC1). A partially delivered batch leaves no half-ingested
+  // scan visible to a reader.
+  rpc IngestScanResults(IngestScanResultsRequest) returns (IngestScanResultsResponse);
+  // GetFinding returns one finding. Not-found, cross-tenant, and
+  // unauthorized are the same coarse denial (SPEC-0001).
+  rpc GetFinding(GetFindingRequest) returns (GetFindingResponse);
+  // ListFindings pages a tenant-scoped, filtered list of findings. Cursors
+  // are opaque, signed, and bound to the tenant and revision that issued
+  // them; a forged or cross-tenant cursor yields no content (SPEC-0025).
+  rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
+}
+
+// FindingsContext is derived from an authenticated principal by the PEP.
+// The actor ID and roles are verified server-side; a caller cannot assert
+// them. An empty or cross-tenant context is a coarse denial that does not
+// distinguish nonexistent from unauthorized (SPEC-0025).
+message FindingsContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  repeated string actor_roles = 4;
+  string request_id = 5;
+}
+
+// ScannerClass is the one-of-five scanner classes the normalized model
+// covers (SPEC-0024 AC1). Adding a scanner class is an additive enum value;
+// adding a scanner needs no model change (SPEC-0024 AC6).
+enum ScannerClass {
+  SCANNER_CLASS_UNSPECIFIED = 0;
+  SCANNER_CLASS_SAST = 1;
+  SCANNER_CLASS_DEPENDENCY = 2;
+  SCANNER_CLASS_SECRETS = 3;
+  SCANNER_CLASS_CONTAINER = 4;
+  SCANNER_CLASS_DAST = 5;
+}
+
+// FindingSeverity is the one normalized severity scale across scanner classes
+// (SPEC-0025). The tool's native severity is preserved in provenance; it
+// never travels as a first-class field.
+enum FindingSeverity {
+  FINDING_SEVERITY_UNSPECIFIED = 0;
+  FINDING_SEVERITY_LOW = 1;
+  FINDING_SEVERITY_MEDIUM = 2;
+  FINDING_SEVERITY_HIGH = 3;
+  FINDING_SEVERITY_CRITICAL = 4;
+}
+
+// FindingLifecycle is server-computed state. A finding that a later scan no
+// longer reports is RESOLVED, never deleted (SPEC-0024 AC9). A caller cannot
+// supply a lifecycle value: it appears in no request message.
+enum FindingLifecycle {
+  FINDING_LIFECYCLE_UNSPECIFIED = 0;
+  FINDING_LIFECYCLE_OPEN = 1;
+  FINDING_LIFECYCLE_RESOLVED = 2;
+}
+
+// FindingLocation is the content-derived half of a finding's identity input
+// set (SPEC-0024). Its components are derived from content, not from a
+// commit or an absolute line number: identity must survive an unrelated edit
+// that shifts lines. For dependency and container findings the affected
+// component and version stand in place of a file location.
+message FindingLocation {
+  // The artifact within the repository the finding sits in.
+  string artifact_path = 1;
+  // The enclosing content that carries the finding, content-derived
+  // (normalized snippet or enclosing symbol). The exact construction is an
+  // implementation choice constrained by SPEC-0024 AC2/AC3.
+  string enclosing_content = 2;
+  // Dependency and container findings: the affected component.
+  string component = 3;
+  // Dependency and container findings: the affected component's version.
+  string component_version = 4;
+}
+
+// RawFinding is one normalized finding as an adapter delivers it. It
+// deliberately carries no identity, no lifecycle state, and no first-seen
+// value: identity is computed server-side per SPEC-0024, lifecycle is
+// server state, and first-seen is server history — a request that would
+// carry them has no fields to carry them in (SPEC-0025 AC3).
+message RawFinding {
+  // The rule the reporting tool fired on. Together with the scan
+  // descriptor's tool identity and the location, this is the
+  // per-finding half of the identity input set.
+  string rule_id = 1;
+  FindingSeverity severity = 2;
+  FindingLocation location = 3;
+  // The scanner-native payload, carried byte-for-byte and never interpreted
+  // by the domain (SPEC-0025 AC6). Malformed or oversized blobs are
+  // rejected at the boundary without partial ingest.
+  bytes provenance = 4;
+  // The media type of the provenance blob, e.g.
+  // "application/sarif+json". Provenance round-trips only with it.
+  string provenance_media_type = 5;
+}
+
+// ScanDescriptor names the tool that produced a batch. Tool identity is part
+// of the identity input set: the same defect reported by two tools is two
+// findings, never one (SPEC-0024 AC3).
+message ScanDescriptor {
+  ScannerClass scanner_class = 1;
+  // The reporting tool's identity, e.g. its name. Distinct tools never
+  // collapse into one identity.
+  string tool_name = 2;
+  string tool_version = 3;
+  google.protobuf.Timestamp scan_started_at = 4;
+  google.protobuf.Timestamp scan_ended_at = 5;
+}
+
+// IngestScanResultsRequest carries a completed scan's batch of normalized
+// findings. It accepts no finding identity, no lifecycle state, and no
+// first-seen value — those are server-computed (SPEC-0025 AC3) — and no
+// authorization outcome: the PDP alone answers allow or deny.
+message IngestScanResultsRequest {
+  FindingsContext context = 1;
+  // The opaque revision the scan ran against. Identity is invariant to it
+  // (SPEC-0024); it is recorded so reads can name what was scanned.
+  string revision = 2;
+  ScanDescriptor scan = 3;
+  // One bounded batch. A large scan arrives as consecutive chunks of the
+  // same scan; nothing of the scan is visible to a reader until the final
+  // chunk completes.
+  repeated RawFinding findings = 4;
+  // The chunk's zero-based position within the scan's batch sequence.
+  int32 chunk_index = 5;
+  // True when this chunk completes the scan's batch.
+  bool final_chunk = 6;
+}
+
+message IngestScanResultsResponse {
+  // The server-assigned opaque identity of the scan record.
+  string scan_id = 1;
+  // How many findings this request recorded. A replay of the same request
+  // ID reports the same outcome and creates nothing new (SPEC-0025 AC1).
+  int64 findings_recorded = 2;
+}
+
+message GetFindingRequest {
+  FindingsContext context = 1;
+  // The opaque, server-assigned finding identity. A caller can only ever
+  // refer to a finding by what the server computed and returned.
+  string finding_id = 2;
+}
+
+message GetFindingResponse {
+  Finding finding = 1;
+}
+
+// Finding is the normalized shape every scanner class lands in (SPEC-0024
+// AC1). It deliberately excludes filesystem paths outside the repository,
+// credentials, scanner API tokens, policy outcomes, triage state, and audit
+// sequences — none of those is representable in v1 (SPEC-0025).
+message Finding {
+  // The opaque, server-computed identity (SPEC-0024 identity rule).
+  string finding_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  ScannerClass scanner_class = 4;
+  // The reporting tool, as delivered in the scan descriptor.
+  string tool_name = 5;
+  string tool_version = 6;
+  // The rule the tool fired on.
+  string rule_id = 7;
+  FindingSeverity severity = 8;
+  FindingLocation location = 9;
+  FindingLifecycle lifecycle = 10;
+  // Server history: the scans that first and last reported this finding.
+  // A finding a later scan no longer reports keeps its identity and history
+  // as RESOLVED (SPEC-0024 AC9).
+  string first_seen_scan_id = 11;
+  string last_seen_scan_id = 12;
+  // The scanner-native payload, stored and returned byte-for-byte with its
+  // media type; the domain never parses it (SPEC-0025 AC6).
+  bytes provenance = 13;
+  string provenance_media_type = 14;
+}
+
+// ListFindingsRequest pages a tenant-scoped list. An UNSPECIFIED filter
+// value is no filter. Facets and counts obey the same authorization as the
+// result list: a count may not reveal a finding the caller may not read
+// (SPEC-0025).
+message ListFindingsRequest {
+  FindingsContext context = 1;
+  // Filters: repository, scanner class, severity, and lifecycle state are
+  // the v1 set (SPEC-0025).
+  string repository_filter = 2;
+  ScannerClass scanner_class_filter = 3;
+  FindingSeverity severity_filter = 4;
+  FindingLifecycle lifecycle_filter = 5;
+  // Zero means the server's default page size.
+  int32 page_size = 6;
+  // An opaque cursor from a previous response: signed and bound to the
+  // tenant and revision that issued it. A forged, expired, or cross-tenant
+  // cursor yields no content (SPEC-0025). Empty starts at the first page.
+  string page_token = 7;
+}
+
+message ListFindingsResponse {
+  repeated Finding findings = 1;
+  // Empty when this is the last page.
+  string next_page_token = 2;
+}

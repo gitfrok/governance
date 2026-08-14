@@ -33,7 +33,13 @@ default allow := false
 #
 # T-0005 ships the skeleton vocabulary. T-0013 (identity) extended it with
 # personal_access_token actions; T-0016 (merge requests) adds merge_request.* and
-# branch-protection actions below; T-0018 (import) adds repository.import.*.
+# branch-protection actions below; T-0018 (import) adds repository.import.*;
+# T-0022 (findings, SPEC-0025) adds findings.ingest and findings.read.
+#
+# findings.ingest is granted to owner and member and withheld from reader on
+# the same reasoning as LFS: a tenant that grants reading a repository's text
+# has not granted feeding scanner output into its findings plane, and a scan
+# adapter ingests with the roles of the principal it runs for.
 #
 # The import actions are owner-only, and that is the decision, not an omission.
 # An import writes history the platform did not witness, and mapping a foreign
@@ -50,6 +56,7 @@ role_actions := {
 		"repository.import", "repository.import.read", "repository.import.revoke",
 		"repository.import.map_actor",
 		"repo.lfs.read", "repo.lfs.write",
+		"findings.ingest", "findings.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -61,6 +68,7 @@ role_actions := {
 		# is bulk egress and a large-file write is bulk storage, and a tenant must be
 		# able to grant repository access without granting either.
 		"repo.lfs.read", "repo.lfs.write",
+		"findings.ingest", "findings.read",
 	},
 	# A reader reads the repository. LFS is deliberately not included: pulling every
 	# large object in a repository is a different cost from reading its text, and a
@@ -68,30 +76,37 @@ role_actions := {
 	"reader": {"repo.read"},
 }
 
-# action_resource pins each action to the one resource kind it may be asked about.
+# action_resource pins each action to the resource kind(s) it may be asked about.
 #
 # Without this, the action vocabulary is the only thing separating a repository grant from every
 # future resource that reuses a verb — "read" on a repository and "read" on an audit trail are not
 # the same permission, and a table keyed only by verb would eventually conflate them.
+#
+# Every entry is the SET of resource kinds the action may be asked about — a singleton for every
+# action so far. The one exception is findings.read (SPEC-0025): listing is asked about the
+# repository, reading one finding is asked about the finding itself, and the same PDP decision
+# shape serves both. A set with one member reads exactly as the old pinning did.
 action_resource := {
-	"repo.read": "repository",
-	"repo.write": "repository",
-	"repo.admin": "repository",
-	"identity.pat.issue": "personal_access_token",
-	"identity.pat.list": "personal_access_token",
-	"identity.pat.revoke": "personal_access_token",
-	"ci.run": "repository",
-	"ci.cancel": "ci_job",
-	"merge_request.open": "repository",
-	"merge_request.review": "merge_request",
-	"merge_request.merge": "merge_request",
-	"repository.branch_protection.manage": "repository",
-	"repository.import": "repository",
-	"repository.import.read": "import",
-	"repository.import.revoke": "import",
-	"repository.import.map_actor": "import",
-	"repo.lfs.read": "repository",
-	"repo.lfs.write": "repository",
+	"repo.read": {"repository"},
+	"repo.write": {"repository"},
+	"repo.admin": {"repository"},
+	"identity.pat.issue": {"personal_access_token"},
+	"identity.pat.list": {"personal_access_token"},
+	"identity.pat.revoke": {"personal_access_token"},
+	"ci.run": {"repository"},
+	"ci.cancel": {"ci_job"},
+	"merge_request.open": {"repository"},
+	"merge_request.review": {"merge_request"},
+	"merge_request.merge": {"merge_request"},
+	"repository.branch_protection.manage": {"repository"},
+	"repository.import": {"repository"},
+	"repository.import.read": {"import"},
+	"repository.import.revoke": {"import"},
+	"repository.import.map_actor": {"import"},
+	"repo.lfs.read": {"repository"},
+	"repo.lfs.write": {"repository"},
+	"findings.ingest": {"repository"},
+	"findings.read": {"repository", "finding"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
@@ -106,8 +121,8 @@ allow if {
 	# for a tenant other than the one it is asking about.
 	input.subject.tenant_id == input.tenant_id
 
-	# The action must be one this policy knows, asked about the kind of thing it applies to.
-	action_resource[input.action] == input.resource.type
+	# The action must be one this policy knows, asked about a kind of thing it applies to.
+	input.resource.type in action_resource[input.action]
 
 	# And some role the subject holds must grant it.
 	some role in input.subject.roles

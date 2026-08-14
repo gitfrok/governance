@@ -34,6 +34,10 @@ needs a direct response.
   per-environment configuration and cannot be named by a caller
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
   (SPEC-0017); authorization remains in Repository/Git
+- `proto/security/v1/findings.proto` — Security/Findings ingest and read surface (SPEC-0024,
+  SPEC-0025): completed-scan ingestion with server-computed finding identity and lifecycle,
+  opaque scanner provenance, and tenant-scoped, cursor-paginated reads; no request carries an
+  identity, lifecycle, first-seen value, or authorization outcome
 - `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
   ADR-0016/0018/0042): shard records, fencing terms, durable-primary and sync acknowledgements,
   compare-and-swap auto-promotion, and the audited platform-operator force-promote
@@ -51,3 +55,6 @@ needs a direct response.
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
+- `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
+  finding-resolved events (SPEC-0024, SPEC-0025); opaque identifiers, tenant and repository
+  scope, tool and rule identity and severity — never provenance bytes or a policy outcome

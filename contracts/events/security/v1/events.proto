@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+// Security/Findings domain events (SPEC-0024, SPEC-0025). Events carry
+// opaque identifiers, tenant and repository scope, tool and rule identity,
+// and severity; they never carry provenance bytes, scanner credentials,
+// source code, or a policy allow flag. A consumer builds its own
+// tenant-scoped local projection from them and does not call back into
+// Security/Findings on a hot path (ADR-0022).
+package gitsaas.events.security.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/security/v1;securityeventsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// ScannerClass mirrors proto/security/v1's enum so an event consumer needs
+// no dependency on the synchronous surface. The values are the same
+// one-of-five scanner classes (SPEC-0024 AC1).
+enum ScannerClass {
+  SCANNER_CLASS_UNSPECIFIED = 0;
+  SCANNER_CLASS_SAST = 1;
+  SCANNER_CLASS_DEPENDENCY = 2;
+  SCANNER_CLASS_SECRETS = 3;
+  SCANNER_CLASS_CONTAINER = 4;
+  SCANNER_CLASS_DAST = 5;
+}
+
+// FindingSeverity mirrors proto/security/v1's normalized severity scale
+// (SPEC-0025). The tool's native severity stays in provenance, which events
+// never carry.
+enum FindingSeverity {
+  FINDING_SEVERITY_UNSPECIFIED = 0;
+  FINDING_SEVERITY_LOW = 1;
+  FINDING_SEVERITY_MEDIUM = 2;
+  FINDING_SEVERITY_HIGH = 3;
+  FINDING_SEVERITY_CRITICAL = 4;
+}
+
+// ScanIngested records that a completed scan's results were ingested. It is
+// emitted once per scan, after the final chunk lands; a replayed ingest
+// emits nothing new (SPEC-0025 AC1).
+message ScanIngested {
+  string event_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  string scan_id = 4;
+  ScannerClass scanner_class = 5;
+  string tool_name = 6;
+  string tool_version = 7;
+  string revision = 8;
+  int64 finding_count = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}
+
+// FindingOpened records that ingestion produced a finding no scan had
+// reported before. Its identity is the one the server computed (SPEC-0024);
+// the event never carries a caller-supplied one.
+message FindingOpened {
+  string event_id = 1;
+  string finding_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  string scan_id = 5;
+  ScannerClass scanner_class = 6;
+  string tool_name = 7;
+  string rule_id = 8;
+  FindingSeverity severity = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}
+
+// FindingResolved records that a later scan no longer reports an open
+// finding. The finding is resolved, not deleted: its identity and history
+// remain retrievable (SPEC-0024 AC9).
+message FindingResolved {
+  string event_id = 1;
+  string finding_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  // The scan that first failed to report the finding again.
+  string scan_id = 5;
+  ScannerClass scanner_class = 6;
+  string tool_name = 7;
+  string rule_id = 8;
+  FindingSeverity severity = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}
