@@ -4,7 +4,7 @@
 - **Phase / Epic:** 3 / EP-16 (packaging and lifecycle)
 - **Repo(s):** super-repo (chart, Operator, conformance harness), backend (driver seam) — one commit
   per repo
-- **Spec:** docs/specs/SPEC-0039-byo-packaging-upgrades.md (Draft — Approved before RED)
+- **Spec:** docs/specs/SPEC-0039-byo-packaging-upgrades.md (Approved 2026-08-14 — RED may begin)
 - **ADRs:** 0013, 0010, 0009, 0060
 - **Owner:** unassigned
 

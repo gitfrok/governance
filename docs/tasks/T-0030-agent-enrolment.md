@@ -3,7 +3,7 @@
 - **Status:** Todo
 - **Phase / Epic:** 3 / EP-15 (BYO data plane)
 - **Repo(s):** governance (additive `agent/v1` messages first, ADR-0027 order), then backend
-- **Spec:** docs/specs/SPEC-0038-agent-enrolment-registration.md (Draft — Approved before RED)
+- **Spec:** docs/specs/SPEC-0038-agent-enrolment-registration.md (Approved 2026-08-14 — RED may begin)
 - **ADRs:** 0060, 0011, 0017, 0009, 0010
 - **Owner:** unassigned
 

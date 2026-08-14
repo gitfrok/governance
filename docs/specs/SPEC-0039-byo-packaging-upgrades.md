@@ -1,6 +1,6 @@
 # SPEC-0039: BYO packaging, per-cloud drivers, and signed reconcile-based upgrades
 
-- **Status:** Draft
+- **Status:** Approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Packaging and lifecycle of the data plane — ADR-0013, ADR-0010
 - **ADRs:** 0013 (Helm + Operator), 0010 (GKE/EKS/AKS portability), 0011, 0017, 0044 (image trust), 0060
