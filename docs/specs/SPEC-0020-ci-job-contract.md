@@ -128,7 +128,10 @@ contract/event; none reads another's tables.
 - Job claim and idempotency are transactional per tenant/repository/ref/SHA/config digest.
 - The queue-depth scaler and runner may retry control operations, but retries never create a second
   live attempt for one job.
-- Logs are bounded operational output with credential redaction; artifact persistence is deferred.
+- Logs are bounded operational output with credential redaction; artifact persistence is deferred
+  — with one narrow exception, added 2026-08-14: a **scan report** is persisted under
+  **SPEC-0037** (ADR-0059), because the findings plane cannot ingest what the attempt discards.
+  That exception is scan reports only; build outputs, caches and general artifacts stay deferred.
 
 ## Open questions / assumptions
 
