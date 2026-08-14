@@ -173,9 +173,17 @@ applied and denies merges whose head or base lacks an ingested scan — rollout 
 coverage before enabling it on existing repositories, and no scan-dispatch path exists in dev yet;
 (b) the MR-findings projection is in-process memory, so a dataplane restart merge-blocks MRs opened
 before the restart until a new push/retarget re-emits the events — startup seeding from the durable
-stores is a follow-up against the findings plane; (c) the decision-record append sits on the `Decide`
-hot path and fails closed — an operational availability contract: monitor decision-record append
-failures, because a failing append reads as a plane that denies everything.
+stores is a follow-up against the findings plane; (c) the decision-record append is **async**
+(`backend/modules/policy/internal/app/recorder.go`), off the `Decide` hot path: a bounded queue
+admits records, ENFORCED records still fail closed **at admission** (`ErrRecorderFull` refuses the
+decision when the queue is saturated, exactly as a failing synchronous append did), but a store
+failure *inside* the worker is best-effort — counted and logged, it can no longer fail the decision.
+SPEC-0029 AC1 ("every enforced decision is recorded and retrievable") therefore holds up to store
+availability, plus a queue-depth window on a non-clean exit (the graceful-shutdown drain is skipped
+by the `os.Exit` paths). The operational contract is to alert on the recorder's counters —
+`FailedRecords` (records the store refused inside the worker) and `DroppedRecords` (dry-run records
+shed under backpressure); a sick database now reads as missing audit data behind admission refusals,
+not as a plane that denies everything.
 
 **Deployment-posture limits recorded from the Phase-2 code review (H2/M13, 2026-08-14)** — these are
 recorded limits, not coded gaps: the ACs hold under the stated posture, and each carries an explicit
@@ -212,11 +220,19 @@ follow-up.
 `phase-2-code-review.md`) reported 17 findings; H2/M13 were recorded above as deployment-posture
 limits at 3313a42, and the remaining 15 were code fixes, merged to backend `main` at **42ad9b3**:
 
-- **H1** — decision-record reads (`GetDecision`/`EvaluateDryRun`) refuse a caller-supplied tenant
-  that mismatches the verified caller; a guard hook is reserved for the future caller-pinning
-  interceptor (note (d)'s follow-up).
+- **H1** — **deferred behind limit (d), not runtime-fixed.** The enforcement point is implemented
+  and test-covered: decision-record reads (`GetDecision`/`EvaluateDryRun`) carry a tenant guard that
+  refuses a caller-supplied tenant mismatching the context-bound caller — but the door has no
+  verified caller today (limit (d)), so the caller-supplied tenant binds its own context and the
+  comparison is a tautology. Runtime enforcement is pending the door-auth follow-up: the
+  caller-pinning interceptor that gives the tested guard a verified tenant to compare against.
 - **H3** — `GetFinding`/`GetTriage` now refuse cross-repository reads inside a tenant, mirroring
   `SetTriage`'s existing check.
+- **H3 ordering (review N7) — a decision, not a drift:** the fix deliberately reads the store
+  before the PDP decides — the finding row loads first and denies on repository mismatch (the
+  `SetTriage` shape, coarse denial preserved), then passes the repository into the PDP context.
+  The PDP is no longer the first gate on this path, and an unauthorized caller causes one cheap
+  database read on the unauthenticated door — recorded against limit (d).
 - **H4** — evidence-pack trail truncation is no longer silent: a truncated section carries
   `Complete: false` with the gap marked.
 - **H5** — `ScanReportAt` spans every scanner class at the revision; `ScanReport` carries the
