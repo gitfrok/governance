@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+// Internal Code Search surface for permission-filtered code search
+// (SPEC-0034, SPEC-0035, ADR-0014).
+//
+// Code Search owns its index, its indexing state, its cursors and its
+// freshness records. The searchable repository set is derived by the server
+// from the caller's permissions at query time; no request carries a
+// repository allow-list, a permission claim, an "include unauthorized" flag,
+// or a scoring override (SPEC-0035 AC2). Counts and any "more results"
+// indicator are computed under the caller's authorization, so the response
+// shape has no field capable of expressing an unauthorized total —
+// non-enumeration is a type property, not a filter applied late
+// (SPEC-0035 AC3). A query whose only matches are unauthorized returns
+// exactly what a no-match query returns: the contract defines no error,
+// code, or field that distinguishes them (SPEC-0035 AC4).
+package gitsaas.search.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/search/v1;searchv1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+service SearchService {
+  // Search runs a tenant-scoped code query — substring, regex, or symbol —
+  // across the repositories the caller may read, as derived server-side at
+  // query time. A permission revocation binds on the next query: no reindex,
+  // cache cycle, or cursor reuse serves revoked content (SPEC-0034 AC6,
+  // SPEC-0035 AC5). A query matching only unauthorized content is
+  // indistinguishable from a query matching nothing (SPEC-0034 AC3).
+  rpc Search(SearchRequest) returns (SearchResponse);
+  // GetIndexStatus reports per-repository index freshness — last indexed
+  // revision and lag — for repositories the caller may read, and reports
+  // nothing for others: not even existence (SPEC-0035 AC6).
+  rpc GetIndexStatus(GetIndexStatusRequest) returns (GetIndexStatusResponse);
+}
+
+// SearchContext is derived from an authenticated principal by the PEP.
+// The actor ID and roles are verified server-side; a caller cannot assert
+// them. An empty or cross-tenant context is a coarse denial that does not
+// distinguish nonexistent from unauthorized (SPEC-0001). Search is
+// tenant-scoped: the context names no repository, because the searchable
+// repository set is server-derived, never caller-supplied (SPEC-0035 AC2).
+message SearchContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+  repeated string actor_roles = 3;
+  string request_id = 4;
+}
+
+// QueryMode selects the query language. Every mode is permission-filtered on
+// every result path (SPEC-0034 AC2); regex evaluation is bounded so a
+// pathological pattern cannot monopolize the index or become a timing oracle
+// (SPEC-0035 non-functional).
+enum QueryMode {
+  QUERY_MODE_UNSPECIFIED = 0;
+  // Code-aware substring match with identifier and camelCase tokenization
+  // (SPEC-0034 AC1).
+  QUERY_MODE_SUBSTRING = 1;
+  QUERY_MODE_REGEX = 2;
+  // Symbol queries over the index's code-aware symbol table.
+  QUERY_MODE_SYMBOL = 3;
+}
+
+// SearchRequest carries the query and nothing authorization-sensitive. It
+// has no field for a repository allow-list, a permission claim, an
+// authorization flag, or a scoring override: a request that would carry them
+// has no fields to carry them in (SPEC-0035 AC2).
+message SearchRequest {
+  SearchContext context = 1;
+  // The query string, interpreted per the mode.
+  string query = 2;
+  QueryMode mode = 3;
+  // The maximum number of results in one page, bounded by the server; zero
+  // means the server's default. No query streams unbounded memory
+  // (SPEC-0035 non-functional).
+  int32 result_limit = 4;
+  // The maximum number of context lines around each match, bounded by the
+  // server; zero means none.
+  int32 context_line_limit = 5;
+  // An opaque cursor from a previous response: signed and bound to the
+  // tenant and the authorization state that issued it. A forged, expired, or
+  // cross-tenant cursor yields no content (SPEC-0035 AC1); reuse of a cursor
+  // issued before a revocation never serves the revoked content (AC5).
+  // Empty starts at the first page.
+  string page_token = 6;
+}
+
+// SearchResponse carries authorized matches only. It deliberately has no
+// field capable of expressing a total that includes unauthorized matches:
+// there is no whole-corpus count and no facet over repositories the caller
+// may not read, so non-enumeration holds by construction rather than by a
+// late filter (SPEC-0035 AC3). The empty response is the one shape a
+// no-match query and an unauthorized-only query both return (SPEC-0035 AC4).
+message SearchResponse {
+  repeated SearchResult results = 1;
+  // Empty when there are no more authorized matches. Its presence or absence
+  // is itself authorization-derived: it never indicates further matches the
+  // caller may not read (SPEC-0034 AC2).
+  string next_page_token = 2;
+}
+
+// SearchResult is one authorized match. It carries opaque identifiers and
+// bounded content only — no filesystem location outside the repository, no
+// credential, no blob handle, and no permission fact (SPEC-0035).
+message SearchResult {
+  // The opaque identifier of the repository the match sits in.
+  string repository_id = 1;
+  // The opaque revision the match was indexed at.
+  string revision = 2;
+  // The path within the repository.
+  string path = 3;
+  // The matched line range, one-based and inclusive.
+  int64 line_start = 4;
+  int64 line_end = 5;
+  // The matched content and its bounded context lines, as indexed. Never
+  // larger than the request's limits allow.
+  string matched_content = 6;
+}
+
+// GetIndexStatusRequest names no repository: freshness is reported for the
+// repositories the caller may read and nothing else, so a caller cannot
+// probe the existence of a repository it may not read (SPEC-0035 AC6).
+message GetIndexStatusRequest {
+  SearchContext context = 1;
+}
+
+// GetIndexStatusResponse lists one entry per readable, indexed repository.
+// A repository the caller may not read appears in no entry and is
+// indistinguishable from a repository that does not exist (SPEC-0035 AC6).
+message GetIndexStatusResponse {
+  repeated IndexStatusEntry entries = 1;
+}
+
+// IndexStatusEntry is the freshness record of one repository the caller may
+// read. Freshness lag is measured, not asserted (SPEC-0034 AC4); exceeding
+// the stated bound is reported as an IndexLagged condition, not a silent
+// delay (SPEC-0034 non-functional).
+message IndexStatusEntry {
+  string repository_id = 1;
+  // The opaque revision the index last absorbed.
+  string last_indexed_revision = 2;
+  // When the index absorbed that revision.
+  google.protobuf.Timestamp indexed_at = 3;
+  // The measured lag between the indexed revision and the repository's
+  // admitted head at status time.
+  google.protobuf.Duration freshness_lag = 4;
+}

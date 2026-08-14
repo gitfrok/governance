@@ -38,6 +38,12 @@ needs a direct response.
   SPEC-0025): completed-scan ingestion with server-computed finding identity and lifecycle,
   opaque scanner provenance, and tenant-scoped, cursor-paginated reads; no request carries an
   identity, lifecycle, first-seen value, or authorization outcome
+- `proto/search/v1/search.proto` — Code Search query and index-status surface (SPEC-0034,
+  SPEC-0035, ADR-0014): tenant-scoped substring/regex/symbol queries with verified context and
+  signed, tenant-bound cursors; the searchable repository set is server-derived from the caller's
+  permissions at query time, so no request carries a repository allow-list, permission claim, or
+  authorization flag, and the response shape has no field capable of expressing an unauthorized
+  total; `GetIndexStatus` reports freshness only for repositories the caller may read
 - `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
   ADR-0016/0018/0042): shard records, fencing terms, durable-primary and sync acknowledgements,
   compare-and-swap auto-promotion, and the audited platform-operator force-promote
@@ -58,3 +64,6 @@ needs a direct response.
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
   finding-resolved events (SPEC-0024, SPEC-0025); opaque identifiers, tenant and repository
   scope, tool and rule identity and severity — never provenance bytes or a policy outcome
+- `events/search/v1/events.proto` — Code Search repository-indexed / index-lagged events
+  (SPEC-0034, SPEC-0035); opaque identifiers, tenant scope, revision and measured lag — never
+  matched content or a permission fact

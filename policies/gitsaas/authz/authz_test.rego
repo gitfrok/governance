@@ -574,3 +574,114 @@ test_deny_findings_read_is_not_implied_by_repo_read if {
 		{"action": "findings.read", "resource": {"type": "finding", "id": "finding-1"}},
 	)
 }
+
+# --- T-0028 / SPEC-0034 / SPEC-0035: code search ------------------------------------------------
+
+# search.query is asked about the tenant: the query is tenant-scoped and the
+# searchable repository set is server-derived, so no repository appears in the
+# question (SPEC-0035 AC2). search.read and search.index.status.read are asked
+# about a repository — the per-repository re-check that binds a revocation to
+# the next query (SPEC-0034 AC6). The deny cases outnumber the allow cases on
+# purpose: the leak this surface must not create is an existence hint, and
+# every denial below is one it could have given.
+search_request(role, action, resource_type, resource_id) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-search", "roles": [role], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": resource_id},
+	"context": {},
+}
+
+# Every role that reads a repository may search: a search result is repository
+# text, and the index never serves what repo.read does not (SPEC-0034/0035).
+test_allow_every_role_queries_search if {
+	every role in ["owner", "member", "reader"] {
+		authz.allow with input as search_request(role, "search.query", "tenant", "acme")
+	}
+}
+
+test_allow_every_role_reads_search_results if {
+	every role in ["owner", "member", "reader"] {
+		authz.allow with input as search_request(role, "search.read", "repository", "repo-1")
+	}
+}
+
+test_allow_every_role_reads_index_status if {
+	every role in ["owner", "member", "reader"] {
+		authz.allow with input as search_request(role, "search.index.status.read", "repository", "repo-1")
+	}
+}
+
+# Holding owner in another tenant does not authorize a query here
+# (invariant 1). A cross-tenant query, cursor or result is impossible
+# (SPEC-0034 AC8), and the denial says nothing about why.
+test_deny_search_query_from_another_tenant if {
+	not authz.allow with input as object.union(
+		search_request("owner", "search.query", "tenant", "acme"),
+		{"subject": {"id": "u-search", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+test_deny_search_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		search_request("reader", "search.read", "repository", "repo-1"),
+		{"subject": {"id": "u-search", "roles": ["reader"], "tenant_id": "globex"}},
+	)
+}
+
+# Index status of a repository in another tenant must be no more discoverable
+# than the repository itself: the status read is denied like everything else,
+# and GetIndexStatus reports nothing for it (SPEC-0035 AC6).
+test_deny_index_status_read_from_another_tenant if {
+	not authz.allow with input as object.union(
+		search_request("owner", "search.index.status.read", "repository", "repo-1"),
+		{"subject": {"id": "u-search", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+}
+
+# The resource kind is load-bearing for every search action. A query asked
+# about a repository is not the tenant-scoped question the grant answers, and
+# a per-repository read asked about the tenant is not answered either —
+# conflating the two would let one grant serve both surfaces.
+test_deny_search_query_asked_about_a_repository if {
+	not authz.allow with input as search_request("owner", "search.query", "repository", "repo-1")
+}
+
+test_deny_search_read_asked_about_a_tenant if {
+	not authz.allow with input as search_request("owner", "search.read", "tenant", "acme")
+}
+
+test_deny_index_status_read_asked_about_a_finding if {
+	not authz.allow with input as search_request("owner", "search.index.status.read", "finding", "finding-1")
+}
+
+test_deny_search_read_asked_about_an_import if {
+	not authz.allow with input as search_request("member", "search.read", "import", "import-1")
+}
+
+# No roles means no search, on every action: a principal cannot reach the
+# index at all, so neither a result nor a freshness record can leak
+# existence to it.
+test_deny_search_with_no_roles if {
+	every action in {"search.query", "search.read", "search.index.status.read"} {
+		not authz.allow with input as object.union(
+			search_request("reader", action, "repository", "repo-1"),
+			{"subject": {"id": "u-search", "roles": [], "tenant_id": "acme"}},
+		)
+	}
+}
+
+# Search denials are as indistinguishable as every other denial: a cross-tenant
+# query and a roleless query receive the same reason, so probing the PDP
+# cannot separate "wrong tenant" from "no such role" (SPEC-0001).
+test_deny_search_reasons_are_indistinguishable if {
+	cross_tenant := authz.decision.reason with input as object.union(
+		search_request("owner", "search.read", "repository", "repo-1"),
+		{"subject": {"id": "u-search", "roles": ["owner"], "tenant_id": "globex"}},
+	)
+	no_role := authz.decision.reason with input as object.union(
+		search_request("reader", "search.read", "repository", "repo-1"),
+		{"subject": {"id": "u-search", "roles": [], "tenant_id": "acme"}},
+	)
+	cross_tenant == no_role
+}

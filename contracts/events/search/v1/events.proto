@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+// Code Search domain events (SPEC-0034, SPEC-0035). Events carry opaque
+// identifiers, tenant scope, revision and lag; they never carry matched
+// content, source code, or a permission fact (SPEC-0035). A consumer builds
+// its own tenant-scoped local projection from them and does not call back
+// into Code Search on a hot path (ADR-0022).
+package gitsaas.events.search.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/events/search/v1;searcheventsv1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// RepositoryIndexed records that the index absorbed a repository revision.
+// Indexing is incremental off Repository/Git's ref-update events (SPEC-0034
+// AC4); each absorbed revision lands one of these.
+message RepositoryIndexed {
+  string event_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  // The opaque revision the index absorbed.
+  string revision = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+// IndexLagged records that a repository's index freshness exceeded the
+// stated bound. Exceeding the bound is a reported condition, not a silent
+// delay (SPEC-0034 non-functional); the event carries the measured lag,
+// never matched content or a permission fact.
+message IndexLagged {
+  string event_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  // The opaque revision the index last absorbed when the lag was measured.
+  string last_indexed_revision = 4;
+  // The measured freshness lag at reporting time.
+  google.protobuf.Duration lag = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}

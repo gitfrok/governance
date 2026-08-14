@@ -34,7 +34,18 @@ default allow := false
 # T-0005 ships the skeleton vocabulary. T-0013 (identity) extended it with
 # personal_access_token actions; T-0016 (merge requests) adds merge_request.* and
 # branch-protection actions below; T-0018 (import) adds repository.import.*;
-# T-0022 (findings, SPEC-0025) adds findings.ingest and findings.read.
+# T-0022 (findings, SPEC-0025) adds findings.ingest and findings.read;
+# T-0028 (code search, SPEC-0034/0035) adds search.query, search.read and
+# search.index.status.read.
+#
+# The search actions are granted to every role that reads a repository —
+# owner, member and reader — because a search result is repository text: the
+# index never serves what repo.read does not already serve, and per-repository
+# readability is re-derived server-side at query time (the searchable scope is
+# a server fact, never a caller claim; SPEC-0035 AC2). Withholding search from
+# a reader would withhold nothing a clone does not give. Index status likewise
+# reveals only the freshness of repositories the caller may already read
+# (SPEC-0035 AC6).
 #
 # findings.ingest is granted to owner and member and withheld from reader on
 # the same reasoning as LFS: a tenant that grants reading a repository's text
@@ -57,6 +68,7 @@ role_actions := {
 		"repository.import.map_actor",
 		"repo.lfs.read", "repo.lfs.write",
 		"findings.ingest", "findings.read",
+		"search.query", "search.read", "search.index.status.read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -69,11 +81,13 @@ role_actions := {
 		# able to grant repository access without granting either.
 		"repo.lfs.read", "repo.lfs.write",
 		"findings.ingest", "findings.read",
+		"search.query", "search.read", "search.index.status.read",
 	},
 	# A reader reads the repository. LFS is deliberately not included: pulling every
 	# large object in a repository is a different cost from reading its text, and a
 	# tenant that wants to grant one without the other has to be able to.
-	"reader": {"repo.read"},
+	# Search is included: it surfaces nothing repo.read does not (SPEC-0034/0035).
+	"reader": {"repo.read", "search.query", "search.read", "search.index.status.read"},
 }
 
 # action_resource pins each action to the resource kind(s) it may be asked about.
@@ -82,10 +96,15 @@ role_actions := {
 # future resource that reuses a verb — "read" on a repository and "read" on an audit trail are not
 # the same permission, and a table keyed only by verb would eventually conflate them.
 #
-# Every entry is the SET of resource kinds the action may be asked about — a singleton for every
-# action so far. The one exception is findings.read (SPEC-0025): listing is asked about the
+# Every entry is the SET of resource kinds the action may be asked about — a singleton for most
+# actions. The one exception is findings.read (SPEC-0025): listing is asked about the
 # repository, reading one finding is asked about the finding itself, and the same PDP decision
 # shape serves both. A set with one member reads exactly as the old pinning did.
+#
+# search.query is asked about the tenant (SPEC-0035): the query is tenant-scoped and the
+# searchable repository set is server-derived, so no repository is named in the question.
+# search.read and search.index.status.read are asked about a repository — the per-repository
+# re-check that binds a revocation to the next query (SPEC-0034 AC6, SPEC-0035 AC5).
 action_resource := {
 	"repo.read": {"repository"},
 	"repo.write": {"repository"},
@@ -107,6 +126,9 @@ action_resource := {
 	"repo.lfs.write": {"repository"},
 	"findings.ingest": {"repository"},
 	"findings.read": {"repository", "finding"},
+	"search.query": {"tenant"},
+	"search.read": {"repository"},
+	"search.index.status.read": {"repository"},
 }
 
 # The single grant rule. Every condition is a conjunct, so removing any one of them widens the
