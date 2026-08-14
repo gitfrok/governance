@@ -4,7 +4,7 @@
 - **Phase / Epic:** 2 carry-over / EP-11 (findings plane), closing the path EP-7 and EP-11 never joined
 - **Repo(s):** governance (SPEC-0020 amendment, if the deferral note needs restating), then backend
   — ADR-0027 order, one commit per repo
-- **Spec:** docs/specs/SPEC-0037-ci-scan-report-handoff.md (Draft — must be Approved before RED)
+- **Spec:** docs/specs/SPEC-0037-ci-scan-report-handoff.md (Approved 2026-08-14 — RED may begin)
 - **ADRs:** 0059, 0022, 0025, 0050
 - **Owner:** unassigned
 
