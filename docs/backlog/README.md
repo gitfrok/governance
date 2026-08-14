@@ -168,7 +168,7 @@ Three decisions were taken at approval and are recorded in the specs themselves:
   pack is a self-contained snapshot; neither period is tenant-configurable in v1. This closes
   ADR-0007's retention follow-up and SPEC-0011's last open item.
 
-## Phase 3 — BYO & commercial *(Active 2026-08-14)*
+## Phase 3 — BYO & commercial *(implementation complete 2026-08-15; cluster-lane proof pending)*
 
 Plan: `../plans/phase-3-byo.md`. Scope is PR-20…PR-23. The architecture was already decided
 (ADR-0009/0010/0011/0013/0017); the two open decisions are settled by **ADR-0060** (enrolment token
@@ -177,13 +177,40 @@ authority).
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-15** BYO data plane | PR-20 | T-0030 | SPEC-0038 | Todo — gates the phase |
-| **EP-16** Packaging & lifecycle | PR-20, PR-21 | T-0031, T-0032 | SPEC-0039 | Todo |
-| **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 | Todo |
-| **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 | Todo |
+| **EP-15** BYO data plane | PR-20 | T-0030 | SPEC-0038 | Done — AC1–AC9 proven |
+| **EP-16** Packaging & lifecycle | PR-20, PR-21 | T-0031, T-0032 | SPEC-0039 | Done — AC1–AC7 proven; AC8 real-state proof carried |
+| **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 | Done — AC1–AC8 proven |
+| **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 | Done — AC1–AC10 proven |
 
-All four specs are **Approved (2026-08-14)**, so every Phase-3 task may go RED. T-0030 is the one to
-start: EP-15 gates the phase.
+All five tasks are **Done** (exit records in `../tasks/`): T-0030 contracts governance@5e33e90 +
+authz governance@2c268d3, backend@8e5d013; T-0031 backend@4b26cb2, super-repo@150cc2b; T-0032
+governance@dea5476, backend@85b773c, super-repo@149b3e2; T-0033 governance@0e61302, backend@c630a1e;
+T-0034 governance@5dff9b3, backend@d3f4ad6, bff@e2344de, webfrontend@95f77be+0e80261.
+
+**What is proven and what is carried.** Every task-level acceptance criterion is proven by named tests
+at the exit pins; the phase's final exit criterion — the whole path proven once end to end on a real
+customer-shaped cluster, not a harness — is **not** among them and is carried to T-0003's cluster
+lane. The conformance-matrix rows exist and are all marked real-cluster "not run" — honest by
+construction. Recorded the same way Phase 1/2 recorded their host limits, as carried proof rather than
+open code.
+
+Carried forward out of Phase 3 (in addition to the cluster-lane proof above):
+
+- **Real-cluster conformance proof.** The whole install → self-register → upgrade → meter path on a
+  real customer-shaped cluster (GKE/EKS/AKS), plus SPEC-0039 AC8's forward/backward migration proof on
+  real state. Owned by T-0003's cluster lane.
+- **Proxy-only egress** (ADR-0017's remaining follow-up) — still open, still able to block an install
+  outright for a customer whose egress permits only an HTTP proxy (tracked already; unchanged).
+- **CA key custody** (ADR-0057-scoped platform-secrets follow-up) — the enrolment CA runs on dev key
+  custody; production custody is the platform-secrets decision SPEC-0038's out-of-scope names.
+- **Postgres adapters for the agent/residency in-memory stores** — the enrolment-token/data-plane
+  registry and the residency declaration store do not survive a control-plane restart; the audit trail
+  is durable, the live stores are not.
+- **Residency Declare wire surface** — the declaration is set by in-process composition only; a
+  wire/RPC surface is future work.
+- **PR-7 read-only enforcement** — the commercial read-only prohibition holds now, but the in-product
+  distinction from the PR-7 durability read-only mode (ADR-0018) is enforced per ADR-0061 when PR-7
+  ships.
 
 Open and able to block a sale rather than a sprint: **proxy-only egress** (ADR-0017's remaining
 follow-up) stops an install outright for a customer whose egress permits only an HTTP proxy.

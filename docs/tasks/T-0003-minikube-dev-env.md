@@ -89,6 +89,12 @@ is only as good as the search, and the first version of this record claimed `sta
   the `CIJobFinished`→ingest wiring is unbuilt at the pinned backend (scan ingest is RPC-only, no
   `CIJobFinished` subscriber exists), so it is part of what this lane must first deliver — distinct
   from the scan-dispatch host limit.
+  Phase 3 delegated its cluster-bound proofs here as well: the **whole BYO path — install →
+  self-register → upgrade → meter — proven once end to end on a real customer-shaped cluster**
+  (the conformance matrix `deploy/conformance/byo-dataplane.md` exists, 14 rows, all marked
+  real-cluster "not run"), **SPEC-0039 AC8's forward/backward migration proof on real state**, and
+  the **clock-skew runbook entry** (SPEC-0038's non-functional) that belongs with the first
+  real-cluster run.
 - **The ADR-0051 FUSE mount does not propagate on this driver**, so the cluster runs the S3 adapter
   ADR-0050 decision 6 keeps for that case. Measured, with the evidence in `deploy/dev/README.md`.
 - Smaller, all in `deploy/dev/README.md`: no CI wires the Minikube flow itself (an ADR-0024 intent),

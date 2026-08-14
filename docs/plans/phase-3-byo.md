@@ -1,6 +1,7 @@
 # Plan — Phase 3: BYO & commercial
 
-**Status:** **Active (2026-08-14)**
+**Status:** **Implementation complete (2026-08-15)** — every task is proven by named tests at its exit
+pin; the phase's real-cluster exit criterion is carried to T-0003's cluster lane (verdict below)
 **Objective:** a customer runs the data plane in their own GKE/EKS/AKS under a flat plan — installed
 from a chart, self-registered over an outbound-only connection, upgraded by reconcile, pinned to a
 declared region, and metered against fair-use envelopes that never block git
@@ -36,7 +37,8 @@ Two decisions were open and blocked honest specs. Both are now settled:
 | **EP-17** Residency & evidence | PR-22 | T-0033 | SPEC-0040 |
 | **EP-18** Commercial | PR-23 | T-0034 | SPEC-0041 |
 
-All four specs are Approved (2026-08-14); RED may begin, starting with T-0030.
+All four specs were Approved (2026-08-14); all five tasks are now **Done** with exit records in
+`../tasks/` (see the exit verdict below).
 
 ## Sequence and critical path
 
@@ -65,15 +67,44 @@ starting as soon as T-0030 lands.
 
 ## Exit criteria
 
-- [ ] PR-20: a data plane installs into GKE, EKS and AKS from the chart plus an enrolment token, and
-  self-registers over an outbound-only connection.
-- [ ] PR-21: a signed release rolls out by reconcile and rolls back on failure, with no inbound access
-  and no half-applied state left silent.
-- [ ] PR-22: a tenant's declared cloud/region is enforced, contradiction is visible, and an evidence
-  pack shows placement over its range with honest gaps.
-- [ ] PR-23: usage is metered centrally, visible before an envelope is reached, enforced by
-  throttling — with git available in every state and every deferred dimension labelled as deferred.
+- [x] PR-20: a data plane installs into GKE, EKS and AKS from the chart plus an enrolment token, and
+      self-registers over an outbound-only connection.
+- [x] PR-21: a signed release rolls out by reconcile and rolls back on failure, with no inbound access
+      and no half-applied state left silent.
+- [x] PR-22: a tenant's declared cloud/region is enforced, contradiction is visible, and an evidence
+      pack shows placement over its range with honest gaps.
+- [x] PR-23: usage is metered centrally, visible before an envelope is reached, enforced by
+      throttling — with git available in every state and every deferred dimension labelled as deferred.
 - [ ] The whole path proven once end to end on a real customer-shaped cluster, not a harness.
+      *(carried to T-0003's cluster lane — see exit verdict)*
+
+### Exit verdict (2026-08-15)
+
+**Implementation complete, demonstration carried.** PR-20…PR-23 are met at the code level: every
+task-level acceptance criterion is proven by named tests at the exit pins — T-0030 (SPEC-0038 AC1–AC9:
+contracts governance@5e33e90 + authz governance@2c268d3, backend@8e5d013), T-0031 (SPEC-0039 AC1/AC2:
+backend@4b26cb2, super-repo@150cc2b), T-0032 (SPEC-0039 AC3–AC7: governance@dea5476, backend@85b773c,
+super-repo@149b3e2), T-0033 (SPEC-0040 AC1–AC8: governance@0e61302, backend@c630a1e), T-0034
+(SPEC-0041 AC1–AC10: governance@5dff9b3, backend@d3f4ad6, bff@e2344de, webfrontend@95f77be+0e80261).
+All pins are commits on each repo's `main`, merged by fast-forward, no force-push.
+
+**The fifth criterion is carried, not met.** The whole path proven once end to end on a real
+customer-shaped cluster is infrastructure-bound exactly the way Phase 1's gVisor/durability steps and
+Phase 2's measured-freshness steps were: recorded as carried proof against T-0003's cluster lane,
+never counted as met. The conformance matrix (`deploy/conformance/byo-dataplane.md`, 14 rows) exists
+and states per row what was verified where — every row is harness-evidence only, every real-cluster
+column reads "not run". Carried with it: SPEC-0039 AC8's forward/backward migration proof on real
+state (named in T-0031's AC list, not among its exit evidence — recorded as carried, not papered
+over), the in-memory agent/residency stores (Postgres adapters), the enrolment CA's production key
+custody (ADR-0057-scoped platform-secrets follow-up), the residency Declare wire surface, the PR-7
+read-only product distinction, and the clock-skew runbook entry. Full carried set in
+`../backlog/README.md`.
+
+**The phase's "must not" list held.** Git is never blocked in any envelope state (one test per
+dimension, SPEC-0041 AC7); no inbound path exists into a customer's cluster (asserted by the
+architecture fitness test, SPEC-0039 AC4, and the chart renders zero inbound surfaces); no customer
+self-attestation can reach a control section (SPEC-0040 AC7, excluded by construction); deferred
+metering dimensions render as "not metered", never zero (SPEC-0041 AC2).
 
 ## Risks
 

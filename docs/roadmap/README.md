@@ -57,11 +57,23 @@ follow-ups, and both bounded by the single-tenant dev posture the phase ships un
 Also carried: the PDP-driven merge-gate severity threshold and the two new gap-reason wire enums,
 both additive contract changes tracked in `../backlog/`.
 
-## Phase 3 — BYO · **Active (2026-08-14)**
+## Phase 3 — BYO · **Implementation complete (2026-08-15) — cluster-lane proof pending**
 
 Agent (implements `contracts/proto/agent/v1`), Operator + Helm, per-cloud drivers, usage metering →
 billing + fair-use.
 **Exit:** a customer runs the data plane in their own GKE/EKS/AKS under a flat plan.
+
+**Exit (met in code; the real-cluster demonstration is carried, not closed):** tasks **T-0030…T-0034**
+all Done against **SPEC-0038…SPEC-0041** — enrolment, self-registration and cert rotation (SPEC-0038
+AC1–AC9), the chart, driver seam and signed reconcile upgrades (SPEC-0039 AC1–AC7), residency pinning
+and its evidence-pack section (SPEC-0040 AC1–AC8), and fair-use metering with the usage view
+(SPEC-0041 AC1–AC10), each proven by named tests at the exit pins. The one exit criterion the harness
+cannot satisfy — *the whole path proven once end to end on a real customer-shaped cluster, not a
+harness* — is recorded the way Phase 1 and 2 recorded their host limits: carried to T-0003's cluster
+lane, with the conformance-matrix rows in place and all marked real-cluster "not run", rather than
+counted as met. Carried with it: SPEC-0039 AC8's forward/backward migration proof on real state, the
+in-memory agent/residency stores (Postgres adapters), the enrolment CA's production key custody, and
+the residency Declare wire surface — all in `../backlog/`.
 
 Plan: `../plans/phase-3-byo.md`. Scope PR-20…PR-23 as epics **EP-15…EP-18**, tasks **T-0030…T-0034**,
 specs **SPEC-0038…SPEC-0041** (all Approved 2026-08-14). The architecture was decided in
