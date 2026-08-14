@@ -90,6 +90,11 @@ Carried forward out of Phase 2:
 - **`/api/v1` route-prefix deviation.** Every Phase-2 BFF surface shipped under `/api/v1` (as filed in
   T-0023…T-0027), while Phase-1 surfaces use bare `/v1`. Both are live and tenant-scoped; unifying
   them is a routing-hygiene item for a future task, not a correctness gap.
+- **Repo-scoped security dashboard folded into the unified surface.** Stage 1 of the plan named two
+  dashboard routes — org-wide `/security` and repo-scoped `/repos/[repositoryID]/security` — but only
+  the unified `/security` page shipped, with repo scope served as a `?repository=` filter per
+  ADR-0015's unified-surface direction (webfrontend 5b53c36, asserted in T-0023's exit record). The
+  second route was never built; record the substitution here since it was not itemized at exit.
 - **bff `gen/proto/policy/v1` was regenerated at exit** (bff@b7c3763, webfrontend@7997c7c) because
   the super-repo `codegen-check` gate hard-fails on drift — the pinned BFF work itself consumes only
   `Decide`, so the T-0025 EvaluateDryRun/provenance surfaces have no BFF consumer yet; their first
