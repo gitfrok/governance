@@ -1,6 +1,6 @@
 # T-0027: Scoped, read-only, time-boxed auditor access
 
-- **Status:** In progress (contracts + backend auditor grant lifecycle + BFF auditor access routes done; backend GrantFacts composition into evidence.pack.read pending)
+- **Status:** In progress (contracts + backend auditor grant lifecycle + backend PEP grant-facts hook + BFF auditor access routes done; super-repo pointer bump reserved for the final task)
 - **Phase / Epic:** 2 / EP-13 Evidence & auditor access
 - **Repo(s):** governance (policies) + backend + bff
 - **Spec:** docs/specs/SPEC-0033-scoped-auditor-access.md — **Approved 2026-08-14**; RED may start (AGDD)
@@ -89,6 +89,26 @@ See `../process/definition-of-done.md`.
   into the audit app's evidence.pack.read decisions — that PEP hook
   lives in backend, not BFF, and is tracked separately before the
   auditor read path can be proven live end-to-end.
+- Backend PEP grant-facts hook committed as `gitfrok/backend@6e4696c`
+  on `feat/t-0027-auditor-grants` (pushed, stacked on `50bdc34`):
+  the audit app's decide() path now composes Identity & Access's
+  `api.AuditorGrants.GrantFacts` into every evidence.pack.read
+  decision an auditor principal naming a pack makes — facts read
+  FRESH on each decision request, never cached (SPEC-0033 AC7), and
+  rendered into exactly the context keys the merged authz.rego grant
+  rule consumes (auditor_grant_id/state/tenant/expires_at/range
+  bounds/named packs, plus pack range and decision_time). An absent
+  or failing facts source fails the decision closed before the PDP is
+  asked; a factless principal still reaches the PDP so deny-by-default
+  denies and the policy surface records the denial. Member principals
+  are untouched — no facts read, no grant keys, the role-table
+  decision as before. Composition stays at the cmd/dataplane-app line
+  (audit consumes identity's api port; no new module edge, module
+  graph acyclicity preserved). Gates green: go build/vet/test full
+  suite plus -race on touched packages; the live auditor grant proof
+  now witnesses pack reads END-TO-END through decide() against this
+  bundle: allowed under fresh ACTIVE facts, denied
+  unnamed/factless/revoked/expired, member reads unaffected.
 
 ## Notes / open questions
 Depends on T-0026 having a pack to scope. The same **retention** gate applies: the audit retention
