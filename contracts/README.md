@@ -33,16 +33,23 @@ needs a direct response.
   and gets back a tenant-scoped principal or nothing. Issuer, audience, and role vocabulary are
   per-environment configuration and cannot be named by a caller
 - `proto/repository/v1/repository.proto` — tenant-scoped tree, file and diff reads for the BFF
-  (SPEC-0017); authorization remains in Repository/Git
-- `proto/security/v1/findings.proto` — Security/Findings ingest, read, triage and dashboard
-  surface (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027): completed-scan ingestion with
-  server-computed finding identity and lifecycle, opaque scanner provenance, and tenant-scoped,
-  cursor-paginated reads; no request carries an identity, lifecycle, first-seen value, or
-  authorization outcome. Triage is a separate resource keyed by finding identity — `SetTriage`
-  (expected-version guarded, idempotent per request ID) and `GetTriage` (history included) —
-  and the finding message gains no triage field; `GetFindingsSummary` returns counts and facets
-  computed under the caller's authorization, and `ListFindings` filters extend to severity,
-  scanner class, age range, lifecycle and owning team
+  (SPEC-0017); authorization remains in Repository/Git. `GetMergeBase` (SPEC-0028) computes the
+  merge base of two refs or commits — the comparison anchor introduction attribution needs,
+  which nothing else on this surface computed — and reports a no-common-ancestor pair as
+  `found = false`, never as an error
+- `proto/security/v1/findings.proto` — Security/Findings ingest, read, triage, dashboard and
+  merge-request surface (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027, SPEC-0028): completed-scan
+  ingestion with server-computed finding identity and lifecycle, opaque scanner provenance, and
+  tenant-scoped, cursor-paginated reads; no request carries an identity, lifecycle, first-seen
+  value, or authorization outcome. Triage is a separate resource keyed by finding identity —
+  `SetTriage` (expected-version guarded, idempotent per request ID) and `GetTriage` (history
+  included) — and the finding message gains no triage field; `GetFindingsSummary` returns counts
+  and facets computed under the caller's authorization, and `ListFindings` filters extend to
+  severity, scanner class, age range, lifecycle and owning team. `ListMergeRequestFindings`
+  (SPEC-0028) pages the findings an opaque merge-request ID introduced — each with its triage
+  state, its location at the head revision, and an attribution status of
+  ATTRIBUTED/PRE_EXISTING/UNAVAILABLE with an unavailability reason; a missing scan is never an
+  empty finding set, and attribution is derived state recomputed on head or merge-base move
 - `proto/search/v1/search.proto` — Code Search query and index-status surface (SPEC-0034,
   SPEC-0035, ADR-0014): tenant-scoped substring/regex/symbol queries with verified context and
   signed, tenant-bound cursors; the searchable repository set is server-derived from the caller's
@@ -60,16 +67,20 @@ needs a direct response.
 - `proto/bff/v1/browser.proto` — proto-JSON shapes for the BFF tree/file/diff browser views
   (SPEC-0021); tenant and actor are deliberately absent, and the BFF maps only from
   RepositoryReader results
-- `events/codereview/v1/events.proto` — Code Review opened/reviewed/merged/protection-changed
-  events (SPEC-0019); Repository/Git consumes only `BranchProtectionChanged`
+- `events/codereview/v1/events.proto` — Code Review opened/updated/reviewed/merged/
+  protection-changed events (SPEC-0019, SPEC-0028); Repository/Git consumes only
+  `BranchProtectionChanged`, and Security/Findings consumes `MergeRequestOpened` and
+  `MergeRequestUpdated` (head moves and retargets) into its attribution projection
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)
 - `events/audit/v1/events.proto` — the audit trail's `AuditEvent` (ADR-0007, SPEC-0003)
 - `events/security/v1/events.proto` — Security/Findings scan-ingested / finding-opened /
-  finding-resolved / finding-triaged events (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027);
-  opaque identifiers, tenant and repository scope, tool and rule identity, severity, and prior /
-  new triage state — never provenance bytes, justification text, or a policy outcome
+  finding-resolved / finding-triaged / findings-attributed events (SPEC-0024, SPEC-0025,
+  SPEC-0026, SPEC-0027, SPEC-0028); opaque identifiers, tenant and repository scope, tool and
+  rule identity, severity, prior / new triage state, and — for attribution — the merge-request
+  identifier, the head and base revisions compared, and counts by severity — never provenance
+  bytes, justification text, source, or a policy outcome
 - `events/search/v1/events.proto` — Code Search repository-indexed / index-lagged events
   (SPEC-0034, SPEC-0035); opaque identifiers, tenant scope, revision and measured lag — never
   matched content or a permission fact

@@ -7,6 +7,12 @@ service RepositoryReader {
   rpc GetTree(GetTreeRequest) returns (GetTreeResponse);
   rpc GetFile(GetFileRequest) returns (stream FileChunk);
   rpc GetDiff(GetDiffRequest) returns (stream DiffChunk);
+  // GetMergeBase computes the merge base of two refs or commits. Additive for
+  // SPEC-0028: introduction attribution is the set difference between the
+  // scan at an MR's head revision and the scan at the merge base of its
+  // target branch, and nothing on this surface computed a merge base before.
+  // Authorization stays server-side exactly as for the other reads.
+  rpc GetMergeBase(GetMergeBaseRequest) returns (GetMergeBaseResponse);
 }
 // Roles are verified principal attributes supplied to the Repository/Git PDP
 // input. They are not a caller-provided authorization result.
@@ -26,3 +32,12 @@ message FileChunk { FileMetadata metadata = 1; bytes data = 2; bool eof = 3; }
 message FileMetadata { string path = 1; string object_id = 2; uint32 mode = 3; int64 size_bytes = 4; }
 message GetDiffRequest { ReadContext context = 1; string base_revision = 2; string head_revision = 3; string path = 4; }
 message DiffChunk { bytes data = 1; bool eof = 2; }
+// GetMergeBaseRequest names the two sides of the comparison as refs or
+// commit identifiers — a merge request's source ref and target ref are the
+// SPEC-0028 shape. An empty side is rejected; resolution is server-side.
+message GetMergeBaseRequest { ReadContext context = 1; string ref_a = 2; string ref_b = 3; }
+// GetMergeBaseResponse names the merge base. A pair with no common ancestor
+// (unrelated histories) is not an error: found is false and merge_base stays
+// empty, so the caller — Security/Findings, per SPEC-0028 — reports
+// attribution UNAVAILABLE rather than attributing everything.
+message GetMergeBaseResponse { bool found = 1; string merge_base = 2; }

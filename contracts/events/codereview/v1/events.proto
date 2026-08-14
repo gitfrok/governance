@@ -1,9 +1,12 @@
 syntax = "proto3";
 
-// Code Review domain events (SPEC-0019). Events carry opaque IDs and
-// tenant/repository scope; they never carry review text, credentials, Git
-// objects, or a policy allow flag. Repository/Git consumes only
-// BranchProtectionChanged, into a tenant-scoped local projection.
+// Code Review domain events (SPEC-0019, SPEC-0028). Events carry opaque IDs
+// and tenant/repository scope; they never carry review text, credentials,
+// Git objects, or a policy allow flag. Repository/Git consumes only
+// BranchProtectionChanged, into a tenant-scoped local projection;
+// Security/Findings consumes MergeRequestOpened and MergeRequestUpdated
+// into its own projection to learn an MR's head and target without calling
+// Code Review on a read path (SPEC-0028).
 package gitsaas.events.codereview.v1;
 
 option go_package = "github.com/yourorg/gitsaas/gen/events/codereview/v1;coderevieweventsv1";
@@ -48,6 +51,32 @@ message MergeRequestMerged {
   string target_ref = 6;
   string head_revision = 7;
   google.protobuf.Timestamp occurred_at = 8;
+}
+
+// MergeRequestUpdated records that an open merge request moved: a push to
+// its source ref (new head revision) or a retarget to a different target
+// ref (SPEC-0028). Neither movement is observable from the existing events —
+// MergeRequestOpened carries no head revision and fires once,
+// ReviewSubmitted names a head only when a review lands, and the
+// repository's RefUpdated carries no merge-request association — and a
+// retarget changes no ref at all. Additive for SPEC-0028, whose consumers
+// (Security/Findings) must recompute introduction attribution whenever the
+// head or the merge base moves: the event names both sides of what can
+// move, so a projection needs no second read to learn the new pair.
+message MergeRequestUpdated {
+  string event_id = 1;
+  string merge_request_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  // The verified actor whose push or retarget moved the merge request.
+  string actor_id = 5;
+  // The MR's head revision after the move. Always the current head; a
+  // retarget-only move repeats the head it already had.
+  string head_revision = 6;
+  string source_ref = 7;
+  // The target ref after the move; unchanged for a head-only push.
+  string target_ref = 8;
+  google.protobuf.Timestamp occurred_at = 9;
 }
 
 message BranchProtectionChanged {

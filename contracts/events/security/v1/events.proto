@@ -1,11 +1,12 @@
 syntax = "proto3";
 
 // Security/Findings domain events (SPEC-0024, SPEC-0025, SPEC-0026,
-// SPEC-0027). Events carry opaque identifiers, tenant and repository scope,
-// tool and rule identity, and severity; they never carry provenance bytes,
-// scanner credentials, source code, justification text, or a policy allow
-// flag. A consumer builds its own tenant-scoped local projection from them
-// and does not call back into Security/Findings on a hot path (ADR-0022).
+// SPEC-0027, SPEC-0028). Events carry opaque identifiers, tenant and
+// repository scope, tool and rule identity, and severity; they never carry
+// provenance bytes, scanner credentials, source code, justification text, or
+// a policy allow flag. A consumer builds its own tenant-scoped local
+// projection from them and does not call back into Security/Findings on a
+// hot path (ADR-0022).
 package gitsaas.events.security.v1;
 
 option go_package = "github.com/yourorg/gitsaas/gen/events/security/v1;securityeventsv1";
@@ -114,4 +115,33 @@ message FindingTriaged {
   // The verified actor who recorded the decision.
   string actor_id = 8;
   google.protobuf.Timestamp occurred_at = 9;
+}
+
+// FindingsAttributed records that attribution was (re)computed for a merge
+// request: the set difference between the scan at the MR's head revision and
+// the scan at the merge base of its target branch (SPEC-0028). It carries
+// the opaque merge-request, repository and tenant identifiers, the two
+// revisions compared, and counts by severity — attribution is reproducible
+// from two named revisions (SPEC-0028 G5), so a consumer can re-derive the
+// claim without reading back. Recomputation is idempotent per merge request,
+// head and base triple, and a replayed computation emits nothing new
+// (SPEC-0028 non-functional). It never carries source, provenance bytes,
+// justification text, or a policy outcome.
+message FindingsAttributed {
+  string event_id = 1;
+  string tenant_id = 2;
+  string repository_id = 3;
+  // The opaque, Code Review-assigned merge-request identity.
+  string merge_request_id = 4;
+  // The opaque head revision the attribution was computed against.
+  string head_revision = 5;
+  // The opaque merge-base revision compared against. Empty when no merge
+  // base exists; the attributed counts are then all zero and the read
+  // surface reports attribution unavailable (SPEC-0028).
+  string base_revision = 6;
+  int64 attributed_low = 7;
+  int64 attributed_medium = 8;
+  int64 attributed_high = 9;
+  int64 attributed_critical = 10;
+  google.protobuf.Timestamp occurred_at = 11;
 }

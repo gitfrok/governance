@@ -37,7 +37,9 @@ default allow := false
 # T-0022 (findings, SPEC-0025) adds findings.ingest and findings.read;
 # T-0028 (code search, SPEC-0034/0035) adds search.query, search.read and
 # search.index.status.read; T-0023 (security dashboard + triage, SPEC-0026/0027)
-# adds findings.triage and findings.summary.read.
+# adds findings.triage and findings.summary.read; T-0024 (findings on merge
+# requests, SPEC-0028) extends findings.read to the merge_request resource
+# kind — no new action, because reading an MR's findings is reading findings.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -113,9 +115,11 @@ role_actions := {
 # the same permission, and a table keyed only by verb would eventually conflate them.
 #
 # Every entry is the SET of resource kinds the action may be asked about — a singleton for most
-# actions. The one exception is findings.read (SPEC-0025): listing is asked about the
-# repository, reading one finding is asked about the finding itself, and the same PDP decision
-# shape serves both. A set with one member reads exactly as the old pinning did.
+# actions. The one exception is findings.read (SPEC-0025, SPEC-0028): listing is asked about the
+# repository, reading one finding is asked about the finding itself, and reading a merge request's
+# introduced findings is asked about the merge request — and the same PDP decision shape serves
+# all three, with the repository and head revision carried as server-derived context (SPEC-0028).
+# A set with one member reads exactly as the old pinning did.
 #
 # search.query is asked about the tenant (SPEC-0035): the query is tenant-scoped and the
 # searchable repository set is server-derived, so no repository is named in the question.
@@ -147,7 +151,7 @@ action_resource := {
 	"repo.lfs.read": {"repository"},
 	"repo.lfs.write": {"repository"},
 	"findings.ingest": {"repository"},
-	"findings.read": {"repository", "finding"},
+	"findings.read": {"repository", "finding", "merge_request"},
 	"findings.triage": {"finding"},
 	"findings.summary.read": {"repository"},
 	"search.query": {"tenant"},

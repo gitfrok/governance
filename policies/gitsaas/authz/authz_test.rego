@@ -812,3 +812,87 @@ test_deny_search_reasons_are_indistinguishable if {
 	)
 	cross_tenant == no_role
 }
+
+# --- T-0024 / SPEC-0028: findings on a merge request -------------------------------------------
+
+# Reading a merge request's introduced findings reuses findings.read, asked
+# about the merge request itself: the repository, the head revision and the
+# attribution status are server-derived context, never caller claims
+# (SPEC-0028). No new action enters the vocabulary, so the deny cases below
+# pin that the extension widens the resource set of findings.read and
+# nothing else — the mutation this section must catch is one that lets a
+# repository grant, a review grant, or a reader answer a merge-request-keyed
+# findings question.
+mr_findings_request(role) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-mrf", "roles": [role], "tenant_id": "acme"},
+	"action": "findings.read",
+	"resource": {"type": "merge_request", "id": "mr-1"},
+	"context": {},
+}
+
+test_allow_owner_and_member_read_merge_request_findings if {
+	every role in ["owner", "member"] {
+		authz.allow with input as mr_findings_request(role)
+	}
+}
+
+# A reader reads repository text; the findings plane is its own permission,
+# and asking findings.read about a merge request changes nothing about that
+# (SPEC-0025, SPEC-0028 AC8).
+test_deny_reader_reads_merge_request_findings if {
+	not authz.allow with input as mr_findings_request("reader")
+}
+
+# Holding no roles at all denies the merge-request-keyed read like every
+# other question: a caller without read on the merge request or its
+# repository sees nothing, coarsely (SPEC-0028 AC8).
+test_deny_merge_request_findings_with_no_roles if {
+	not authz.allow with input as object.union(
+		mr_findings_request("member"),
+		{"subject": {"id": "u-mrf", "roles": [], "tenant_id": "acme"}},
+	)
+}
+
+# Holding member in another tenant does not authorize the read here
+# (invariant 1); the denial is as coarse as every other (SPEC-0001).
+test_deny_merge_request_findings_from_another_tenant if {
+	not authz.allow with input as object.union(
+		mr_findings_request("member"),
+		{"subject": {"id": "u-mrf", "roles": ["member"], "tenant_id": "globex"}},
+	)
+}
+
+# The extension widens findings.read's resource set only. Ingest stays
+# pinned to the repository kind (tested above), and triage and summary stay
+# pinned to finding and repository respectively: asking either about a
+# merge request is not the question those grants answer.
+test_deny_triage_asked_about_a_merge_request if {
+	not authz.allow with input as triage_request("owner", "findings.triage", "merge_request")
+}
+
+test_deny_summary_read_asked_about_a_merge_request if {
+	not authz.allow with input as summary_request("owner", "findings.summary.read", "merge_request")
+}
+
+# A review grant on the same merge request is not a findings grant: the
+# role table is the whole of the authorization logic, and holding
+# merge_request.review must not be re-readable as findings.read.
+test_deny_merge_request_findings_is_not_implied_by_repo_read if {
+	not authz.allow with input as object.union(
+		reader_request,
+		{"action": "findings.read", "resource": {"type": "merge_request", "id": "mr-1"}},
+	)
+}
+
+# Merge-request-keyed findings denials are as indistinguishable as every
+# other denial: a cross-tenant read and a reader's read receive the same
+# reason, so probing the PDP cannot separate the causes (SPEC-0001).
+test_deny_merge_request_findings_reasons_are_indistinguishable if {
+	cross_tenant := authz.decision.reason with input as object.union(
+		mr_findings_request("member"),
+		{"subject": {"id": "u-mrf", "roles": ["member"], "tenant_id": "globex"}},
+	)
+	reader_mr := authz.decision.reason with input as mr_findings_request("reader")
+	cross_tenant == reader_mr
+}

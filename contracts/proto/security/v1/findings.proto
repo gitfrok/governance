@@ -1,8 +1,9 @@
 syntax = "proto3";
 
 // Internal Security/Findings surface for ingesting completed scan results,
-// reading findings, triaging findings, and reading dashboard summaries
-// (SPEC-0024, SPEC-0025, SPEC-0026, SPEC-0027).
+// reading findings, triaging findings, reading dashboard summaries, and
+// reading findings attributed to a merge request (SPEC-0024, SPEC-0025,
+// SPEC-0026, SPEC-0027, SPEC-0028).
 //
 // Security/Findings owns findings, their identities, scan records, provenance
 // blobs, triage records and their history, and idempotency keys. A finding's
@@ -52,6 +53,17 @@ service FindingsService {
   // that exists only in a repository the caller may not read is absent,
   // not zero (SPEC-0026 AC6, SPEC-0027 AC4).
   rpc GetFindingsSummary(GetFindingsSummaryRequest) returns (GetFindingsSummaryResponse);
+  // ListMergeRequestFindings pages the findings a merge request introduced,
+  // keyed by an opaque merge-request identifier (SPEC-0028). Attribution is
+  // the set difference between the scan at the MR's head revision and the
+  // scan at the merge base, compared by SPEC-0024 identity; it is derived
+  // state, recomputed when the head or base moves, and never a stored claim
+  // that outlives its inputs. If either side of the comparison is missing —
+  // an unscanned base, a failed or timed-out head scan — the response says
+  // attribution is UNAVAILABLE with a reason; it never degrades to an empty
+  // finding set (SPEC-0028 AC7). Tenant scoping, permission filtering and
+  // signed cursors are the same as ListFindings (SPEC-0025, SPEC-0027).
+  rpc ListMergeRequestFindings(ListMergeRequestFindingsRequest) returns (ListMergeRequestFindingsResponse);
 }
 
 // FindingsContext is derived from an authenticated principal by the PEP.
@@ -108,6 +120,46 @@ enum TriageState {
   TRIAGE_STATE_FALSE_POSITIVE = 2;
   TRIAGE_STATE_FIX = 3;
   TRIAGE_STATE_DEFER = 4;
+}
+
+// AttributionStatus is the outcome of comparing what a merge request's head
+// revision reports against what its merge base reports (SPEC-0028). It is
+// server-derived state: no request carries it, and a caller-asserted
+// attribution is not representable in v1. A stale attribution is reported
+// as stale rather than served as current (SPEC-0028 non-functional).
+enum AttributionStatus {
+  ATTRIBUTION_STATUS_UNSPECIFIED = 0;
+  // Present at the MR's head revision and absent at the merge base: the
+  // merge request introduced it (SPEC-0028 attribution rule).
+  ATTRIBUTION_STATUS_ATTRIBUTED = 1;
+  // Present at both the head and the merge base: it predates the merge
+  // request and is never attributed to it, whatever its first-seen time
+  // (SPEC-0028 AC1/AC2).
+  ATTRIBUTION_STATUS_PRE_EXISTING = 2;
+  // Attribution cannot be computed: one side of the comparison is missing.
+  // The reason is in AttributionUnavailableReason, never in an empty result
+  // set (SPEC-0028 AC7).
+  ATTRIBUTION_STATUS_UNAVAILABLE = 3;
+}
+
+// AttributionUnavailableReason names why attribution is UNAVAILABLE. The
+// reason is an honest rendering of a scan that failed, timed out, has not
+// run, or cannot be compared — never "no findings" (SPEC-0028).
+enum AttributionUnavailableReason {
+  ATTRIBUTION_UNAVAILABLE_REASON_UNSPECIFIED = 0;
+  // The merge base has never been scanned (SPEC-0028 attribution rule).
+  ATTRIBUTION_UNAVAILABLE_REASON_BASE_NOT_SCANNED = 1;
+  // The scan of the MR's head revision failed (SPEC-0028 AC7).
+  ATTRIBUTION_UNAVAILABLE_REASON_HEAD_SCAN_FAILED = 2;
+  // The scan of the MR's head revision timed out (SPEC-0028 AC7).
+  ATTRIBUTION_UNAVAILABLE_REASON_HEAD_SCAN_TIMED_OUT = 3;
+  // No scan of the MR's head revision has run yet (SPEC-0028 AC7).
+  ATTRIBUTION_UNAVAILABLE_REASON_HEAD_SCAN_NOT_RUN = 4;
+  // No merge base exists for the source/target pair — e.g. unrelated
+  // histories — so nothing can be compared against. The merge request
+  // reports UNAVAILABLE rather than attributing everything (SPEC-0028
+  // open questions).
+  ATTRIBUTION_UNAVAILABLE_REASON_NO_MERGE_BASE = 5;
 }
 
 // FindingLocation is the content-derived half of a finding's identity input
@@ -385,4 +437,97 @@ message SummaryFacet {
 message SummaryFacetValue {
   string value = 1;
   int64 count = 2;
+}
+
+// ListMergeRequestFindingsRequest pages the findings attributable to one
+// merge request (SPEC-0028). The merge request reaches Security/Findings
+// only as an opaque identifier, fed by Code Review's events into a
+// tenant-scoped local projection; Security/Findings reads no Code Review
+// table and the request carries no head revision, no merge base, no
+// attribution claim and no authorization outcome — all of those are server
+// facts (ADR-0022, SPEC-0028).
+message ListMergeRequestFindingsRequest {
+  FindingsContext context = 1;
+  // The opaque, Code Review-assigned merge-request identity.
+  string merge_request_id = 2;
+  // UNSPECIFIED/empty/zero is no filter for its dimension, and filters
+  // combine, as in ListFindings (SPEC-0026 AC2). Authorization filtering
+  // obeys the same rule as ListFindings: no entry, count, or next-page
+  // indicator may reveal a finding the caller may not read (SPEC-0028 AC8).
+  ScannerClass scanner_class_filter = 3;
+  FindingSeverity severity_filter = 4;
+  AttributionStatus attribution_filter = 5;
+  // Zero means the server's default page size.
+  int32 page_size = 6;
+  // An opaque cursor from a previous response: signed and bound to the
+  // tenant and revision that issued it, exactly as ListFindings'. A forged,
+  // expired, or cross-tenant cursor yields no content (SPEC-0025). Empty
+  // starts at the first page.
+  string page_token = 7;
+}
+
+// MergeRequestFindingView is one finding as it renders on the merge request
+// that is under review: the finding itself, the triage state attached to
+// its identity, its location in the head revision, and its attribution
+// status (SPEC-0028). Triage travels here as view state, not as a field of
+// the Finding message: the finding's shape keeps the triage-resource
+// separation SPEC-0027 AC7 pins, and a triaged finding renders in its
+// triaged state rather than as new (SPEC-0028 AC5).
+message MergeRequestFindingView {
+  Finding finding = 1;
+  // The latest triage record on the finding's identity, if one exists.
+  // Absent means no triage decision has been recorded, and is the only
+  // meaning of absence here: denial of the whole read is a coarse denial
+  // of the request, never a view with an empty triage (SPEC-0001).
+  TriageRecord triage = 2;
+  // The finding's location as resolved at the MR's current head revision.
+  // Identity is revision-invariant (SPEC-0024), so a later push within the
+  // MR that shifts the finding's line re-resolves this location without
+  // changing the finding it belongs to (SPEC-0028 AC4).
+  FindingLocation head_location = 3;
+  AttributionStatus attribution = 4;
+  // Set only when attribution is ATTRIBUTION_STATUS_UNAVAILABLE; the honest
+  // reason the comparison cannot be computed (SPEC-0028 AC7).
+  AttributionUnavailableReason unavailable_reason = 5;
+}
+
+// AttributionSummary is the response-level statement of what was compared
+// and what the comparison produced. Attribution is reproducible from two
+// named revisions (SPEC-0028 G5), so the response names them.
+message AttributionSummary {
+  AttributionStatus status = 1;
+  // Set only when status is ATTRIBUTION_STATUS_UNAVAILABLE.
+  AttributionUnavailableReason unavailable_reason = 2;
+  // The opaque head revision the attribution was computed against: the MR's
+  // current head as Security/Findings learned it from Code Review's events.
+  string head_revision = 3;
+  // The opaque merge-base revision of the MR's source and target, computed
+  // via Repository/Git (repository.v1.RepositoryReader.GetMergeBase). Empty
+  // when no merge base exists; the summary then reports UNAVAILABLE with
+  // ATTRIBUTION_UNAVAILABLE_REASON_NO_MERGE_BASE (SPEC-0028).
+  string merge_base_revision = 4;
+  // True when a recomputation is pending or the served attribution lags the
+  // freshness bound. A stale attribution is reported as stale, never served
+  // as current (SPEC-0028 non-functional).
+  bool stale = 5;
+  // Counts of ATTRIBUTED findings by severity. A summary can never be wider
+  // than the list it summarizes (SPEC-0026 AC6): counts cover only findings
+  // the caller may read.
+  int64 attributed_low = 6;
+  int64 attributed_medium = 7;
+  int64 attributed_high = 8;
+  int64 attributed_critical = 9;
+}
+
+message ListMergeRequestFindingsResponse {
+  // Empty is a legitimate answer only when the summary says attribution was
+  // computed and found nothing: an UNAVAILABLE summary with an empty list is
+  // still UNAVAILABLE, never "no findings" (SPEC-0028 AC7).
+  repeated MergeRequestFindingView findings = 1;
+  // Empty when this is the last page; authorization-derived exactly as in
+  // ListFindingsResponse (SPEC-0026 AC6).
+  string next_page_token = 2;
+  // The comparison this page was served from. Always present: the shape has
+  // no way to say "no findings" without also saying what was compared.
+  AttributionSummary summary = 3;
 }
