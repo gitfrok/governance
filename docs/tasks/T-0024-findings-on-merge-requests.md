@@ -55,3 +55,9 @@ measurement will observe there — ingest off `CIJobFinished` with pre-materiali
 **not yet built**: at the pinned backend no `CIJobFinished` subscriber exists and scan ingest is
 RPC-only, so the `CIJobFinished`→ingest wiring is itself part of what the cluster lane must first
 deliver, distinct from (and preceding) the scan-dispatch host limit above.
+
+Fix wave 2 (review H5/H6/L14, backend@42ad9b3): `ScanReportAt` spans every scanner class at the
+revision and `ScanReport` carries its `ScanIDs` (H5); an attribution recompute replaces the cached
+record so a later scan reaches the MR view and gate facts (H6); `UNAVAILABLE` carries the
+resolver-not-composed reason (L14) — the wire enum still maps it to `UNSPECIFIED` until contracts
+add the value (backlog carry-over). See `../plans/phase-2-ultimate-wedge.md`.

@@ -65,3 +65,7 @@ Phase-2 exit (task #23, 2026-08-14):
   later Zoekt swap is an engine change, not a module change (rationale recorded at
   `backend/modules/codesearch/internal/engine/engine.go`).
 - Super-repo pointer lands with the phase-exit pin bump.
+
+Fix wave 2 (review L15/L17, backend@42ad9b3): indexing jobs carry a per-job timeout so one hung
+fetch no longer stops indexing for the whole plane (L15), and search cursors are bound to the
+issuing actor (L17). See `../plans/phase-2-ultimate-wedge.md`.

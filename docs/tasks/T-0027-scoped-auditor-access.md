@@ -115,6 +115,11 @@ See `../process/definition-of-done.md`.
   denied after expiry/revocation with the next decision (grant facts
   composed fresh per decision, never cached). AC1–AC7 all hold; the
   super-repo pin bump this task reserved lands with the phase exit.
+- Fix wave 2 (review M9/L16, backend@42ad9b3): grant issuance inserts the
+  grant before appending the immutable audit record (M9, SPEC-0033 AC4),
+  and `GrantDecisionFacts` now include the grant's `RepositoryID` so policy
+  can compare the grant's repository scope against the pack's (L16,
+  SPEC-0033 AC1/AC8). See `../plans/phase-2-ultimate-wedge.md`.
 
 ## Notes / open questions
 Depends on T-0026 having a pack to scope. The same **retention** gate applies: the audit retention

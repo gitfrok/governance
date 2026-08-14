@@ -67,3 +67,9 @@ satisfied at the BFF API (bff@3c4ebe0 request/status/retrieve for the compliance
 was in this task's scope). Anchor verification + tamper detection: the pack is a self-contained
 snapshot embedding records and chain anchors (ADR-0055 rule 3), with consumer-side verification
 tests. DRY_RUN decisions are excluded from control sections by type.
+
+Fix wave 2 (review H4/M7/M8, backend@42ad9b3): a truncated trail section now carries
+`Complete: false` with the gap marked instead of presenting as complete (H4, SPEC-0031 AC10 /
+SPEC-0032 AC8); the header chunk is bounded — sections and appendix no longer ride chunk 0 (M7); a
+policy decision without an input digest is refused from the control section (M8, SPEC-0031 AC3).
+See `../plans/phase-2-ultimate-wedge.md`.

@@ -85,7 +85,9 @@ against T-0003's cluster lane exactly as Phase 1 recorded them; and the exit e2e
 live-cluster steps were demonstrable only up to the host limit (dev-cluster bring-up blocked at the
 interactive mkcert/ingress step on this host). The Phase-2 code review added a third class —
 **deployment-posture limits** (unauthenticated dataplane door, in-process-only restart state) —
-recorded in the carried-forward list below and in the specs they bound.
+recorded in the carried-forward list below and in the specs they bound. The review's remaining 15
+findings (H1, H3–H6, M7–M12, L14–L17) were code fixes merged to backend main at **42ad9b3** (fix
+wave 2 — see the exit plan's fix-wave block); two of them carry governance follow-ups below.
 
 Carried forward out of Phase 2:
 
@@ -123,6 +125,16 @@ Carried forward out of Phase 2:
   per-tenant or global cap. Recorded as limits against SPEC-0031 AC8 and SPEC-0034 AC4/AC5, holding
   under the single-tenant dev posture with restart re-announcement as the recovery path. Follow-up:
   startup seeding or persistent stores for packs, the projection and the index; per-tenant index caps.
+- **PDP-driven merge-gate severity threshold (code-review M11).** Fix wave 2 (backend@42ad9b3)
+  enforced the threshold as a rego-vs-Go parity test in backend CI, but SPEC-0029 AC3 wants the rule
+  in the bundle: the assembler should pass the severity distribution and the triage records to the
+  PDP and let the rule pick the threshold, removing the mirrored Go constant. Follow-up: governance
+  contract change to the security merge-gate facts (additive, governance PR first per ADR-0027),
+  then backend moves the threshold filtering into the PDP.
+- **Attribution UNAVAILABLE reason wire enum (code-review L14).** Fix wave 2 (backend@42ad9b3) makes
+  the attribution carry the resolver-not-composed reason internally, but the wire contract has no
+  enum value for it, so gRPC renders it `UNSPECIFIED` until contracts add one (SPEC-0028 AC7 names
+  the reason). Follow-up: additive contract change adding the value, then the backend surfaces it.
 
 **EP-11 gates the phase.** T-0022 fixes the normalized findings model and, harder, the rule for
 **stable finding identity across scans**; triage that survives a re-scan (T-0023), MR attribution

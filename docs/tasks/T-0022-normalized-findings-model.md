@@ -58,3 +58,7 @@ seeded repository with an unrelated intermediate commit, identities equal. AC1â€
 full backend suite with `TEST_DATABASE_URL` (Postgres, RLS). Scan *dispatch* through CI v0 remains
 the recorded host limit against T-0003's cluster lane (planning-time record above, unchanged).
 Shipped scanners: Semgrep (SAST) + gitleaks (secrets) behind the one ingestion contract.
+
+Fix wave 2 (review M10, backend@42ad9b3): exactly one audit record per accepted ingest (SPEC-0025
+AC5) â€” a claim marker plus replay backfill closes the retry-replay hole; the marker is append-only
+because the `scan_chunks` grants are INSERT-only. See `../plans/phase-2-ultimate-wedge.md`.

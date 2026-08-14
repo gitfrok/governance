@@ -53,3 +53,7 @@ differential two-principal leak tests; byte-identical responses for no-match vs 
 Web dashboard (org + repo surfaces) ships in webfrontend@5b53c36 with the triage actions and
 justification flow; BFF stays shape-only under the boundary fitness tests. All suites green at the
 exit pins (backend full suite with `TEST_DATABASE_URL`, bff, webfrontend check/test/build).
+
+Fix wave 2 (review H3 + L17, backend@42ad9b3): `GetFinding`/`GetTriage` now refuse cross-repository
+reads inside a tenant (mirroring `SetTriage`, SPEC-0026 AC6 / SPEC-0027 AC3–AC4), and findings
+cursors are bound to the issuing actor. See `../plans/phase-2-ultimate-wedge.md`.

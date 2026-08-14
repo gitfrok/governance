@@ -208,6 +208,38 @@ follow-up.
   seeding or persistent stores for pack state, the attribution projection and the search index, and
   per-tenant/global caps on the index. Recorded in SPEC-0031's and SPEC-0034's open questions.
 
+**Fix wave 2 (review H1–L17, backend 42ad9b3, 2026-08-14)** — the Phase-2 code review (super-repo
+`phase-2-code-review.md`) reported 17 findings; H2/M13 were recorded above as deployment-posture
+limits at 3313a42, and the remaining 15 were code fixes, merged to backend `main` at **42ad9b3**:
+
+- **H1** — decision-record reads (`GetDecision`/`EvaluateDryRun`) refuse a caller-supplied tenant
+  that mismatches the verified caller; a guard hook is reserved for the future caller-pinning
+  interceptor (note (d)'s follow-up).
+- **H3** — `GetFinding`/`GetTriage` now refuse cross-repository reads inside a tenant, mirroring
+  `SetTriage`'s existing check.
+- **H4** — evidence-pack trail truncation is no longer silent: a truncated section carries
+  `Complete: false` with the gap marked.
+- **H5** — `ScanReportAt` spans every scanner class at the revision; `ScanReport` carries the
+  `ScanIDs` it was built from.
+- **H6** — an attribution recompute replaces the cached record, so a later scan reaches the MR view
+  and the gate facts.
+- **M7** — the pack's header chunk is bounded (sections and appendix cleared from chunk 0).
+- **M8** — a policy decision without an input digest is refused from the control section.
+- **M9** — auditor-grant issuance inserts the grant before appending the immutable audit record.
+- **M10** — exactly one audit record per accepted ingest via a claim marker plus replay backfill.
+  Design note: the marker is append-only because the `security.scan_chunks` grants are INSERT-only.
+- **M11** — enforced as a rego-vs-Go threshold-parity **test** in backend CI; the full PDP-driven
+  threshold needs a governance contract change → carried in `../backlog/README.md`.
+- **M12** — decision-record append moved off the `Decide` hot path (async), with ENFORCED decisions
+  failing closed on backpressure — note (c)'s availability contract now binds the async append.
+- **L14** — `UNAVAILABLE` attribution carries the resolver-not-composed reason. Wire limitation:
+  gRPC maps it to `UNSPECIFIED` until contracts add the enum value → carried in
+  `../backlog/README.md`.
+- **L15** — per-job indexer timeout; one hung fetch no longer stops indexing for the whole plane.
+- **L16** — `GrantDecisionFacts` include the grant's `RepositoryID`, so policy can compare the
+  grant's repository scope against the pack's.
+- **L17** — code-search and findings cursors are bound to the issuing actor.
+
 ## Risks
 
 - **Host limits carry forward from Phase 1.** Scans ride CI v0, and the dev cluster has no gVisor

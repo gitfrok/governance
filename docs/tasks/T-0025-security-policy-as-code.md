@@ -54,3 +54,11 @@ import), failing CLOSED on missing/stale facts. The imported-approval denial (AC
 test, and the super-repo composition check gained the mandated allow/deny pair
 (`merge-findings-clean` ALLOW / `merge-findings-missing-facts` DENY) over the real bundle — green
 at exit. BFF PEP needed no change: its cache is keyed by bundle revision already (AC6).
+
+Fix wave 2 (review H1/M11/M12, backend@42ad9b3): decision-record reads refuse a caller-supplied
+tenant that mismatches the verified caller, with a guard hook reserved for the future caller-pinning
+interceptor (H1, SPEC-0030 AC6); the merge-gate severity threshold is enforced as a rego-vs-Go
+parity test in backend CI, with the full PDP-driven threshold carried in `../backlog/README.md` as
+a contract-change follow-up (M11, SPEC-0029 AC3); the decision-record append moved off the `Decide`
+hot path (async) with ENFORCED decisions failing closed on backpressure (M12). See
+`../plans/phase-2-ultimate-wedge.md`.
