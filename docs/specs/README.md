@@ -47,3 +47,8 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0039 | BYO packaging, per-cloud drivers, signed reconcile upgrades | Approved | T-0031, T-0032 |
 | SPEC-0040 | Region and cloud pinning, demonstrable in the evidence pack | Approved | T-0033 |
 | SPEC-0041 | Fair-use metering and envelope behaviour | Approved | T-0034 |
+| SPEC-0042 | Durable agent and residency stores | Approved | — |
+| SPEC-0043 | Residency Declare surface and placement hardening | Approved | — |
+| SPEC-0044 | Agent-CA custody and rotation operations | Approved | — |
+| SPEC-0045 | Multi-cluster BYO readiness | Approved | — |
+| SPEC-0046 | Usage view truth and the PR-7 read-only distinction | Approved | — |
