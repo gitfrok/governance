@@ -205,7 +205,10 @@ epics now own are annotated with their new epic — the mapping is restated in �
   outright for a customer whose egress permits only an HTTP proxy (tracked already; unchanged).
 - **CA key custody** (ADR-0057-scoped platform-secrets follow-up) — the enrolment CA runs on dev key
   custody; production custody is the platform-secrets decision SPEC-0038's out-of-scope names.
-  → **EP-21** (T-0040).
+  → **EP-21** (T-0040). **Closed 2026-08-15** — EP-21 complete: T-0040 is Done — the production
+  composition root signs through the deployed, pinned OpenBao custody service exclusively, and
+  rotation distributes as a staged CA trust bundle over reconcile (backend@b0ab32e +
+  super-repo@f8449b8; Wave-3 close-out at backend@28f729f + super-repo@5adedf1).
 - **Postgres adapters for the agent/residency in-memory stores** — the enrolment-token/data-plane
   registry and the residency declaration store do not survive a control-plane restart; the audit trail
   is durable, the live stores are not. → **EP-19** (T-0036, T-0037). **Closed 2026-08-15** — EP-19
@@ -213,9 +216,14 @@ epics now own are annotated with their new epic — the mapping is restated in �
   T-0037's exit record closes T-0033's recorded in-memory-store limit.
 - **Residency Declare wire surface** — the declaration is set by in-process composition only; a
   wire/RPC surface is future work. → **EP-20** (T-0038, with placement hardening in T-0039).
+  **Closed 2026-08-15** — EP-20 complete: T-0038 (governance half at 794f578/3b9e853, bundle
+  0.10.0, + backend half) and T-0039 are Done at backend@f182761, closing T-0033's recorded
+  Declare-wire limit.
 - **PR-7 read-only enforcement** — the commercial read-only prohibition holds now, but the in-product
   distinction from the PR-7 durability read-only mode (ADR-0018) is enforced per ADR-0061 when PR-7
-  ships. → **EP-23** (T-0044).
+  ships. → **EP-23** (T-0044). **Closed 2026-08-16** — T-0044 is Done (backend@0238dee +
+  webfrontend@843a195): every read-only state names its cause and commercial states never render
+  read-only; EP-23 complete with T-0043.
 
 Open and able to block a sale rather than a sprint: **proxy-only egress** (ADR-0017's remaining
 follow-up) stops an install outright for a customer whose egress permits only an HTTP proxy.
@@ -232,7 +240,7 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 | **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Done — T-0038 governance half at 794f578/3b9e853 (bundle 0.10.0) + backend half at backend@f182761; T-0039 at backend@f182761; closes T-0033's Declare-wire limit |
 | **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Done — T-0040 AC1–AC5 proven at backend@b0ab32e (composition swap, reconcile distribution, fitness) + super-repo@f8449b8 (runbook §6b, wiring assertions) on the super-repo@31c9b45 deployment; live dev-OpenBao issuance round-trip proven, honest "not run" rows recorded; Wave-3 review close-out at backend@28f729f + super-repo@5adedf1 |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | In progress — T-0041 Done (SPEC-0045 AC1, AC2 harness half, AC4, AC5 proven at backend@762d5f0 + a669cef, super-repo@febf0f7 on governance@b5128b0); T-0042 carries AC3 + AC2's real-cluster half, blocked by T-0003's cluster lane |
-| **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
+| **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Done — T-0043 AC1/AC2/AC3/AC5 proven (backend@bc30abd, bff@4059a23, webfrontend@08f42c4; contracts governance@b425db0/36f284b); T-0044 AC4/AC5 proven (backend@0238dee, webfrontend@843a195) |
 
 **T-0036 is Done** (exit record in `../tasks/T-0036-durable-agent-stores.md`): backend@c9e58c5,
 2026-08-15 — the durable enrolment-token store and data-plane registry proven against a real-Postgres

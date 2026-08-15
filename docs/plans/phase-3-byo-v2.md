@@ -148,23 +148,23 @@ under its own governance PR first.
 - [ ] All SPEC-0042…0046 acceptance criteria green — including at least one real cluster per cloud,
       or an honestly annotated subset with named causes (the conformance matrix's own rule; never a
       silent "not run").
-- [ ] Durable-store restart proofs: token spend, registry staleness and residency declarations
+- [x] Durable-store restart proofs: token spend, registry staleness and residency declarations
       survive a control-plane kill-and-restart against real Postgres, and pack assembly is proven
       unable to reach in-process stores (SPEC-0042 AC1–AC4).
-- [ ] Custody off-disk proofs: the production composition root cannot construct a CA from disk or
+- [x] Custody off-disk proofs: the production composition root cannot construct a CA from disk or
       env, the dev CA is unreachable, and staged rotation is proven with no re-enrolment
       (SPEC-0044 AC1–AC3) — with the custody service itself deployed, pinned and unsealable by the
       documented procedure (SPEC-0044 AC5).
-- [ ] The Declare surface refuses an unauthenticated or self-asserted caller before the PDP is asked,
+- [x] The Declare surface refuses an unauthenticated or self-asserted caller before the PDP is asked,
       and no request field can choose tenant, actor or roles (SPEC-0043 AC6).
-- [ ] A signing failure during enrolment behaves as SPEC-0042 AC6 specifies — proven by test with the
+- [x] A signing failure during enrolment behaves as SPEC-0042 AC6 specifies — proven by test with the
       signer down, not reasoned about.
-- [ ] Divergence gates shipped through webfrontend: both numbers rendered, applied throttle
+- [x] Divergence gates shipped through webfrontend: both numbers rendered, applied throttle
       observable end to end, never-zero/never-blocked pins failing the build on regression
       (SPEC-0046).
 - [ ] Full gate matrix green at the final pin bump — every repo, one commit per submodule, submodule
       pins referencing merged commits only (invariant 25).
-- [ ] Runbook current: the rotation procedure with its removal precondition, and the clock-skew
+- [x] Runbook current: the rotation procedure with its removal precondition, and the clock-skew
       symptom cross-reference (SPEC-0044 AC4).
 
 ## Risks
