@@ -41,9 +41,14 @@ and nothing here adjusts a metered number.
 
 ## Contracts touched
 
-None by default — the usage view surface landed with T-0034. Where a cause or state field the ACs
-need is missing from an existing view contract, it is an additive change under its own governance PR
-first.
+One additive field, governed before its consumers (this section updated when
+the change landed): AC2 requires the per-dimension state to name its trend,
+and the BFF/browser surfaces render without deriving, so `usage/v1/usage.proto`
+gains the `EnvelopeTrend` enum and `UsageDimensionView.trend` (field 13,
+additive-only, no renumbering), sourced from the same derivation the SPEC-0041
+AC4 notices cite. Everything else the ACs need landed with T-0034; where any
+further cause or state field proves missing from an existing view contract, it
+is an additive change under its own governance PR first.
 
 ## Data owned
 

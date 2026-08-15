@@ -46,6 +46,20 @@ enum DimensionCoverage {
   DIMENSION_COVERAGE_DEFERRED    = 2;
 }
 
+// The direction one dimension's counter moved relative to the interval before
+// it, computed in the control plane with the SAME derivation the SPEC-0041
+// AC4 notices cite (an unknown past is FLAT, never estimated). Meaningful only
+// when the row's coverage is METERED and telemetry_gap is false. Added
+// additively for SPEC-0046 AC2: the state visible to the customer names its
+// dimension, its trend and which envelope behaviour follows, so the AC4
+// notification is never the customer's first sight of trouble.
+enum EnvelopeTrend {
+  ENVELOPE_TREND_UNSPECIFIED = 0;
+  ENVELOPE_TREND_FLAT        = 1;
+  ENVELOPE_TREND_RISING      = 2;
+  ENVELOPE_TREND_FALLING     = 3;
+}
+
 // One telemetry-less interval for a metered dimension (SPEC-0041 AC3): the
 // data plane was silent here, and absence of events is never rendered as
 // absence of usage — the same rule the evidence pack applies to truncation
@@ -79,6 +93,11 @@ message UsageDimensionView {
   // Set only when coverage is DEFERRED: the honest reason the dimension is
   // not metered in this phase (SPEC-0041 AC2).
   string deferred_reason = 12;
+  // The dimension's trend relative to the previous interval (SPEC-0046 AC2),
+  // sourced from the same derivation the SPEC-0041 AC4 notices cite. Additive
+  // (field 13); meaningful only when coverage is METERED and telemetry_gap is
+  // false.
+  EnvelopeTrend trend = 13;
 }
 
 // UsageDivergence is one health finding (SPEC-0041 AC1, ADR-0061 §2): a data
