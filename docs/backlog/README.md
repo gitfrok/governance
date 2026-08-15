@@ -208,7 +208,9 @@ epics now own are annotated with their new epic — the mapping is restated in �
   → **EP-21** (T-0040).
 - **Postgres adapters for the agent/residency in-memory stores** — the enrolment-token/data-plane
   registry and the residency declaration store do not survive a control-plane restart; the audit trail
-  is durable, the live stores are not. → **EP-19** (T-0036, T-0037).
+  is durable, the live stores are not. → **EP-19** (T-0036, T-0037). **Closed 2026-08-15** — EP-19
+  complete: T-0036 (agent stores) and T-0037 (residency declarations + pack assembly) are Done, and
+  T-0037's exit record closes T-0033's recorded in-memory-store limit.
 - **Residency Declare wire surface** — the declaration is set by in-process composition only; a
   wire/RPC surface is future work. → **EP-20** (T-0038, with placement hardening in T-0039).
 - **PR-7 read-only enforcement** — the commercial read-only prohibition holds now, but the in-product
@@ -226,9 +228,9 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | T-0036 Done — AC1, AC2, AC5 (agent half), AC6 proven real-Postgres; T-0037 open |
+| **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Done — AC1–AC6 proven real-Postgres (T-0036 backend@c9e58c5, T-0037 backend@816cb30) |
 | **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Planned |
-| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Planned |
+| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | T-0040 in flight — AC5 deployed + check-asserted (super-repo@31c9b45); custody packages landed unwired (backend@187c89e); additive `ca_trust_bundle` contract field landed (governance@ce455d4); composition swap, fitness, rotation wiring and runbook pending (Wave 3b) |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
 
@@ -241,6 +243,17 @@ super-repo@c7904d1 with the agent migration wired into `dev-provision.sh`. Carri
 durability proofs without `TEST_DATABASE_URL`, and the AC6 runbook edit rides T-0040's super-repo
 commit. The governance pin bump waits for Wave 3a — consumers must regenerate and commit the
 residency codegen first (freshness is gated at the super-repo pin, T-0020 AC5).
+
+**T-0037 is Done — EP-19 is complete** (exit record in `../tasks/T-0037-durable-residency-pack-assembly.md`):
+backend@816cb30, 2026-08-15 — the durable residency declaration store (effective-dated rows with
+retained history) and evidence-pack assembly from durable projections only, proven with `-race`
+against a real-Postgres harness with zero skips (AC3 durability/effective-dating with an identical
+pack digest across kill −9/restart, AC4's import-closure fitness gate against in-process stores,
+AC5 residency migrations/RLS/no-unscoped-path). It **closes T-0033's carried limit** — *the
+declaration store is in-memory and lost on a control-plane restart* — the last in-memory store Phase
+3 recorded. Carried, verbatim from T-0036: CI skips the durability proofs without
+`TEST_DATABASE_URL`. The super-repo governance pin bump still waits for Wave 3a (consumer residency
+codegen first, T-0020 AC5).
 
 One line each (detail in the plan and the specs):
 
