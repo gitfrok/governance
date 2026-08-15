@@ -137,7 +137,17 @@ without the same per-RPC verification seam.
 (794f578/3b9e853, bundle 0.10.0) with its own policy tests, proven from the backend side by
 `TestBundlePlatformOperatorDeclaresBoundTenant` (allowed on the bound tenant) and
 `TestBundlePlatformOperatorTenantMismatchRefused` (denied on tenant mismatch); the owner grant is
-unchanged beside it.
+unchanged beside it. The audit clause (ADR-0067 decision 3) was implemented in the review-fix
+round at backend@28f729f and is proven by `TestDeclarationRecordsNameTheGrantedRole`
+(`modules/residency/internal/app/service_test.go`: every record — allowed AND denied — carries
+the granted role derived from the verified roles the PDP consumed, `platform_operator` preferred
+over `owner`, never a caller claim) and by the granted-role assertions inside
+`TestBundleOneAuditRecordPerActAndRefusal` (`modules/residency/internal/app/policy_bundle_test.go`:
+the owner's record names `granted_role=owner` beside the operator's `platform_operator`, through
+the real bundle). The vocabulary change was a backend-side ADDITIVE detail key
+(`granted_role`, `platform/audit`): the existing record shape expressed the distinction, so
+ADR-0067's conditional — "if the existing record shape cannot express it, that is an additive
+change under its own governance PR" — did not trigger, and no governance PR was needed.
 
 **Closes T-0033's recorded limit** — *Declare has no wire/RPC surface in Phase 3; the declaration
 is set by in-process composition only* — the same shape T-0037 used to discharge T-0033's store
@@ -148,4 +158,6 @@ input is read BEFORE the declaration is witnessed and stored, so a failing read 
 with nothing committed and fail-closed is preserved (`TestDeclareFailsClosedWhenTheSweepReadFailsBeforeCommit`,
 `TestDeclareStandsWhenContradictionWitnessingFails`) — and 28f729f remediates C3 — the audit
 record's `granted_role` detail is populated from the verified roles the PDP consumed
-(`platform_operator` preferred, else `owner`), never a caller claim (AC7).
+(`platform_operator` preferred, else `owner`), never a caller claim (AC7; proven by
+`TestDeclarationRecordsNameTheGrantedRole` and the granted-role assertions in
+`TestBundleOneAuditRecordPerActAndRefusal`, cited in the AC7 paragraph above).

@@ -192,10 +192,29 @@ brings no new Postgres migration and no new RLS exemption: the snapshot is a ten
 singleton — key references and public certificates only — so no tenant-isolated RLS table carries
 it honestly.
 
+**Carry — SPEC-0041 AC5's shape, recorded against SPEC-0044:** `DesiredState.ca_trust_bundle` is
+DISTRIBUTED — the control plane publishes the staged roots on the reconcile channel and the
+distribution tests prove both roots ride it during the window — but NO data-plane consumer applies
+it yet: nothing on the data-plane side reads the field and reconfigures its trust. The application
+half rides with the operator/multi-cluster work — **T-0041** (cross-plane trust-bundle distribution)
+and **T-0042** (real-cluster conformance) are its owners, exactly as SPEC-0041 AC5's data-plane half
+stays T-0035's. Until then the honest statement is: the channel distributes both roots during the
+window; runbook §6b is worded to match.
+
+**Named follow-up — runtime rotation actuation:** `Bundle.Stage` and `Bundle.RemoveRoot` have no
+production caller in the shipped binary — the window suites and the reconcile-distribution tests
+exercise them, but no operator surface or reconcile hook invokes them at runtime (test-only today).
+What IS executable today: distribution of staged bundles over reconcile, the dual-validate window,
+and removal-precondition enforcement WHEN removal is invoked. The actuation seam (an operator-
+invocable stage/remove path) is the follow-up and rides with T-0041/T-0042's work; §6b states both
+halves explicitly. Beside it, the snapshot-file semantics (startup Restore/Bootstrap/re-attach,
+atomic 0600 writes, corrupt snapshot fails startup loudly, persistent-volume requirement) are
+documented in MVP-RUNBOOK §6b against backend@28f729f.
+
 **Pin row:** super-repo@89157a3 (pinning backend@b0ab32e + governance@4b01c61) closed the wave's
 pins, on top of governance@ce455d4 (the additive `ca_trust_bundle` contract field); board #20's
-close-out then supersedes the backend pin at 28f729f in the super-repo commit that lands after
-this record.
+close-out superseded the backend pin at 28f729f at super-repo@5adedf1 (governance e9e05f9 beside
+it), and this record's own landing bumps the governance pointer again.
 
 **ADR-0062 check:** compatible — the file snapshot carries bundle staging state only; keys stay
 in OpenBao transit; it is not the spend/declaration durability ADR-0062 rejects (its rejected

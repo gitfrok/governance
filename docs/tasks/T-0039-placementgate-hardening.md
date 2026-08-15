@@ -82,11 +82,16 @@ contradiction is not evidence of pinning), backed by the gap suite
 
 **SPEC-0043 AC4 — PlacementGate refuses without spending the token, audited:**
 `TestEnrolPlacementRefusedLeavesTokenUnspent` (coarse refusal shape, unspent token),
-`TestResidencyCompositionRefusesAndWitnesses` (the composition drives a FAILING declaration store
-through the gate — an unavailable store refuses, never admits, SPEC-0043 AC4 — and the witness
-path names the declared and the attempted placement), `TestEnrolGateErrorFailsClosed` and
-`TestEnrolGateSeesTenantScopedPlacement`, with the refusal audited
-(`TestAdmissionRefusalsAreAudited`).
+`TestResidencyCompositionRefusesAndWitnesses` (kept for the contradiction-refusal/witnessing
+claim — the composition drives a FAILING declaration store through the gate and the witness path
+names the declared and the attempted placement), and
+`TestResidencyGateUnavailableRefusesCoarseAndKeepsToken`
+(`backend/cmd/controlplane-app/residency_test.go`, board #20 close-out — the unavailable-store
+proof at the production composition boundary: the durable store goes down, even the DECLARED
+placement refuses with the same coarse DENIED shape, the token stays unspent, the refusal is
+audited, and the retry from the SAME token after recovery proves the refusal cost nothing),
+with `TestEnrolGateErrorFailsClosed` and `TestEnrolGateSeesTenantScopedPlacement` beside them,
+and the refusal audited (`TestAdmissionRefusalsAreAudited`).
 
 **Wave-3 review fix (backend main 28f729f):** 19af0ed remediates C2 — DENIED residency
 declarations never enter the pack's declaration lineage: both derivation points admit ALLOWED

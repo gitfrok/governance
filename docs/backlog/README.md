@@ -230,7 +230,7 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 |---|---|---|---|---|
 | **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Done — AC1–AC6 proven real-Postgres (T-0036 backend@c9e58c5, T-0037 backend@816cb30) |
 | **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Done — T-0038 governance half at 794f578/3b9e853 (bundle 0.10.0) + backend half at backend@f182761; T-0039 at backend@f182761; closes T-0033's Declare-wire limit |
-| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Done — T-0040 AC1–AC5 proven at backend@b0ab32e (composition swap, reconcile distribution, fitness) + super-repo@f8449b8 (runbook §6b, wiring assertions) on the super-repo@31c9b45 deployment; live dev-OpenBao issuance round-trip proven, honest "not run" rows recorded |
+| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Done — T-0040 AC1–AC5 proven at backend@b0ab32e (composition swap, reconcile distribution, fitness) + super-repo@f8449b8 (runbook §6b, wiring assertions) on the super-repo@31c9b45 deployment; live dev-OpenBao issuance round-trip proven, honest "not run" rows recorded; Wave-3 review close-out at backend@28f729f + super-repo@5adedf1 |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
 
@@ -278,6 +278,20 @@ throwaway keys deleted. Recorded "not run": no rotation against a real fleet, an
 custody-enabled control-plane image is not yet built or deployed. Shared mechanism named per the
 task's ordering Note: T-0041's release trust bundle rides the same DesiredState channel as a
 separate field; naming and tests stay strictly apart.
+
+**EP-21's carry (SPEC-0041 AC5's shape, board #20 close-out):** `DesiredState.ca_trust_bundle` is
+DISTRIBUTED over the reconcile channel — both roots ride it during the dual-validate window — but
+NO data-plane consumer applies it yet; the application half rides with the operator/multi-cluster
+work and its owners are named: **T-0041/T-0042**. Beside it, two named follow-ups from the same
+close-out: runtime rotation actuation (`Bundle.Stage`/`Bundle.RemoveRoot` have no production
+caller in the shipped binary — distribution, the window, and removal-precondition enforcement when
+removal is invoked are what execute today) and the custody-enabled image's deployment requirement
+for a persistent volume under `GITFROK_CUSTODY_SNAPSHOT_FILE` (deploy/dev/controlplane.yaml has no
+PVC today — an honest carry, not added now). Both are recorded in T-0040's exit record and in
+MVP-RUNBOOK §6b, which states the snapshot-file semantics (Restore/Bootstrap/re-attach, atomic
+0600 writes, corrupt snapshot fails startup loudly) against backend@28f729f. The Wave-3 review fix
+chain (7d5b693, 212e17d, 19af0ed, eb2ed15, 28f729f) landed verified-green at backend@28f729f and
+the super-repo pins were bumped to it at super-repo@5adedf1.
 
 One line each (detail in the plan and the specs):
 
