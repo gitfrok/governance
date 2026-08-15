@@ -1,6 +1,8 @@
 # T-0038: Residency Declare wire surface — residency/v1, verified caller, control-plane implementation, PDP binding
 
-- **Status:** Todo
+- **Status:** Todo — governance half (residency/v1 contracts + AC7 grant, bundle 0.10.0) landed at
+  governance@794f578; the backend half (control-plane service, caller verification, PDP binding —
+  AC1/AC5/AC6) remains Wave 3 work
 - **Phase / Epic:** 3.1 / EP-20 (residency Declare and placement hardening)
 - **Repo(s):** governance (additive `contracts/proto/residency/v1`, plus the `policies/` grant and
   its tests for AC7), backend (control-plane service and PDP binding) — ADR-0027 order, one
