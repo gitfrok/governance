@@ -187,6 +187,40 @@ passes without it (probed via `--resolve`). AC2's openbao half — `smoke-dev.sh
 assertion missing the `OPENBAO_IMAGE` pin — was the one real drift board #23 found and fixed;
 `make dev-smoke` AC2 is green with it.
 
+### Recorded limits carried out of Phase 3.1 (code review, 2026-08-16)
+
+The phase-3.1 code review (super-repo `cfd8898`) confirmed the phase's acceptance criteria and found
+no failing gate. Two of the criteria are met in a narrower sense than their wording suggests, and the
+distinction is recorded here so a later reader does not take a tick for more than it proves. Neither
+is a defect against a decision; both are scope the phase deliberately did not carry.
+
+- **(f) SPEC-0046 AC4 — the read-only cause is contract vocabulary, and nothing produces or renders
+  one yet.** The AC reads "any read-only state in the UI or API identifies its cause". What exists is
+  the vocabulary and its prohibitions: `backend/modules/repository/api/readonly.go` (a bare
+  "read-only" is not constructible; the commercial branch cannot express one) and
+  `webfrontend/src/lib/readonlyCause.ts` (durability and throttle render as different distinctions;
+  an unknown cause renders nothing). Neither has a non-test caller, and no wire field carries a
+  cause. This follows SPEC-0046's own stated assumption — PR-7's durability mode has no product
+  state yet — and T-0044's exit record says so; the limit is that the AC's surface half lands with
+  PR-7's own work, not in this phase.
+
+- **(g) EP-21 — the release trust bundle is distributed, not applied.** The bundle reaches each data
+  plane over the outbound reconcile channel and its applied revision is recorded per plane
+  (SPEC-0045 AC2), but the operator loads its verification keys once at startup from a directory the
+  chart mounts (`backend/cmd/operator-app/trust.go`); nothing writes a received bundle into that
+  directory. `ReconcileDir` is the control-plane-side staging seam. A rotation therefore reaches the
+  fleet's registry but does not change what an operator trusts until the ConfigMap is updated and the
+  pod restarts — so AC2's "no downtime during overlap" is proven as a control-plane property, not yet
+  as a fleet one. First recorded at board #20 as distribution-without-application; carried here at
+  phase level because it bounds what the phase's headline proof means.
+
+A third review finding is recorded as a platform-wide follow-up rather than a phase limit: the
+durable adapters scope their transactions from the tenant ARGUMENT, so RLS is evaluated for the
+tenant asked about and cannot itself refuse a caller asking about another. Residency's adapter now
+refuses the one shape a caller must never express — a tenant argument contradicting the tenant on the
+context — before any database work; the same pattern in the security and agent adapters is untouched
+and is a platform decision, not a residency one.
+
 ## Risks
 
 - **The cluster lane bounds M3.** T-0042 is the only task whose blocker is infrastructure, and it is
