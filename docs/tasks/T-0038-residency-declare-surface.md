@@ -126,6 +126,13 @@ refusal is the same coarse shape as a nonexistent record — SPEC-0001's rule),
 in the request context, never from the body; the descriptor contract asserts no request field
 chooses subject).
 
+**Carry — recorded against SPEC-0043 as the limit it is:** caller verification is PER-RPC on the
+declare door itself — fail-closed in that handler, verification before the PDP ask — rather than a
+server-wide interceptor. The control-plane doors that already exist keep their present posture
+(SPEC-0002's limit (d) untouched, per this task's Notes scope bound); widening verification to
+every door is a future task of its own, and until then a new credentialed door must not be added
+without the same per-RPC verification seam.
+
 **SPEC-0043 AC7 — tenant-scoped platform_operator grant:** the Rego grant landed in governance
 (794f578/3b9e853, bundle 0.10.0) with its own policy tests, proven from the backend side by
 `TestBundlePlatformOperatorDeclaresBoundTenant` (allowed on the bound tenant) and

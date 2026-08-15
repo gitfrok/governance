@@ -42,9 +42,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0035 | Apply the envelope throttle in the data plane | 3 | Todo — SPEC-0041 AC5/AC9 second half; phase-3 review H2 |
 | T-0036 | Durable agent stores — enrolment-token store + data-plane registry Postgres adapters | 3.1 | Done — backend@c9e58c5; SPEC-0042 AC1/AC2/AC6/AC5 (agent half) proven real-Postgres |
 | T-0037 | Durable residency declarations + evidence-pack assembly from durable projections | 3.1 | Done — backend@816cb30; SPEC-0042 AC3/AC4/AC5 (residency half) proven real-Postgres; closes T-0033's in-memory-store limit |
-| T-0038 | Residency Declare wire surface — residency/v1, verified caller, control-plane implementation, PDP binding | 3.1 | Todo — SPEC-0043 AC1/AC5/AC6/AC7; EP-20; ADR-0027 order (governance → backend) |
-| T-0039 | PlacementGate hardening + placement-facts contradiction visibility | 3.1 | Todo — SPEC-0043 AC2–AC4; EP-20 |
-| T-0040 | Agent-CA custody — OpenBao deployment, KMS signing, staged CA-trust-bundle rotation, runbook | 3.1 | Todo — SPEC-0044 AC1–AC5; EP-21; deployment + runbook in super-repo, split commit |
+| T-0038 | Residency Declare wire surface — residency/v1, verified caller, control-plane implementation, PDP binding | 3.1 | Done — governance@794f578/3b9e853 (bundle 0.10.0) + backend@f182761; SPEC-0043 AC1/AC5/AC6/AC7 proven; closes T-0033's Declare-wire limit |
+| T-0039 | PlacementGate hardening + placement-facts contradiction visibility | 3.1 | Done — backend@f182761; SPEC-0043 AC2–AC4 proven (matrix, tie-break, gate) |
+| T-0040 | Agent-CA custody — OpenBao deployment, KMS signing, staged CA-trust-bundle rotation, runbook | 3.1 | Done — super-repo@31c9b45 deployment + backend@b0ab32e + super-repo@f8449b8; SPEC-0044 AC1–AC5 proven; EP-21 complete; honest "not run" rows recorded |
 | T-0041 | Signed operator image + cross-plane release-trust-bundle distribution/rotation | 3.1 | Todo — SPEC-0045 AC1/AC2/AC4/AC5; EP-22; backend + super-repo split commits |
 | T-0042 | Real-cluster conformance proof — GKE/EKS/AKS | 3.1 | Todo — SPEC-0045 AC3 + AC2 real half, SPEC-0039 AC8; EP-22; blocked-by T-0003 cluster lane |
 | T-0043 | Usage-view divergence health gates + envelope-state telemetry through bff → webfrontend | 3.1 | Todo — SPEC-0046 AC1–AC3/AC5; EP-23; blocked-by T-0035 |
