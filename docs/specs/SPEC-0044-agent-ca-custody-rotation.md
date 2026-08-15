@@ -1,6 +1,6 @@
 # SPEC-0044: Agent-CA custody and rotation operations
 
-- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — ADR-0066's custody service gains an owner here: AC5 deploys it, AC4 covers unseal and seal-outage)
+- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — ADR-0066's custody service gains an owner here: AC5 deploys it, AC4 covers unseal and seal-outage; **amended again 2026-08-15** — the staged CA trust bundle gains its additive `agent/v1` field: `DesiredState.ca_trust_bundle` (`CATrustBundle`: bundle revision, dual-validate trusted roots, issuance root), named apart from SPEC-0045's release trust bundle)
 - **Owner:** platform
 - **Context(s):** Control plane (CA signs through custody, OpenBao deployed beside it) · Agent (validates staged CA trust bundles) — ADR-0022
 - **ADRs:** 0064 (decides custody and rotation), 0066 (decides the provider, its deployment, unseal and availability contract), 0034/0035 (image pin form for the custody image), 0060 (enrolment and loss recovery — unchanged), 0056 (AISVS L3, C9.4.1), 0044 (cosign custody — the overlap shape, not the model), 0057 (decision 5 — inference credentials only, untouched)
@@ -47,10 +47,12 @@ procedure, alongside the clock-skew symptom entry owed since T-0030.
 
 ## Contracts touched
 
-None by default — CA rotation rides the agent channel's existing desired-state/reconcile path
-(SPEC-0039). If the staged CA bundle needs a field the channel does not carry, that is an additive
-`agent/v1` change under its own governance PR first — and it is not the same field SPEC-0045's
-release trust bundle would need.
+`contracts/proto/agent/v1` — **additive** (ADR-0027): the staged CA bundle needs a field the
+channel did not carry, so it rides the reconcile path (SPEC-0039) as desired state —
+`DesiredState.ca_trust_bundle` (field 3), a `CATrustBundle` carrying a monotonic bundle
+revision, the trusted roots (`CATrustRoot`, `repeated` for the dual-validate overlap) and the
+`issuance_root_id` new certificates chain to. It is NOT the field SPEC-0045's release trust
+bundle would need, and is named apart from it (SPEC-0045's two-bundles note).
 
 ## Data owned
 
@@ -129,8 +131,10 @@ desired state, to hold.
 
 ## Open questions / assumptions
 
-- Assumed: the CA-trust-bundle staging rides the existing reconcile path without a new agent/v1 field;
-  if not, the additive contract change happens first under its own PR (see Contracts touched).
+- ~~Assumed: the CA-trust-bundle staging rides the existing reconcile path without a new agent/v1
+  field; if not, the additive contract change happens first under its own PR (see Contracts
+  touched).~~ **Resolved 2026-08-15:** the staging needs what the channel did not carry, so the
+  additive `agent/v1` field landed first under its own governance commit — see Contracts touched.
 - Assumed: loss of custody access is an availability event, not an integrity event — certificates
   already issued remain valid until expiry, which bounds the blast radius the runbook must describe.
   **The one place that assumption does not hold on its own is first issuance**, where a durable token

@@ -166,6 +166,40 @@ message CertificateRotationAck {             // agent -> CP; answers Certificate
 }
 
 // ---------------------------------------------------------------------------
+// CA trust bundle distribution  (SPEC-0044 AC2, ADR-0064)
+// ---------------------------------------------------------------------------
+// The AGENT-IDENTITY trust roots the data plane validates agent certificates against,
+// distributed as desired state over the reconcile path (SPEC-0039). Rotation is staged,
+// never a cut-over: a new root joins the bundle before issuance moves to it, both roots
+// validate during an explicit overlap window, and the outgoing root leaves only after every
+// issued certificate chained to it predates its removal (SPEC-0044 AC2 — no fleet
+// re-enrolment). The bundle carries more than one trusted root precisely while that overlap
+// is open.
+//
+// This is the CA trust bundle of SPEC-0044 and ADR-0064 — the agent-identity roots. It is a
+// DIFFERENT artifact from the RELEASE trust bundle of SPEC-0045 (the cosign release-signing
+// keys of ADR-0044/ADR-0065): different owner, different rotation reasons, never one field
+// (SPEC-0045's two-bundles note). No name on this surface may imply the release bundle.
+
+// One trusted CA root in the bundle.
+message CATrustRoot {
+  string root_id         = 1;                // CP-assigned identity for this root; issuance_root_id names one of these
+  bytes  certificate_pem = 2;                // PEM certificate of the root, the house form (ClientCertificate.certificate_pem)
+  google.protobuf.Timestamp not_after = 3;   // the root's expiry; removal happens only after every certificate
+                                             // chained to this root predates its removal (SPEC-0044 AC2)
+}
+
+// The staged CA trust bundle. revision advances with every staging step — stage,
+// issuance-root move, removal — so consumers detect staging progress and converge on the
+// newest revision the way DesiredState.generation converges desired state.
+message CATrustBundle {
+  int64 revision = 1;                        // monotonic bundle epoch; agents apply the newest
+  repeated CATrustRoot trusted_roots = 2;    // every root currently valid; dual-validate overlap ⇒ > 1
+  string issuance_root_id = 3;               // root_id of the root NEW certificates chain to; during overlap,
+                                             // old-root certificates still VALIDATE but do not issue
+}
+
+// ---------------------------------------------------------------------------
 // Health / telemetry  (no source code, no secrets)
 // ---------------------------------------------------------------------------
 enum HealthState {
@@ -286,6 +320,12 @@ message EnvelopeStateAck {                   // agent -> CP; answers EnvelopeSta
 message DesiredState {
   int64 generation = 1;                      // monotonic; agent applies newest, ignores older
   repeated Component components = 2;
+  // The staged CA trust bundle (SPEC-0044 AC2, ADR-0064): the agent-identity trust roots the
+  // data plane validates agent certificates against. Additive — an absent field means no
+  // bundle update and the agent keeps its current roots. This is NOT the release trust
+  // bundle of SPEC-0045 (cosign release-signing keys): a different artifact that, when it
+  // gains a field of its own, must be named apart from this one.
+  CATrustBundle ca_trust_bundle = 3;
 }
 
 message Component {

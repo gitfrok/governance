@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 8 (SPEC-0044 AC2, SPEC-0045's two-bundles note).
+//
+// It carries the one shape the real gitsaas.agent.v1.DesiredState must never grow: the trust
+// bundle named as if it were the RELEASE trust bundle. The gate compiles this module and asserts
+// the descriptor DOES carry a release-bundle marker — proving the check can fail. In contracts/,
+// the staged CA trust bundle rides the reconcile path as ca_trust_bundle (SPEC-0044, ADR-0064),
+// and the release trust bundle of SPEC-0045 — the cosign release-signing keys of ADR-0044/
+// ADR-0065 — is a DIFFERENT artifact: different owner, different rotation reasons, never one
+// field, and no name on this surface may imply it.
+package gitsaas.agent.v1;
+
+message DesiredState {
+  int64 generation = 1;
+  // The defect under test: release-trust-bundle naming living on DesiredState.
+  bytes release_trust_bundle = 3;
+}

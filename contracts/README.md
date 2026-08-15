@@ -23,7 +23,14 @@ needs a direct response.
   and data plane (`EnrolmentAck`, refusing via `EnrolmentRefusalReason`), rotates it on the
   channel before expiry (`CertificateRotation`), and the agent surfaces application failures
   (`CertificateRotationAck` + `CertificateRotationFailureReason`). Identity always comes from
-  the certificate; payload claims never override it. `AgentGateway.Connect` stays the single RPC
+  the certificate; payload claims never override it. `AgentGateway.Connect` stays the single RPC.
+  SPEC-0044 (ADR-0064) additively adds the staged CA trust bundle to desired state:
+  `DesiredState` gains `ca_trust_bundle` — a `CATrustBundle` with a monotonic bundle revision,
+  the trusted roots (`repeated`, more than one while the dual-validate overlap window is open)
+  and an `issuance_root_id` naming the root new certificates chain to — so CA rotation rides the
+  reconcile path with no fleet re-enrolment. It is the agent-identity CA trust bundle; the
+  release trust bundle of SPEC-0045 (cosign release-signing keys, ADR-0044/ADR-0065) is a
+  different artifact and never shares or implies this field's name
 - `proto/policy/v1/policy.proto` — the Policy Decision Point (ADR-0006, SPEC-0002). Synchronous
   against the usual preference for events, because a PEP cannot proceed without the answer; the
   rules themselves live in `../policies/` and never travel over this wire. T-0025 (SPEC-0029,
