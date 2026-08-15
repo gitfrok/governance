@@ -81,10 +81,10 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the runner persists, a subscriber ingests | Accepted |
 | [ADR-0060](0060-agent-enrolment-identity.md) | Agent identity: one-time enrolment token, control-plane-issued short-lived certificates | Accepted |
 | [ADR-0061](0061-metering-authority.md) | The control plane is the authority for fair-use metering | Accepted |
-| [ADR-0062](0062-durable-agent-residency-stores.md) | Durable Postgres stores for agent enrolment, registry and residency behind the existing ports | Proposed |
-| [ADR-0063](0063-residency-declare-wire-surface.md) | Residency Declare is a control-plane admin gRPC surface; the agent channel never declares | Proposed |
-| [ADR-0064](0064-agent-ca-key-custody.md) | Agent-CA keys in platform-secrets custody; rotation by staged trust bundle, no re-enrolment | Proposed |
-| [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Proposed |
+| [ADR-0062](0062-durable-agent-residency-stores.md) | Durable Postgres stores for agent enrolment, registry and residency behind the existing ports | Accepted |
+| [ADR-0063](0063-residency-declare-wire-surface.md) | Residency Declare is a control-plane admin gRPC surface; the agent channel never declares | Accepted |
+| [ADR-0064](0064-agent-ca-key-custody.md) | Agent-CA keys in platform-secrets custody; rotation by staged trust bundle, no re-enrolment | Accepted |
+| [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Accepted |
 
 ## Open follow-ups
 
@@ -102,19 +102,18 @@ the deciding ADR is the record.
 | Event catalog and naming — names exist as the protobuf full names of `contracts/events`, but nothing documents them | 0022 |
 | Super-repo CI: fail on submodule pointers referencing unmerged commits | 0027 |
 | Per-repo scaffolding + generated-type publishing (contracts → TS). Blocks **per-consumer** codegen gating: a consumer's `buf.gen.yaml` reads `../governance/contracts`, which exists only in the composition, so freshness is gated at the super-repo pin instead | 0027, 0028, 0032 |
-| Meter audit-store and evidence-pack growth against the PRD §6 fair-use dimensions — retention is now unbounded by decision, and nothing measures it | 0055 |
+| Meter audit-store and evidence-pack growth against the PRD §6 fair-use dimensions — retention is now unbounded by decision, and nothing measures it; ADR-0062 joined the agent and residency store tables to the same follow-up | 0055 |
 | Whether an expired attested store leaves a marker distinguishable from "never imported" | 0055 |
 | PRD revision adding AI-assisted review as **PR-24**, a roadmap placement, and an inference-volume fair-use dimension — the capability is Accepted with no requirement behind it | 0057 |
 | Platform-wide tenant secret custody, expected to **supersede** ADR-0057 decision 5 once a second consumer (webhooks, registry, mirrors) exists | 0057 |
 | How a non-deterministic producer's output may be cited as control evidence — until decided, AI review stays out of an evidence pack's scan-gate sections | 0057 |
-| AISVS L3 obligations that do not exist yet: agent cryptographic identity (C9.4.1), nonce-bound approvals (C9.2.8), per-execution budgets (C9.1.2), tool-definition snapshot with re-approval (C10.4.8), indirect-prompt-injection screening (C10.4.2), out-of-band kill switch (C9.6.3) | 0056, 0057 |
+| AISVS L3 obligations that do not exist yet: nonce-bound approvals (C9.2.8), per-execution budgets (C9.1.2), tool-definition snapshot with re-approval (C10.4.8), indirect-prompt-injection screening (C10.4.2), out-of-band kill switch (C9.6.3) — agent cryptographic identity (C9.4.1) closed by ADR-0060 + ADR-0064 | 0056, 0057 |
 | Amend SPEC-0010 and SPEC-0020 (both Approved) for the pipeline format, publish the supported-construct subset, and file the implementing task | 0058 |
 | Retention and fair-use metering of stored scan reports — SPEC-0037 bounds size and age, but nothing meters growth, and ADR-0055's retention rules do not cover a report (it is not an audit record) | 0059 |
 | Whether to adopt Woodpecker's **engine** later — headless executor or Go library inside `modules/ci`. Not foreclosed by adopting the format | 0058 |
 | HTTP/2 proxy fallback for a customer whose egress permits only a proxy — the remaining half of ADR-0017's follow-up; cert issuance closed by 0060 | 0017 |
 | Unit-economics model per pricing tier — dimensions and derivation now fixed by 0061, prices still open | 0008 |
 | Which PRD §6 dimensions are centrally derivable (storage and index size are sizes, not events) — SPEC-0041 states coverage; the rest is deferred and must not read as metered | 0061 |
-| Agent CA key custody, shared with the platform-secrets question ADR-0057 carries | 0060 |
 | Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |
 | Whether a red `main` should notify anything beyond whoever pushed it | 0053 |
 | First-party images are pinned by tag, not digest, in `deploy/dev` | 0035 |

@@ -1,6 +1,6 @@
 # ADR-0062: The agent and residency stores are durable Postgres behind their existing ports
 
-- **Status:** Proposed (2026-08-15)
+- **Status:** Accepted (2026-08-15)
 - **Deciders:** product/architecture (proposed by AGDD Phase 3.1 planning)
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0003 (shared DB + RLS), ADR-0023 (stack: PostgreSQL 18), ADR-0055 (unbounded

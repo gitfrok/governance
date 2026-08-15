@@ -1,6 +1,6 @@
 # ADR-0064: Production agent-CA keys live in platform-secrets custody; rotation is a staged trust bundle, not a fleet re-enrolment
 
-- **Status:** Proposed (2026-08-15)
+- **Status:** Accepted (2026-08-15)
 - **Deciders:** product/architecture (proposed by AGDD Phase 3.1 planning)
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0060 (this closes its CA-custody follow-up), ADR-0057 (decision 5 — inference

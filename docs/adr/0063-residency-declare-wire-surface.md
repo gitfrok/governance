@@ -1,6 +1,6 @@
 # ADR-0063: Residency Declare is a control-plane admin gRPC surface — the agent channel never declares
 
-- **Status:** Proposed (2026-08-15)
+- **Status:** Accepted (2026-08-15)
 - **Deciders:** product/architecture (proposed by AGDD Phase 3.1 planning)
 - **Supersedes / superseded by:** —
 - **Related:** SPEC-0040 (PR-22), ADR-0006 (PDP decides, surfaces ask), ADR-0009 (control/data

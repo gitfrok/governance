@@ -1,6 +1,6 @@
 # ADR-0065: One tenant may run many data planes — the operator ships as a signed image and trust distributes over the channel that already exists
 
-- **Status:** Proposed (2026-08-15)
+- **Status:** Accepted (2026-08-15)
 - **Deciders:** product/architecture (proposed by AGDD Phase 3.1 planning)
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0013 (Helm + Operator), ADR-0011 (outbound-only), ADR-0044 (signing custody —
