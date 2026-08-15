@@ -7,3 +7,4 @@ and exit criteria. Plans turn `../roadmap` intent into ordered `../tasks`.
 - `phase-1-mvp.md`
 - `phase-2-ultimate-wedge.md`
 - `phase-3-byo.md`
+- `phase-3-byo-v2.md`

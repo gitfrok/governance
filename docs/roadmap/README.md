@@ -73,7 +73,8 @@ harness* — is recorded the way Phase 1 and 2 recorded their host limits: carri
 lane, with the conformance-matrix rows in place and all marked real-cluster "not run", rather than
 counted as met. Carried with it: SPEC-0039 AC8's forward/backward migration proof on real state, the
 in-memory agent/residency stores (Postgres adapters), the enrolment CA's production key custody, and
-the residency Declare wire surface — all in `../backlog/`.
+the residency Declare wire surface — all in `../backlog/`, since reclassified into Phase 3.1's
+**EP-19…EP-23** (next section).
 
 Plan: `../plans/phase-3-byo.md`. Scope PR-20…PR-23 as epics **EP-15…EP-18**, tasks **T-0030…T-0034**,
 specs **SPEC-0038…SPEC-0041** (all Approved 2026-08-14). The architecture was decided in
@@ -84,6 +85,36 @@ cluster never reports the number it is measured against).
 
 **Still open, and able to block an install outright:** proxy-only egress — the remaining half of
 ADR-0017's follow-up. A customer whose egress permits only an HTTP proxy cannot install today.
+
+## Phase 3.1 — North Star: durability, custody, multi-cluster, commercial maturity · **Planned (2026-08-15)**
+
+Plan accepted: `../plans/phase-3-byo-v2.md`. Specs **SPEC-0042…SPEC-0046** Approved and ADRs
+**ADR-0062…ADR-0065** Accepted (both 2026-08-15), so every epic may go RED. Phase 3's recorded limits
+become production posture: durable control-plane stores behind the existing ports (Postgres adapters,
+RLS, effective-dated declarations, pack assembly from durable projections), residency's operator
+handle on a PDP-decided `residency/v1` wire surface, agent-CA keys in platform-secrets/KMS custody
+with staged trust-bundle rotation, the operator as a signed digest-pinned first-party image across N
+data planes, the conformance matrix answered on real clusters, honest divergence health gates through
+to the browser, and the PR-7 read-only distinction surfaced. Epics **EP-19…EP-23**, tasks
+**T-0036…T-0044**, milestones M1–M4 per the plan's dependency spine.
+
+**Exit:** every SPEC-0042…0046 acceptance criterion green — including at least one real cluster per
+cloud or an honestly annotated subset — durable-store restart proofs, custody off-disk proofs,
+divergence gates shipped through webfrontend, the full gate matrix green at the final pin bump, and
+the runbook current.
+
+**Phase 3 carries, reclassified (history preserved above and in `../backlog/`):**
+
+- Postgres adapters for the agent/residency in-memory stores → **EP-19** (T-0036, T-0037).
+- Residency Declare wire surface → **EP-20** (T-0038, with placement hardening in T-0039).
+- CA key custody → **EP-21** (T-0040).
+- Cluster-lane proof (incl. SPEC-0039 AC8) + signed operator image → **EP-22** (T-0041, T-0042 —
+  T-0042 still blocked-by T-0003's lane).
+- PR-7 read-only distinction → **EP-23** (T-0044, with usage-view truth in T-0043).
+- Envelope-throttle data-plane half → **T-0035** — already open on EP-18's books, filed by the
+  2026-08-15 review *before* this phase was planned, and gating T-0043; not renumbered.
+- **Proxy-only egress stays open** on its own track (ADR-0017's remaining follow-up) — unchanged by
+  this phase and still able to block an install outright.
 
 ## Architecture evolution (ADR-0025 → ADR-0026)
 

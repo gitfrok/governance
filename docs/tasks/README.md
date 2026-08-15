@@ -40,6 +40,15 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0033 | Residency pinning and its evidence-pack section | 3 | Done — governance@0e61302, backend@c630a1e; SPEC-0040 AC1–AC8 proven |
 | T-0034 | Fair-use metering, envelopes, usage view | 3 | Done — governance@5dff9b3, backend@d3f4ad6, bff@e2344de, webfrontend@95f77be+0e80261; SPEC-0041 AC1–AC10 proven |
 | T-0035 | Apply the envelope throttle in the data plane | 3 | Todo — SPEC-0041 AC5/AC9 second half; phase-3 review H2 |
+| T-0036 | Durable agent stores — enrolment-token store + data-plane registry Postgres adapters | 3.1 | Todo — SPEC-0042 AC1/AC2/AC5 (agent half); EP-19 |
+| T-0037 | Durable residency declarations + evidence-pack assembly from durable projections | 3.1 | Todo — SPEC-0042 AC3/AC4/AC5 (residency half); EP-19 |
+| T-0038 | Residency Declare wire surface — residency/v1, control-plane implementation, PDP binding | 3.1 | Todo — SPEC-0043 AC1/AC5; EP-20; ADR-0027 order (governance → backend) |
+| T-0039 | PlacementGate hardening + placement-facts contradiction visibility | 3.1 | Todo — SPEC-0043 AC2–AC4; EP-20 |
+| T-0040 | Agent-CA custody — KMS signing, staged trust-bundle rotation, runbook | 3.1 | Todo — SPEC-0044 AC1–AC4; EP-21; runbook in super-repo, split commit |
+| T-0041 | Signed operator image + cross-plane trust-bundle distribution/rotation | 3.1 | Todo — SPEC-0045 AC1/AC2/AC4/AC5; EP-22; backend + super-repo split commits |
+| T-0042 | Real-cluster conformance proof — GKE/EKS/AKS | 3.1 | Todo — SPEC-0045 AC3 + AC2 real half, SPEC-0039 AC8; EP-22; blocked-by T-0003 cluster lane |
+| T-0043 | Usage-view divergence health gates + envelope-state telemetry through bff → webfrontend | 3.1 | Todo — SPEC-0046 AC1–AC3/AC5; EP-23; blocked-by T-0035 |
+| T-0044 | PR-7 durability read-only vs envelope-throttle distinction in UI/API | 3.1 | Todo — SPEC-0046 AC4/AC5; EP-23 |
 
 ## Retired numbers (never reused)
 

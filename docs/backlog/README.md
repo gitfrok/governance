@@ -194,26 +194,66 @@ lane. The conformance-matrix rows exist and are all marked real-cluster "not run
 construction. Recorded the same way Phase 1/2 recorded their host limits, as carried proof rather than
 open code.
 
-Carried forward out of Phase 3 (in addition to the cluster-lane proof above):
+Carried forward out of Phase 3 (in addition to the cluster-lane proof above); items the Phase 3.1
+epics now own are annotated with their new epic — the mapping is restated in §Phase 3.1 below:
 
 - **Real-cluster conformance proof.** The whole install → self-register → upgrade → meter path on a
   real customer-shaped cluster (GKE/EKS/AKS), plus SPEC-0039 AC8's forward/backward migration proof on
-  real state. Owned by T-0003's cluster lane.
+  real state. Owned by T-0003's cluster lane. → executed by **EP-22** (T-0041 harness half, T-0042
+  real half — still blocked-by the lane).
 - **Proxy-only egress** (ADR-0017's remaining follow-up) — still open, still able to block an install
   outright for a customer whose egress permits only an HTTP proxy (tracked already; unchanged).
 - **CA key custody** (ADR-0057-scoped platform-secrets follow-up) — the enrolment CA runs on dev key
   custody; production custody is the platform-secrets decision SPEC-0038's out-of-scope names.
+  → **EP-21** (T-0040).
 - **Postgres adapters for the agent/residency in-memory stores** — the enrolment-token/data-plane
   registry and the residency declaration store do not survive a control-plane restart; the audit trail
-  is durable, the live stores are not.
+  is durable, the live stores are not. → **EP-19** (T-0036, T-0037).
 - **Residency Declare wire surface** — the declaration is set by in-process composition only; a
-  wire/RPC surface is future work.
+  wire/RPC surface is future work. → **EP-20** (T-0038, with placement hardening in T-0039).
 - **PR-7 read-only enforcement** — the commercial read-only prohibition holds now, but the in-product
   distinction from the PR-7 durability read-only mode (ADR-0018) is enforced per ADR-0061 when PR-7
-  ships.
+  ships. → **EP-23** (T-0044).
 
 Open and able to block a sale rather than a sprint: **proxy-only egress** (ADR-0017's remaining
 follow-up) stops an install outright for a customer whose egress permits only an HTTP proxy.
+
+## Phase 3.1 — North Star *(planned 2026-08-15)*
+
+Plan: `../plans/phase-3-byo-v2.md` (accepted 2026-08-15). Turns Phase 3's carried set into production
+posture under **ADR-0062…ADR-0065** (Accepted) and **SPEC-0042…SPEC-0046** (Approved), all 2026-08-15.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Planned |
+| **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Planned |
+| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Planned |
+| **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
+| **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
+
+One line each (detail in the plan and the specs):
+
+- **EP-19** — Postgres adapters behind the existing ports (enrolment-token store, data-plane registry,
+  residency declarations), additive module-owned migrations, RLS everywhere, effective-dated
+  declarations, pack assembly from durable projections only (ADR-0062).
+- **EP-20** — an additive `residency/v1` admin gRPC surface where the PDP decides and every act is
+  audited, plus placement contradiction/gap hardening and the agent-channel tripwire (ADR-0063).
+- **EP-21** — the agent CA signs through platform-secrets/KMS custody and rotates by staged trust
+  bundle with a dual-validate window, no fleet re-enrolment; the dev CA is test-only (ADR-0064).
+- **EP-22** — a vendor-signed, digest-pinned operator image and trust-bundle distribution across N
+  data planes per tenant, proven on real GKE/EKS/AKS (ADR-0065).
+- **EP-23** — divergence health gates with both numbers shown, envelope-state telemetry to the
+  browser, and the PR-7 read-only distinction, with never-zero/never-blocked regression pins
+  (ADR-0061/0018).
+
+**The Phase 3 carried list above is reclassified, not duplicated** — each annotated bullet now points
+at its owning epic; the mapping in full: Postgres adapters → **EP-19**; residency Declare wire
+surface → **EP-20**; CA key custody → **EP-21**; real-cluster conformance proof (with SPEC-0039 AC8)
+and the operator image → **EP-22**; PR-7 read-only distinction → **EP-23**. The envelope throttle's
+data-plane half stays **T-0035** — opened by the 2026-08-15 review before this phase was planned, on
+EP-18's books, and gating T-0043. **Proxy-only egress is unchanged** (ADR-0017's remaining follow-up,
+able to block an install outright). Closed by the review and carried nowhere: the CA trust-ordering
+fix (backend@e722046) and the derived no-inbound fitness tree — neither is open here.
 
 ## Parked — needs a human decision first
 
