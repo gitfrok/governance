@@ -86,6 +86,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0064](0064-agent-ca-key-custody.md) | Agent-CA keys in platform-secrets custody; rotation by staged trust bundle, no re-enrolment | Accepted |
 | [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Accepted |
 | [ADR-0066](0066-openbao-control-plane-custody-service.md) | OpenBao as the control-plane custody service (agent-CA first consumer, transit signing, Shamir unseal) | Accepted |
+| [ADR-0067](0067-platform-operator-residency-declaration.md) | A tenant-scoped platform operator may set a tenant's residency declaration (extends ADR-0046's role by one action) | Accepted |
 
 ## Open follow-ups
 
@@ -106,7 +107,11 @@ the deciding ADR is the record.
 | Meter audit-store and evidence-pack growth against the PRD §6 fair-use dimensions — retention is now unbounded by decision, and nothing measures it; ADR-0062 joined the agent and residency store tables to the same follow-up | 0055 |
 | Whether an expired attested store leaves a marker distinguishable from "never imported" | 0055 |
 | PRD revision adding AI-assisted review as **PR-24**, a roadmap placement, and an inference-volume fair-use dimension — the capability is Accepted with no requirement behind it | 0057 |
-| Platform-wide tenant secret custody, expected to **supersede** ADR-0057 decision 5 once a second consumer (webhooks, registry, mirrors) exists | 0057 |
+| Platform-wide tenant secret custody, expected to **supersede** ADR-0057 decision 5 once a second consumer (webhooks, registry, mirrors) exists — ADR-0066 records OpenBao as its presumptive home but authorizes no second consumer | 0057, 0066 |
+| OpenBao pin-and-upgrade cadence: upstream maintains only its latest major, and 2.7 moves several built-in seals to plugins — a packaging change to track before it lands. An operational obligation with no end date, deliberately not a Phase 3.1 acceptance criterion | 0066 |
+| Hardware-backed signing for the agent CA — OpenBao's External Keys RFC (transit/PKI keys backed by KMS/HSM) is Accepted upstream but not landed. A future compliance bar demanding it is a new decision on the same custody seam, not a change to ADR-0064's posture | 0066, 0064 |
+| What the tenant-scoped `platform_operator` role may and may not accumulate — ADR-0046 confined it to one action, ADR-0067 added a second; the general rule is worth writing before a third arrives | 0046, 0067 |
+| Door authentication and a server-derived tenant-pinning interceptor for the Phase-2 dataplane door — SPEC-0002's recorded limit (d). SPEC-0043 AC6 gives the new `residency/v1` surface a verified caller; whether that seam generalizes to the older doors is undecided | 0045, 0006 |
 | How a non-deterministic producer's output may be cited as control evidence — until decided, AI review stays out of an evidence pack's scan-gate sections | 0057 |
 | AISVS L3 obligations that do not exist yet: nonce-bound approvals (C9.2.8), per-execution budgets (C9.1.2), tool-definition snapshot with re-approval (C10.4.8), indirect-prompt-injection screening (C10.4.2), out-of-band kill switch (C9.6.3) — agent cryptographic identity (C9.4.1) closed by ADR-0060 + ADR-0064 | 0056, 0057 |
 | Amend SPEC-0010 and SPEC-0020 (both Approved) for the pipeline format, publish the supported-construct subset, and file the implementing task | 0058 |
