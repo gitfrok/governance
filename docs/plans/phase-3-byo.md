@@ -100,6 +100,16 @@ custody (ADR-0057-scoped platform-secrets follow-up), the residency Declare wire
 read-only product distinction, and the clock-skew runbook entry. Full carried set in
 `../backlog/README.md`.
 
+**Carried out of the phase by the code review (2026-08-15).** The review found the envelope
+throttle computed and delivered but never applied: no data-plane consumer reads it, so SPEC-0041
+AC5's behaviour does not happen in a customer's cluster. T-0034's record now says so, and **T-0035**
+owns the data-plane half plus the design decision it needs — the CI dispatcher claims one job per
+tick and scales by KEDA replicas, so a per-tenant cap has nowhere to bind yet. Two smaller findings
+were fixed in place: the agent CA classified a certificate's validity window before establishing
+trust (backend@e722046), and the no-inbound fitness scan's tree list is now derived from the
+composition root rather than maintained by hand, after phase 3 added two control-plane modules it
+did not cover.
+
 **The phase's "must not" list held.** Git is never blocked in any envelope state (one test per
 dimension, SPEC-0041 AC7); no inbound path exists into a customer's cluster (asserted by the
 architecture fitness test, SPEC-0039 AC4, and the chart renders zero inbound surfaces); no customer

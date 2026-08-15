@@ -66,14 +66,24 @@ granted to owner+member), backend main at **d3f4ad6**, bff main at **e2344de**, 
 - **AC8** — no repository is ever made read-only for a commercial reason (the enforcement path cannot
   produce it); read-only stays reserved for the PR-7 durability mode (ADR-0018). *The product
   distinction between the two states is enforced when PR-7 lands — see recorded limits.*
-- **AC9** — envelope state reaches the data plane as desired state over the agent channel and is
-  applied there — delivered **and acked** on the channel; the control plane never reaches into the
-  cluster.
+- **AC9** — **partially met, and carried.** Envelope state is computed centrally, published as
+  desired state over the agent channel, and the gateway handles its ack; the control plane never
+  reaches into the cluster. What does not exist is the data-plane half: the shipped agent client
+  (`platform/agentclient`) ignores `DesiredState`/`EnvelopeStateUpdate` by comment, nothing in the CI
+  runtime reads `MaxCIConcurrency` or `QueueDepthCap`, and the only `EnvelopeStateAck` producer is
+  the gateway's integration-test client. So AC5's behaviour — running jobs finishing while queued
+  jobs are delayed and visibly caused — does not happen in a customer's cluster. Carried as
+  **T-0035**; found by the phase-3 review (H2), which also noted this line previously read as met.
 - **AC10** — the customer and the platform read the same counters: the usage view reads the same
   ledger the envelope decision was made from, tenant-isolated; no second internal number.
 
 **Recorded limits:**
 
+- **The envelope throttle is computed but not applied.** See AC9 above: central computation,
+  delivery and the ack surface exist; no data-plane consumer does. The reason it is a task rather
+  than a wiring fix is that the CI dispatcher claims at most one job per tick and scales by KEDA
+  replicas, so a per-tenant concurrency cap has nowhere to land yet — where the cap binds (claim
+  gate, scaler input, or both) is a design decision T-0035 owns.
 - **AC8's product distinction defers to PR-7.** The read-only-for-commercial prohibition holds now
   (nothing can produce it), but the in-product distinction from the PR-7 durability read-only mode
   (ADR-0018) is enforced per ADR-0061 when PR-7 ships — carried in `../backlog/`.

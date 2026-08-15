@@ -47,6 +47,14 @@ needing a policy for what to do when the two disagree. Two metering paths and a 
 more machinery than a flat-rate plan with no metered billing can justify today. If a dimension is
 ever billed rather than envelope-checked, revisit this first.
 
+**What decision 2 does and does not buy.** "Not asked" is precise about the *totals* message and
+loose about the mechanism: authoritative values are derived from `TelemetrySample`, which the same
+customer-controlled process sends. A data plane that under-reports its telemetry counters does
+under-report the number it is measured against. What the split buys is that there is exactly one
+reporting path rather than two, that the convenient one (a totals message the customer's cluster
+computes) is never authoritative, and that divergence between the two is detectable and recorded.
+That is worth having; it is not the same as the customer's cluster being out of the loop.
+
 ## Consequences
 
 - Telemetry becomes load-bearing: an event stream that was operational signal now feeds a commercial
