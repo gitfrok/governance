@@ -231,7 +231,7 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 | **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Done — AC1–AC6 proven real-Postgres (T-0036 backend@c9e58c5, T-0037 backend@816cb30) |
 | **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Done — T-0038 governance half at 794f578/3b9e853 (bundle 0.10.0) + backend half at backend@f182761; T-0039 at backend@f182761; closes T-0033's Declare-wire limit |
 | **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Done — T-0040 AC1–AC5 proven at backend@b0ab32e (composition swap, reconcile distribution, fitness) + super-repo@f8449b8 (runbook §6b, wiring assertions) on the super-repo@31c9b45 deployment; live dev-OpenBao issuance round-trip proven, honest "not run" rows recorded; Wave-3 review close-out at backend@28f729f + super-repo@5adedf1 |
-| **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
+| **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | In progress — T-0041 Done (SPEC-0045 AC1, AC2 harness half, AC4, AC5 proven at backend@762d5f0 + a669cef, super-repo@febf0f7 on governance@b5128b0); T-0042 carries AC3 + AC2's real-cluster half, blocked by T-0003's cluster lane |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
 
 **T-0036 is Done** (exit record in `../tasks/T-0036-durable-agent-stores.md`): backend@c9e58c5,
