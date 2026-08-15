@@ -81,6 +81,10 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0059](0059-ci-scan-results-to-findings.md) | How a CI scan's results reach the findings plane — the runner persists, a subscriber ingests | Accepted |
 | [ADR-0060](0060-agent-enrolment-identity.md) | Agent identity: one-time enrolment token, control-plane-issued short-lived certificates | Accepted |
 | [ADR-0061](0061-metering-authority.md) | The control plane is the authority for fair-use metering | Accepted |
+| [ADR-0062](0062-durable-agent-residency-stores.md) | Durable Postgres stores for agent enrolment, registry and residency behind the existing ports | Proposed |
+| [ADR-0063](0063-residency-declare-wire-surface.md) | Residency Declare is a control-plane admin gRPC surface; the agent channel never declares | Proposed |
+| [ADR-0064](0064-agent-ca-key-custody.md) | Agent-CA keys in platform-secrets custody; rotation by staged trust bundle, no re-enrolment | Proposed |
+| [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Proposed |
 
 ## Open follow-ups
 
