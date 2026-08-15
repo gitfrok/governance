@@ -142,3 +142,10 @@ unchanged beside it.
 **Closes T-0033's recorded limit** — *Declare has no wire/RPC surface in Phase 3; the declaration
 is set by in-process composition only* — the same shape T-0037 used to discharge T-0033's store
 limit. The closure is recorded here and in the backlog.
+
+**Wave-3 review fixes (backend main 28f729f):** eb2ed15 remediates W1 — the contradiction sweep's
+input is read BEFORE the declaration is witnessed and stored, so a failing read refuses the act
+with nothing committed and fail-closed is preserved (`TestDeclareFailsClosedWhenTheSweepReadFailsBeforeCommit`,
+`TestDeclareStandsWhenContradictionWitnessingFails`) — and 28f729f remediates C3 — the audit
+record's `granted_role` detail is populated from the verified roles the PDP consumed
+(`platform_operator` preferred, else `owner`), never a caller claim (AC7).

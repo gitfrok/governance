@@ -181,3 +181,23 @@ CA-bundle test touches the release-bundle surface and vice versa.
 - The env-gated live tests `TestLiveOpenBaoCustodyRoundTrip` /
   `TestLiveOpenBaoKubernetesAuthConsumer` skip in CI by design; the live proof above is the manual
   run they exist to mirror.
+
+**Wave-3 review fix chain (backend main 28f729f):** 7d5b693 remediates C1 — custody-backed CA
+restart durability (env-configured snapshot file `GITFROK_CUSTODY_SNAPSHOT_FILE`, Restore /
+Bootstrap / re-attach-through-the-public-half branches, corrupt snapshot fails startup loudly) —
+and 212e17d remediates S1 — a lost create-key race classifies as `ErrKeyExists` via probe-read,
+both this task's findings; beside them 19af0ed (C2), eb2ed15 (W1) and 28f729f (C3) close the
+residency findings, recorded in T-0039's and T-0038's exit records. The close-out (board #20)
+brings no new Postgres migration and no new RLS exemption: the snapshot is a tenant-less platform
+singleton — key references and public certificates only — so no tenant-isolated RLS table carries
+it honestly.
+
+**Pin row:** super-repo@89157a3 (pinning backend@b0ab32e + governance@4b01c61) closed the wave's
+pins, on top of governance@ce455d4 (the additive `ca_trust_bundle` contract field); board #20's
+close-out then supersedes the backend pin at 28f729f in the super-repo commit that lands after
+this record.
+
+**ADR-0062 check:** compatible — the file snapshot carries bundle staging state only; keys stay
+in OpenBao transit; it is not the spend/declaration durability ADR-0062 rejects (its rejected
+alternative is scoped to spend state and effective-dated declarations, and SPEC-0044 AC1's
+no-key-material-on-disk-or-env rule is untouched).

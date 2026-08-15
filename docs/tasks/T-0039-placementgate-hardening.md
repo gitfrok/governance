@@ -87,3 +87,10 @@ through the gate — an unavailable store refuses, never admits, SPEC-0043 AC4 �
 path names the declared and the attempted placement), `TestEnrolGateErrorFailsClosed` and
 `TestEnrolGateSeesTenantScopedPlacement`, with the refusal audited
 (`TestAdmissionRefusalsAreAudited`).
+
+**Wave-3 review fix (backend main 28f729f):** 19af0ed remediates C2 — DENIED residency
+declarations never enter the pack's declaration lineage: both derivation points admit ALLOWED
+pinnings only, so a refused attempt can never be the declaration in force or open a silence
+window, while refusal records stay fully visible as section records
+(`TestLastDeclarationBeforeIgnoresDeniedAttempts`,
+`TestResidencySectionDeniedDeclarationNeverInForce`).
