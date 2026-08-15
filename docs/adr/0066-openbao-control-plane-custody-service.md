@@ -1,6 +1,6 @@
 # ADR-0066: OpenBao is the control-plane custody service; the agent CA is its first consumer
 
-- **Status:** Proposed (2026-08-15)
+- **Status:** Accepted (2026-08-15)
 - **Deciders:** platform (proposed by AGDD Phase 3.1 planning)
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0064 (the custody posture this names a provider inside), ADR-0060 (the CA role

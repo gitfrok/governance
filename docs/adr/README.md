@@ -85,7 +85,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0063](0063-residency-declare-wire-surface.md) | Residency Declare is a control-plane admin gRPC surface; the agent channel never declares | Accepted |
 | [ADR-0064](0064-agent-ca-key-custody.md) | Agent-CA keys in platform-secrets custody; rotation by staged trust bundle, no re-enrolment | Accepted |
 | [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Accepted |
-| [ADR-0066](0066-openbao-control-plane-custody-service.md) | OpenBao as the control-plane custody service (agent-CA first consumer, transit signing, Shamir unseal) | Proposed |
+| [ADR-0066](0066-openbao-control-plane-custody-service.md) | OpenBao as the control-plane custody service (agent-CA first consumer, transit signing, Shamir unseal) | Accepted |
 
 ## Open follow-ups
 

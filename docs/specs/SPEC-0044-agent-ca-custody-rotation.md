@@ -31,7 +31,7 @@ procedure, alongside the clock-skew symptom entry owed since T-0030.
 ## Out of scope
 
 - Choosing a concrete KMS provider — a deployment concern within the posture ADR-0064 fixes (the
-  same way ADR-0044 kept provider selection out of its custody model).
+  same way ADR-0044 kept provider selection out of its custody model) (settled by ADR-0066).
 - General platform-wide tenant-secret custody — ADR-0057 decision 5 and its anticipated general ADR
   remain open on their own track; this spec decides the agent CA alone.
 - Any change to ADR-0060 enrolment or loss-recovery semantics (Phase 3.1 non-goal: no revisiting

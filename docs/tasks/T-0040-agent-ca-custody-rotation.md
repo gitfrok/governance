@@ -64,6 +64,7 @@ Gate matrix (per repo):
 Rotation cadence and overlap length are per-environment configuration, not compiled in.
 Trust-bundle staging is assumed to ride the existing reconcile path; if the channel lacks a field,
 that additive `agent/v1` change happens first under its own governance PR (SPEC-0044 Contracts
-touched). Choosing a concrete KMS provider stays a deployment concern, out of scope; general
-platform-wide tenant-secret custody stays open on ADR-0057's own track — the custody interface stays
-narrow enough that a future general platform-secrets ADR can absorb it (ADR-0064 decision 2).
+touched). The KMS provider is settled by ADR-0066 (OpenBao transit engine, Shamir unseal,
+Kubernetes auth); deploying it remains T-0040 scope; general platform-wide tenant-secret custody
+stays open on ADR-0057's own track — the custody interface stays narrow enough that a future
+general platform-secrets ADR can absorb it (ADR-0064 decision 2).
