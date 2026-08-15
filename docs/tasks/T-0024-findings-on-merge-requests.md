@@ -56,6 +56,17 @@ measurement will observe there — ingest off `CIJobFinished` with pre-materiali
 RPC-only, so the `CIJobFinished`→ingest wiring is itself part of what the cluster lane must first
 deliver, distinct from (and preceding) the scan-dispatch host limit above.
 
+**Correction (2026-08-16).** The "not yet built" sentence above described the backend pinned when
+this record was written and was overtaken days later: **T-0029 landed the wiring on 2026-08-14
+(backend@49d6bfa), AC1–AC9 proven with tests** — `modules/security/internal/app/ci_ingest.go` is the
+ingester, `cmd/dataplane-app/ciingest.go` subscribes `CIJobFinished` on the composition, and the
+revision comes from `Jobs.Get`'s `CommitSHA` exactly as ADR-0059 Option C specifies. The sentence is
+left standing rather than rewritten because it is part of a dated exit record; this correction is
+what binds. AC4's blocker is therefore the **scan-dispatch host limit alone** (the gVisor
+RuntimeClass the dev host lacks) plus T-0029's own AC10 end-to-end demonstration — not an unbuilt
+path. Found while answering "what blocks the cluster lane"; the stale sentence had been read as
+work the lane must still build.
+
 Fix wave 2 (review H5/H6/L14, backend@42ad9b3): `ScanReportAt` spans every scanner class at the
 revision and `ScanReport` carries its `ScanIDs` (H5); an attribution recompute replaces the cached
 record so a later scan reaches the MR view and gate facts (H6); `UNAVAILABLE` carries the

@@ -85,10 +85,17 @@ is only as good as the search, and the first version of this record claimed `sta
   **gVisor RuntimeClass**, which no rootless-podman driver provides (T-0017's CI dispatch).
   Phase 2 delegated its carried demonstrations here too: **T-0024 AC4 measured findings freshness**,
   **T-0028 AC4 measured index freshness**, **CI-dispatched scans** on an MR, and the **exit-scenario
-  live-cluster walk** the dev host could not host. Ordering note from T-0024's corrected exit record:
-  the `CIJobFinished`→ingest wiring is unbuilt at the pinned backend (scan ingest is RPC-only, no
-  `CIJobFinished` subscriber exists), so it is part of what this lane must first deliver — distinct
-  from the scan-dispatch host limit.
+  live-cluster walk** the dev host could not host. Ordering note from T-0024's corrected exit record,
+  **itself corrected 2026-08-16 — read this correction, not the note it corrects**: that note said the
+  `CIJobFinished`→ingest wiring was unbuilt at the pinned backend (scan ingest RPC-only, no
+  subscriber), so the lane had to *build* it first. True when written, false since: **T-0029 landed
+  the wiring on 2026-08-14 (backend@49d6bfa), AC1–AC9 proven with tests** —
+  `modules/security/internal/app/ci_ingest.go` is the ingester and `cmd/dataplane-app/ciingest.go`
+  subscribes `CIJobFinished` on the composition, with the report-size limit, retention sweep and
+  recovery backfill beside it. What this lane still carries is **T-0029 AC10 only**: the same path
+  proven end to end on the composition — pipeline finishes, findings appear on the dashboard and the
+  merge request, freshness measured. The lane now demonstrates this wiring rather than building it.
+  The scan-dispatch host limit (gVisor) is unchanged and still precedes it.
   Phase 3 delegated its cluster-bound proofs here as well: the **whole BYO path — install →
   self-register → upgrade → meter — proven once end to end on a real customer-shaped cluster**
   (the conformance matrix `deploy/conformance/byo-dataplane.md` exists, 14 rows, all marked
