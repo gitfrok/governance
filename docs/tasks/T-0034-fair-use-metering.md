@@ -74,6 +74,13 @@ granted to owner+member), backend main at **d3f4ad6**, bff main at **e2344de**, 
   the gateway's integration-test client. So AC5's behaviour — running jobs finishing while queued
   jobs are delayed and visibly caused — does not happen in a customer's cluster. Carried as
   **T-0035**; found by the phase-3 review (H2), which also noted this line previously read as met.
+  **Correction (2026-08-16): the carry is discharged.** T-0035 is Done — backend **a9ed620**,
+  pin-bumped by super-repo **9f526d0** — so the "what does not exist" sentence above describes the
+  backend pinned when this record was written, not the tree: `platform/agentclient` now applies each
+  update through `EnvelopeSink.ApplyEnvelopeCaps` and emits a real `EnvelopeStateAck`, and the CI
+  dispatcher binds `MaxCIConcurrency` as a hard in-flight bound with `QueueDepthCap` on the gauge
+  KEDA reads. The sentence stands as dated history; this correction binds. What AC9 still owes is the
+  cluster-lane demonstration, not the code.
 - **AC10** — the customer and the platform read the same counters: the usage view reads the same
   ledger the envelope decision was made from, tenant-isolated; no second internal number.
 

@@ -73,6 +73,13 @@ Numbering in parentheses maps to SPEC-0011.
       **New** and §12 lists it as needing its own spec and task. The dimension it will be charged
       against is that task's to build; this one owes the honest number at the seam, and delivers it.
       Do not read this tick as "a tenant's envelope now reflects imports".
+      **Correction (2026-08-16) — half of this is stale, and the remaining half is unclaimed.**
+      Fair-use accounting DOES exist: PR-23 shipped as SPEC-0041 / T-0034 (Done), with a metering
+      ledger, envelope evaluation and a usage view. What has NOT changed is the sentence's first
+      clause: **no plane wires the meter** — `WithStorageMeter` has test callers only, no composition
+      root calls it, so imported bytes still reach no dimension. The reason given above is obsolete;
+      the gap is real and now belongs to nobody. No backlog row claims it. The tick's warning stands
+      unchanged: a tenant's envelope does not reflect imports.
 
 **Provenance separation (ADR-0029) — the load-bearing criteria**
 - [x] AC10 (AC5): after importing N history records, the audit log holds exactly one

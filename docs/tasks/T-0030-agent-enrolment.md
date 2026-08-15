@@ -69,13 +69,21 @@ not to this task.
 
 **Recorded limits:**
 
-- **Stores are in-memory.** The enrolment-token and data-plane-registry stores do not survive a
-  control-plane restart; Postgres adapters are future work (tracked in `../backlog/`).
-- **CA key custody is dev custody.** The enrolment CA's key custody is the platform-secrets question
+- **Stores are in-memory.** ~~The enrolment-token and data-plane-registry stores do not survive a
+  control-plane restart; Postgres adapters are future work (tracked in `../backlog/`).~~
+  **Closed 2026-08-16 by T-0036** (SPEC-0042 AC1/AC2, backend@c9e58c5): both stores are durable
+  Postgres state and the restart proofs run against a real database.
+- **CA key custody is dev custody.** ~~The enrolment CA's key custody is the platform-secrets question
   SPEC-0038's out-of-scope names; production custody is deferred to the ADR-0057-scoped custody
-  follow-up (tracked in `../backlog/`).
+  follow-up (tracked in `../backlog/`).~~ **Closed 2026-08-16 by T-0040** (SPEC-0044, ADR-0064/0066):
+  the CA signs through an OpenBao custody seam holding key references only, the production
+  composition root cannot construct a CA from disk or env, and staged rotation is proven with no
+  re-enrolment. The custody-enabled control-plane **image** is a separate matter and is still open —
+  see T-0040's own recorded limits.
 - **Proxy-only egress stays open** (ADR-0017's remaining follow-up) — a customer behind an
   HTTP-proxy-only egress still cannot install.
-- **Clock-skew runbook entry still owed.** The symptom (a skewed customer cluster presents as a
+- **Clock-skew runbook entry still owed.** ~~The symptom (a skewed customer cluster presents as a
   network fault) is named in SPEC-0038's non-functional but not yet in `deploy/MVP-RUNBOOK.md`; the
-  cluster-lane runbook pass owns it.
+  cluster-lane runbook pass owns it.~~ **Closed 2026-08-16 by T-0040** (SPEC-0044 AC4): the entry is
+  `deploy/MVP-RUNBOOK.md` §4a, and `scripts/check-runbook.sh` gates its presence and the §6b
+  cross-reference that resolves to it — the gate asserts it on every `make verify`.

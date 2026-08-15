@@ -70,12 +70,20 @@ Follow the Agentic SDLC loop; stop-and-ask if a decision/spec is missing.
    no counterpart in `contracts/events`, so unlike every other event here it has no parity test.
    **T-0006 owns that contract and must adopt or rename it** — nothing subscribes today, so the
    change is free now and expensive later.
+   **Resolved (recorded here 2026-08-16): T-0006 took the rename.** `contracts/events/audit/v1`
+   carries one generic `AuditEvent`, the isolation violation travels on it as the action
+   `tenant.isolation.violation`, and `platform/auditsink` subscribes and routes it (backend@be0d108).
+   T-0006's exit record — *"T-0004's provisional routing key is resolved — renamed"* — is the
+   authority; this pointer exists so the follow-up is not read as open.
 
 ### Follow-ups (not blocking this task)
 
 - **CI does not run AC1–AC3.** The integration tests skip without `TEST_DATABASE_URL`, so backend CI
   covers build, vet and the arch gates but not the isolation proofs. A Postgres service container in
   the backend workflow would close that.
-- **Nothing applies the migrations.** The dev cluster still builds its schema from
+- **Nothing applies the migrations.** ~~The dev cluster still builds its schema from
   `deploy/dev/postgres.yaml`, so `0001_tenancy_baseline.sql` duplicates that init SQL until a
-  migration runner exists. Two sources of schema truth is a drift risk that should not outlive T-0006.
+  migration runner exists. Two sources of schema truth is a drift risk that should not outlive T-0006.~~
+  **Closed (recorded 2026-08-16).** `scripts/dev-provision.sh` applies ALL backend migrations —
+  tenant, audit, identity, policy, security, agent, residency — as its first step, idempotently, and
+  `make dev-provision` is the documented path. The runner exists; the schema has one source.

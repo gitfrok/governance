@@ -108,7 +108,10 @@ comment that hopes someone reads it.
 - **CI does not run AC1/AC2/AC4** — like T-0004's, they skip without `TEST_DATABASE_URL`. Two tasks
   now rest on integration tests that only run locally; a Postgres service container in backend CI is
   worth more than the next feature.
-- **Nothing applies the migrations.** `0001_audit_log.sql` was applied by hand to the dev cluster.
-  T-0004 recorded the same gap; it now affects two schemas.
+- **Nothing applies the migrations.** ~~`0001_audit_log.sql` was applied by hand to the dev cluster.
+  T-0004 recorded the same gap; it now affects two schemas.~~ **Closed (recorded 2026-08-16).**
+  `scripts/dev-provision.sh` applies every backend migration — this schema among them — idempotently
+  as its first step; `make dev-provision` is the documented path. T-0004's twin of this bullet is
+  corrected the same way.
 - **`AuditEvent` has no parity test** yet — `modules/repository/api` has one binding its events to
   `contracts/events`, and the audit event should get the same treatment.

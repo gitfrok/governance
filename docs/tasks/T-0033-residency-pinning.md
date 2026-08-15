@@ -63,11 +63,15 @@ agent `PlacementGate` on enrolment, and the evidence-pack residency section).
 
 **Recorded limits:**
 
-- **The declaration store is in-memory.** It is lost on a control-plane restart; the audit trail
+- **The declaration store is in-memory.** ~~It is lost on a control-plane restart; the audit trail
   remains durable, so the declaration is reconstructable from the record, but the live store does not
-  survive the restart.
-- **Declare has no wire/RPC surface in Phase 3.** The declaration is set by in-process composition
-  only; a wire surface is future work (tracked in `../backlog/`).
+  survive the restart.~~ **Closed 2026-08-16 by T-0037** (SPEC-0042 AC3): the declarations and
+  observations are durable, effective-dated Postgres state, proven against a real-Postgres harness
+  with zero skips. T-0037's own header records the closure.
+- **Declare has no wire/RPC surface in Phase 3.** ~~The declaration is set by in-process composition
+  only; a wire surface is future work (tracked in `../backlog/`).~~ **Closed 2026-08-16 by T-0038**
+  (SPEC-0043, ADR-0063): `residency/v1 ResidencyService` is served, its caller verified before any
+  PDP question, and no tenant/actor/role field rides the wire. T-0038 names this closure too.
 - **Migration is undesigned.** Changing a tenant's declared residency renders as a change under AC6
   with no mechanism to move existing data — stated here so the section never implies migration is
   supported (SPEC-0040's out-of-scope).
