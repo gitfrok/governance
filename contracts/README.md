@@ -23,7 +23,13 @@ needs a direct response.
   and data plane (`EnrolmentAck`, refusing via `EnrolmentRefusalReason`), rotates it on the
   channel before expiry (`CertificateRotation`), and the agent surfaces application failures
   (`CertificateRotationAck` + `CertificateRotationFailureReason`). Identity always comes from
-  the certificate; payload claims never override it. `AgentGateway.Connect` stays the single RPC.
+  the certificate; payload claims never override it. `AgentGateway.Connect` stays its single
+  RPC; the operator-facing issuance door rides a SEPARATE service, `EnrolmentService` with the
+  one RPC `IssueEnrolmentToken` (SPEC-0038 AC1, T-0030 lineage) — an env-gated, PAT-verified
+  surface mirroring the residency Declare door: tenant and actor are the verified principal on
+  the call, never request fields; the request carries the lifetime only and the response the
+  token record the domain returns (`token_id`, `one_time_token`, `issued_at`, `expires_at`),
+  the secret shown exactly once.
   SPEC-0044 (ADR-0064) additively adds the staged CA trust bundle to desired state:
   `DesiredState` gains `ca_trust_bundle` — a `CATrustBundle` with a monotonic bundle revision,
   the trusted roots (`repeated`, more than one while the dual-validate overlap window is open)

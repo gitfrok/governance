@@ -166,6 +166,59 @@ message CertificateRotationAck {             // agent -> CP; answers Certificate
 }
 
 // ---------------------------------------------------------------------------
+// Operator enrolment-token issuance door  (SPEC-0038 AC1, T-0030 lineage)
+// ---------------------------------------------------------------------------
+// The operator-facing door that mints the one-time token Enrol presents on a data
+// plane's first Connect. Until this surface existed, IssueEnrolmentToken was reachable
+// only from tests: no shipped binary exposed an operator path to mint a token, and the
+// north-star journey could not be proven on a cluster. The door mirrors the residency
+// Declare door (SPEC-0043, ADR-0063): a separately env-gated admin gRPC surface that
+// verifies its caller — a PAT verified before any policy decision — before it serves
+// anything. The caller's posture is the PAT-verified platform_operator of ADR-0046:
+// tenant and actor are properties of the verified principal on the call, never request
+// fields — a field naming them would be an unauthenticated routing claim (ADR-0045).
+// The wire vocabulary mirrors the agent module's operator surface (backend/modules/
+// agent/api): the lifetime input the domain clamps, and the token record the domain
+// returns — its ID, the secret shown exactly once, and the server-set instants.
+// The token is a credential: it MUST NOT appear in any log line, error message, metric
+// label, or audit record — the audit trail names tokens by ID only (SPEC-0038 AC2).
+service EnrolmentService {
+  // IssueEnrolmentToken mints one single-use, tenant-scoped, time-bounded enrolment
+  // token (SPEC-0038 AC1). The surface is a PEP: it asks the PDP the domain's token
+  // issue action and refuses coarsely when refused; unverified and unauthorized are the
+  // same coarse refusal (SPEC-0001). Every issuance appends exactly one immutable audit
+  // record naming the tenant, the verified actor and the token's ID and expiry — never
+  // the secret (AC2, AC7).
+  rpc IssueEnrolmentToken(IssueEnrolmentTokenRequest) returns (IssueEnrolmentTokenResponse);
+}
+
+// IssueEnrolmentTokenRequest carries the issuance input and NOTHING ELSE. There is
+// deliberately no tenant or actor field: the token is minted for the tenant the
+// verified caller is scoped to, by the actor the caller verified as — both properties
+// of the PAT-verified principal on the call, never wire claims (the residency Declare
+// door's subject rule, SPEC-0043 AC6, applied to this door).
+message IssueEnrolmentTokenRequest {
+  // The requested token lifetime. The domain clamps it: zero, negative or beyond the
+  // configured maximum all yield the maximum (backend/modules/agent — the same rule
+  // the operator surface applies), so a caller can shorten a token but never lengthen
+  // it past the configured bound.
+  google.protobuf.Duration lifetime = 1;
+}
+
+// IssueEnrolmentTokenResponse is the issued token as the domain records it, plus the
+// secret itself, which exists in this response exactly once: the control plane stores
+// only its hash, so a caller that fails to capture it mints another token rather than
+// retrieving this one (SPEC-0038 AC2). The fields are what an operator needs to store
+// the token as a Secret for the data plane's install: the token to present as
+// Enrol.one_time_token, its identity, and its validity window.
+message IssueEnrolmentTokenResponse {
+  string token_id = 1;                       // the token's identity; the only name the audit trail ever uses (AC2)
+  string one_time_token = 2;                 // the secret, returned exactly once; single-use, tenant-scoped, time-bounded
+  google.protobuf.Timestamp issued_at = 3;   // the server's instant the token was minted
+  google.protobuf.Timestamp expires_at = 4;  // the token becomes unusable at this instant (AC1's time bound)
+}
+
+// ---------------------------------------------------------------------------
 // CA trust bundle distribution  (SPEC-0044 AC2, ADR-0064)
 // ---------------------------------------------------------------------------
 // The AGENT-IDENTITY trust roots the data plane validates agent certificates against,

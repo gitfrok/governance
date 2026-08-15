@@ -1,0 +1,4 @@
+version: v2
+# Fixture module for scripts/check-contracts.sh check 10 — see the .proto for what it proves.
+modules:
+  - path: .

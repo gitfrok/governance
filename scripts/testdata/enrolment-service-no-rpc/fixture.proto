@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 10 (SPEC-0038 AC1, T-0030 lineage).
+//
+// It carries the one shape the real gitsaas.agent.v1.EnrolmentService must never
+// degrade back to: a service with NO RPC — the operator door exists in name but
+// mints nothing, and IssueEnrolmentToken stays reachable only from tests. The gate
+// compiles this module and asserts the descriptor does NOT carry the
+// IssueEnrolmentToken RPC — proving the enrolment-door check can fail. In
+// contracts/, EnrolmentService carries IssueEnrolmentToken with the domain's wire
+// shape: a lifetime-only request — tenant and actor are the PAT-verified principal
+// on the call, never fields — and a response carrying the token record the domain
+// returns (token_id, one_time_token, issued_at, expires_at), the secret shown
+// exactly once (SPEC-0038 AC2).
+package gitsaas.agent.v1;
+
+service EnrolmentService {
+  // The defect under test: no IssueEnrolmentToken RPC — no shipped path mints the
+  // one-time token Enrol presents on a data plane's first Connect.
+}

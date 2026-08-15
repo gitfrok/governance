@@ -49,6 +49,15 @@
 #      the pollution uncorrectable. The discriminator is a TYPE PROPERTY — asserted against
 #      the COMPILED descriptor, exactly as checks 5 to 8 do. The paired fixture is an ack
 #      with no discriminator and must be caught.
+#  10. gitsaas.agent.v1.EnrolmentService carries the IssueEnrolmentToken operator door
+#      (SPEC-0038 AC1, T-0030 lineage): the separately env-gated, PAT-verified surface
+#      that mints the one-time token Enrol presents — with the domain's wire shape: a
+#      lifetime-only request (tenant and actor are the verified principal on the call,
+#      never fields, as the residency Declare door's check 7 demands of its package) and
+#      a response carrying token_id, one_time_token, issued_at and expires_at — the token
+#      record the domain returns, nothing more. Presence and shape are TYPE PROPERTIES —
+#      asserted against the COMPILED descriptor, exactly as checks 5 to 9 do. The paired
+#      fixture is a service with no RPC and must be caught.
 #
 # The baseline is the tip of main, overridable for local use. It is deliberately not a merge base:
 # the question this asks is "does what I am about to merge break what is already released", and main
@@ -436,6 +445,57 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.DesiredStateAck 
   fi
 else
   report "the no-kind ack fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 10. EnrolmentService carries the IssueEnrolmentToken operator door -----------------
+
+# SPEC-0038 AC1 mints the one-time token a data plane presents as Enrol.one_time_token,
+# but until this door existed IssueEnrolmentToken was reachable only from tests: no
+# shipped binary exposed an operator path to mint a token. The door mirrors the residency
+# Declare door (SPEC-0043, ADR-0063): a separately env-gated admin surface whose caller
+# is PAT-verified before any policy decision, and whose tenant and actor are the verified
+# principal on the call — never request fields (ADR-0045). Presence of the service, its
+# RPC and the domain's wire shape — a lifetime-only request, a response carrying the
+# token record (token_id, one_time_token, issued_at, expires_at) — are TYPE PROPERTIES
+# asserted against the COMPILED descriptor, exactly as checks 5 to 9 do.
+# --exclude-source-info keeps comments out of the image — prose is not what is under
+# test. Imports are KEPT: the request references google.protobuf.Duration and the
+# response google.protobuf.Timestamp, whose well-known descriptors carry none of the
+# shape markers.
+
+if image_out=$(buf build contracts --type gitsaas.agent.v1.EnrolmentService \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if ! grep -q '"IssueEnrolmentToken"' <<<"$image_out"; then
+    report "gitsaas.agent.v1.EnrolmentService carries no IssueEnrolmentToken RPC — the operator door that mints the one-time token Enrol presents must exist (SPEC-0038 AC1, T-0030)"
+  elif ! grep -q 'IssueEnrolmentTokenRequest' <<<"$image_out" || ! grep -q 'IssueEnrolmentTokenResponse' <<<"$image_out"; then
+    report "gitsaas.agent.v1.EnrolmentService.IssueEnrolmentToken's input or output is not IssueEnrolmentTokenRequest/IssueEnrolmentTokenResponse — the door's shape is the domain's, not an ad-hoc pair (SPEC-0038 AC1)"
+  elif ! grep -q 'lifetime' <<<"$image_out" || ! grep -q 'token_id' <<<"$image_out" \
+    || ! grep -q 'one_time_token' <<<"$image_out" || ! grep -q 'issued_at' <<<"$image_out" \
+    || ! grep -q 'expires_at' <<<"$image_out"; then
+    report "the IssueEnrolmentToken request/response drifted from the domain's wire shape — lifetime in; token_id, one_time_token, issued_at, expires_at out (SPEC-0038 AC1/AC2)"
+  else
+    echo "  ok    EnrolmentService carries IssueEnrolmentToken with the domain's shape (SPEC-0038, T-0030)"
+  fi
+else
+  report "could not compile gitsaas.agent.v1.EnrolmentService for the enrolment-door check:"
+  indent "$image_out"
+fi
+
+# The fixture is the shape the real door must never degrade back to: an EnrolmentService
+# with NO RPC — a service that compiles but mints nothing. The same descriptor question
+# asked of it must miss the RPC — a check that cannot fail is not a gate (the
+# T-0002/T-0009 pattern).
+fixture=scripts/testdata/enrolment-service-no-rpc
+if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.EnrolmentService --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if ! grep -q '"IssueEnrolmentToken"' <<<"$fixture_image"; then
+    echo "  ok    no-rpc enrolment-service fixture caught (the enrolment-door check can fail)"
+  else
+    report "the no-rpc enrolment-service fixture compiled WITH the IssueEnrolmentToken RPC — the enrolment-door check is vacuous"
+  fi
+else
+  report "the no-rpc enrolment-service fixture did not compile:"
   indent "$fixture_image"
 fi
 
