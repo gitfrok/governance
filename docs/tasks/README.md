@@ -39,7 +39,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0032 | Signed releases, reconcile rollout, rollback | 3 | Done — governance@dea5476, backend@85b773c, super-repo@149b3e2; SPEC-0039 AC3–AC7 proven |
 | T-0033 | Residency pinning and its evidence-pack section | 3 | Done — governance@0e61302, backend@c630a1e; SPEC-0040 AC1–AC8 proven |
 | T-0034 | Fair-use metering, envelopes, usage view | 3 | Done — governance@5dff9b3, backend@d3f4ad6, bff@e2344de, webfrontend@95f77be+0e80261; SPEC-0041 AC1–AC10 proven |
-| T-0035 | Apply the envelope throttle in the data plane | 3 | Todo — SPEC-0041 AC5/AC9 second half; phase-3 review H2 |
+| T-0035 | Apply the envelope throttle in the data plane | 3 | Done — backend@a9ed620 + super-repo pin 9f526d0; SPEC-0041 AC5/AC9 second half proven; decision "Both" recorded; AC5 live-git half carried to the E2E/cluster lane |
 | T-0036 | Durable agent stores — enrolment-token store + data-plane registry Postgres adapters | 3.1 | Done — backend@c9e58c5; SPEC-0042 AC1/AC2/AC6/AC5 (agent half) proven real-Postgres |
 | T-0037 | Durable residency declarations + evidence-pack assembly from durable projections | 3.1 | Done — backend@816cb30; SPEC-0042 AC3/AC4/AC5 (residency half) proven real-Postgres; closes T-0033's in-memory-store limit |
 | T-0038 | Residency Declare wire surface — residency/v1, verified caller, control-plane implementation, PDP binding | 3.1 | Done — governance@794f578/3b9e853 (bundle 0.10.0) + backend@f182761; SPEC-0043 AC1/AC5/AC6/AC7 proven; closes T-0033's Declare-wire limit |
