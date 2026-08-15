@@ -167,6 +167,26 @@ under its own governance PR first.
 - [x] Runbook current: the rotation procedure with its removal precondition, and the clock-skew
       symptom cross-reference (SPEC-0044 AC4).
 
+### Phase-summary evidence — the final gate-matrix run (board #23, 2026-08-16)
+
+Exit criterion 7 above stays deliberately UNTICKED: the gate-matrix run recorded below predates this
+record's own commits, so the pin state at the next bump is not the state the run covered — and a tick
+must name the state it binds (the criterion's own "at the final pin bump" wording).
+
+The final full gate matrix ran green at the pin state of super-repo **8ba8d77**: backend **0238dee**,
+bff **4059a23**, webfrontend **843a195**, governance **a4c0748** — the state T-0043's and T-0044's
+exit records cite (`make verify` + `make codegen-check` + `make surfaces-check` green, per-repo gate
+matrices green per those records). **Honest correction:** the board task that opened this record cited
+super-repo `2162777` and governance `6301d94` for the same run; neither SHA exists in its repository
+(verified after fetch), so the run is cited here at the verifiable pin state above and the unverifiable
+SHAs are recorded as a board-side error, not papered over.
+
+**Dev-smoke caveat carried with this run:** `make dev-smoke` AC3 requires the `*.gitsaas.test` names
+in `/etc/hosts` (sudo) — documented environment prep, not a product defect; its ingress+TLS half
+passes without it (probed via `--resolve`). AC2's openbao half — `smoke-dev.sh`'s running-image
+assertion missing the `OPENBAO_IMAGE` pin — was the one real drift board #23 found and fixed;
+`make dev-smoke` AC2 is green with it.
+
 ## Risks
 
 - **The cluster lane bounds M3.** T-0042 is the only task whose blocker is infrastructure, and it is

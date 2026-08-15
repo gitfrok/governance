@@ -108,6 +108,14 @@ Gates: vitest 81/81, `tsc --noEmit`, `astro build` (pins included).
 **Honest carries:**
 - AC3's live-cluster half (telemetry reflecting the APPLIED throttle in a real customer cluster)
   rides the ack path proven here; the browser/cluster proof lands with board task #22's E2E lane.
+  **Record correction (2026-08-16, board #23):** the earlier authenticated browser E2E claims from
+  that lane were invalid and are retracted here. What was actually proven = the UNAUTHENTICATED
+  graceful-degradation and never-zero rendering at localhost:4321, evidenced by the screenshots in
+  `webfrontend/test-results/t22-verify-{1-home,2-usage-degraded,3-readonly-surface-gate}.png`.
+  The live AUTHENTICATED usage path is not provable in the current dev posture until all of:
+  (a) the bff has `GITFROK_USAGE_ADDR` pointed at a controlplane running a real usage service;
+  (b) a tenant exists carrying metered usage data; (c) the OIDC app is provisioned and DNS is wired.
+  Until then, no authenticated E2E claim may be made for this surface.
 - Trend honesty: with a single interval the past is unknown, so the service path renders FLAT —
   the same derivation the notices cite, never an estimate. Rising/falling appears once a prior
   interval exists; the derivation and its parity are what the tests pin.

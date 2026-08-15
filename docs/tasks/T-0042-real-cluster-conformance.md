@@ -58,3 +58,10 @@ unavailable, its rows carry the explicit cause annotation rather than silence �
 the task's own dependency. Sequenced behind T-0041 (M3): the harness half must exist before the real
 half runs. The plan's exit bar is at least one real cluster per cloud, or an honestly annotated
 subset — never a silent one.
+
+**Named landing place (board #23):** the helm-rendered halves of T-0041 AC1/AC5 — the
+operator-enabled rendered shape with zero image values (vendor digest-pin default, no inbound
+surface) and the rendered no-inbound assertions — were honestly NOT RUN on T-0041's lane (helm
+absent; `check-byo-chart.sh` says so on its own output line). Their landing place is this task:
+**re-run `check-byo-chart.sh`'s helm-rendered halves on a helm-equipped lane** before the matrix's
+real-cluster rows are recorded, and record that run's evidence alongside the matrix rows.
