@@ -118,10 +118,37 @@ message GetUsageViewRequest {
   UsageContext context = 1;
 }
 
+// EnvelopeThrottleObservation is SPEC-0046 AC3's end-to-end observability:
+// the envelope the control plane METERED and delivered as desired state, and
+// what the data plane acked as APPLIED, each shown with its own numbers —
+// never smoothed into one (SPEC-0046 AC1/AC3). A tenant with no evaluation
+// yet has no observation on the response at all; a tenant with an evaluation
+// but no recorded ack shows has_applied_ack = false — absence renders as
+// absence, never as zero or as "applied" (SPEC-0041 AC3's discipline applied
+// to state, and AC7: nothing here can block git).
+message EnvelopeThrottleObservation {
+  // The newest evaluation's desired state — the METERED side (ADR-0061): the
+  // same counters every envelope decision was made from (SPEC-0041 AC10).
+  int64 desired_generation = 1;
+  int32 desired_max_ci_concurrency = 2;  // 0 = the evaluation throttled nothing
+  int64 desired_queue_depth_cap = 3;     // queued jobs are delayed, never dropped
+  // The newest acknowledgement recorded from the data plane — the APPLIED
+  // side (SPEC-0041 AC9, T-0035): the control plane states, the data plane
+  // applies and says so.
+  bool has_applied_ack = 4;              // false = no ack recorded yet: absence, not zero
+  int64 applied_generation = 5;
+  bool applied = 6;
+  string applied_error = 7;              // coarse error prose the data plane reported
+  google.protobuf.Timestamp acked_at = 8;
+}
+
 message GetUsageViewResponse {
   // One entry per PRD §6 dimension — the list itself is the coverage
   // statement (SPEC-0041 AC2).
   repeated UsageDimensionView dimensions = 1;
   repeated UsageDivergence divergences = 2;
   google.protobuf.Timestamp generated_at = 3;
+  // The end-to-end throttle observation (SPEC-0046 AC3): absent until the
+  // tenant has at least one envelope evaluation. Additive (field 4).
+  EnvelopeThrottleObservation envelope_throttle = 4;
 }

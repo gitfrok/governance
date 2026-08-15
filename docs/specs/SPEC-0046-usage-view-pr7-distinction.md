@@ -46,9 +46,14 @@ the change landed): AC2 requires the per-dimension state to name its trend,
 and the BFF/browser surfaces render without deriving, so `usage/v1/usage.proto`
 gains the `EnvelopeTrend` enum and `UsageDimensionView.trend` (field 13,
 additive-only, no renumbering), sourced from the same derivation the SPEC-0041
-AC4 notices cite. Everything else the ACs need landed with T-0034; where any
-further cause or state field proves missing from an existing view contract, it
-is an additive change under its own governance PR first.
+AC4 notices cite. AC3's end-to-end observability likewise needed a shape the
+response did not carry, so the same additive route landed
+`EnvelopeThrottleObservation` and `GetUsageViewResponse.envelope_throttle`
+(field 4, additive-only): the METERED desired state and the data plane's
+APPLIED ack shown as two numbers, never smoothed into one; absence renders as
+absence. Everything else the ACs need landed with T-0034; where any further
+cause or state field proves missing from an existing view contract, it is an
+additive change under its own governance PR first.
 
 ## Data owned
 
