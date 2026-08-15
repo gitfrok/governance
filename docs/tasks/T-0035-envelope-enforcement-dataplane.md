@@ -124,3 +124,18 @@ its delivered-generation per stream, so the reconnect re-delivers).
 **AC7 — absence is not a cap of zero:** `TestFreshCapsRunUnthrottled` — a dispatcher whose caps
 were never touched dispatches freely; `Config.Envelope == nil` applies every update trivially
 (nothing to throttle), and no code path converts "never received" into a 0-cap.
+
+## Exit-record amendment (2026-08-16, Phase 3.1 final review)
+
+The Phase 3.1 correctness review observed that the wire proof above applied the caps into a
+RECORDING STUB (`recordingEnvelopeSink`), so the data plane's actual CONSUMPTION of the caps was
+proven only compositionally. Backend **7c05a86** closes that gap with a real-wire consumption test:
+`TestEnvelopeStateCapsBindTheRealDispatcher` (platform/agentclient) wires the agent's Envelope sink
+to the SAME `ci.EnvelopeCaps` holder the real CI dispatcher reads through `EnvelopeThrottle` on
+every tick (`ci.NewRuntime`'s `WithEnvelopeThrottle(caps)`). Over the real mTLS channel: a breach
+generation (1, 2) lands in the holder and five queued jobs render as the CAPPED depth 2 on the
+KEDA gauge endpoint; the recovery generation (0, 0) LIFTS the caps and a fresh burst renders its
+FULL depth; both generations are recorded by the control-plane delivery as applied acks. The
+claim-gate half (`MaxCIConcurrency`) binds off the same holder — proven against a held in-flight
+count by the dispatcher suite named under AC2. Same full gate sequence, zero failures, zero
+durability skips.

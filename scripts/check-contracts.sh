@@ -41,6 +41,14 @@
 #      COMPILED descriptor, exactly as checks 5 to 7 do. The paired fixtures carry the
 #      defects — one bundle missing, and one bundle type carrying the other's vocabulary —
 #      and must each be caught.
+#   9. gitsaas.agent.v1.DesiredStateAck carries a payload-kind discriminator
+#      (SPEC-0045's two-bundles note, extended to the ack path): the reconcile channel
+#      delivers several desired-state artifacts whose generations are independent revision
+#      spaces, so an ack that does not say WHICH artifact it answers cannot be attributed
+#      to the right applied-state registry, and a forward-only GREATEST upsert would make
+#      the pollution uncorrectable. The discriminator is a TYPE PROPERTY — asserted against
+#      the COMPILED descriptor, exactly as checks 5 to 8 do. The paired fixture is an ack
+#      with no discriminator and must be caught.
 #
 # The baseline is the tip of main, overridable for local use. It is deliberately not a merge base:
 # the question this asks is "does what I am about to merge break what is already released", and main
@@ -389,6 +397,45 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.ReleaseTrustBund
   fi
 else
   report "the CA-vocabulary fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 9. DesiredStateAck carries a payload-kind discriminator (SPEC-0045 two-bundles note) ----
+
+# The reconcile channel delivers several desired-state artifacts — the CA trust bundle of
+# SPEC-0044 and the release trust bundle of SPEC-0045 — whose generations are INDEPENDENT
+# revision spaces (both start at 1). An ack that does not say which artifact it answers
+# cannot be attributed: the control plane would record a CA bundle ack's generation into
+# the release bundle's applied registry, and the registry's forward-only GREATEST upsert
+# makes that pollution uncorrectable. So the ack carries a payload-kind discriminator — a
+# TYPE PROPERTY asserted against the COMPILED descriptor, exactly as checks 5 to 8 do.
+# --exclude-source-info keeps comments out of the image — prose is not what is under test.
+
+if image_out=$(buf build contracts --type gitsaas.agent.v1.DesiredStateAck --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if ! grep -q 'kind' <<<"$image_out"; then
+    report "gitsaas.agent.v1.DesiredStateAck carries no payload-kind discriminator — an ack must say WHICH desired-state artifact it answers, or its generation cannot be attributed to the right applied-state registry (SPEC-0045's two-bundles note, extended to the ack path)"
+  else
+    echo "  ok    DesiredStateAck carries a payload-kind discriminator (SPEC-0045)"
+  fi
+else
+  report "could not compile gitsaas.agent.v1.DesiredStateAck for the ack-discriminator check:"
+  indent "$image_out"
+fi
+
+# The fixture is the shape the real DesiredStateAck must never degrade back to: an ack with
+# generation only and no discriminator. The same descriptor question asked of it must miss
+# the kind field — a check that cannot fail is not a gate (the T-0002/T-0009 pattern).
+fixture=scripts/testdata/desired-state-ack-no-kind
+if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.DesiredStateAck --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if ! grep -q 'kind' <<<"$fixture_image"; then
+    echo "  ok    no-kind ack fixture caught (the ack-discriminator check can fail)"
+  else
+    report "the no-kind ack fixture compiled WITH a kind field — the ack-discriminator check is vacuous"
+  fi
+else
+  report "the no-kind ack fixture did not compile:"
   indent "$fixture_image"
 fi
 

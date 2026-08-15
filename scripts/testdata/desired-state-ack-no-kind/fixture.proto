@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 9 (SPEC-0045's two-bundles note,
+// extended to the ack path).
+//
+// It carries the one shape the real gitsaas.agent.v1.DesiredStateAck must never
+// degrade back to: generation only, with NO payload-kind discriminator. The gate
+// compiles this module and asserts the descriptor does NOT carry a kind field —
+// proving the discriminator check can fail. In contracts/, the ack says WHICH
+// desired-state artifact it answers, because the reconcile channel delivers
+// several artifacts whose generations are independent revision spaces (the CA
+// trust bundle revision of SPEC-0044 and the release trust bundle revision of
+// SPEC-0045 both start at 1) — an unattributable ack would pollute the wrong
+// applied-state registry through its forward-only GREATEST upsert.
+package gitsaas.agent.v1;
+
+message DesiredStateAck {
+  int64  generation = 1;
+  bool   applied    = 2;
+  string error      = 3;
+  // The defect under test: no payload-kind discriminator — the ack's generation
+  // cannot be attributed to the artifact it answers.
+}

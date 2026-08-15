@@ -379,10 +379,30 @@ message SignedRelease {
   string signature = 3;                      // cosign/DSSE sig; agent verifies vs pinned key
 }
 
+// The payload kind a DesiredStateAck answers. The reconcile channel delivers
+// SEVERAL desired-state artifacts whose generations are INDEPENDENT revision
+// spaces (the CA trust bundle revision of SPEC-0044 and the release trust
+// bundle revision of SPEC-0045 both start at 1), so an ack must say WHICH
+// artifact it acknowledges: without a discriminator, a control plane cannot
+// attribute an ack's generation to the right registry, and a forward-only
+// GREATEST upsert would make the misattribution uncorrectable (SPEC-0045's
+// two-bundles note, extended to the ack path). UNSPECIFIED means a plane
+// predating this field: its ack is attributed to NO registry, which is safe
+// — attribution never widens on ambiguity.
+enum DesiredStateKind {
+  DESIRED_STATE_KIND_UNSPECIFIED           = 0;
+  DESIRED_STATE_KIND_CA_TRUST_BUNDLE       = 1;
+  DESIRED_STATE_KIND_RELEASE_TRUST_BUNDLE  = 2;
+}
+
 message DesiredStateAck {
   int64  generation = 1;
   bool   applied    = 2;
   string error      = 3;
+  // The artifact this ack answers (see DesiredStateKind). Additive — a plane
+  // that does not set it sends UNSPECIFIED and its ack is attributed to no
+  // registry.
+  DesiredStateKind kind = 4;
 }
 
 message ActualStateReport {                  // observed reality, drives convergence
