@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 8 (SPEC-0044 AC2, SPEC-0045 AC2).
+//
+// It carries the one shape the real gitsaas.agent.v1.DesiredState must never degrade to:
+// only ONE of the two trust bundles present, the release trust content left to ride the CA
+// bundle's field. The gate compiles this module and asserts the descriptor does NOT carry a
+// release_trust_bundle field — proving the presence check can fail. In contracts/, the two
+// bundles of SPEC-0044 (CA trust bundle, ADR-0064) and SPEC-0045 (release trust bundle,
+// ADR-0044/ADR-0065) ride the reconcile path as desired state on their OWN fields, each with
+// its own type: never one field standing for both artifacts (SPEC-0045's two-bundles note).
+package gitsaas.agent.v1;
+
+message DesiredState {
+  int64 generation = 1;
+  CaBundle ca_trust_bundle = 3;
+  // The defect under test: no release_trust_bundle field — the release trust
+  // bundle has nowhere of its own to ride.
+}
+
+message CaBundle {
+  int64 revision = 1;
+}

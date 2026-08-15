@@ -1,6 +1,6 @@
 # SPEC-0045: Multi-cluster BYO readiness
 
-- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — the artifact this spec rotates is named the *release* trust bundle throughout, to keep it apart from SPEC-0044's CA trust bundle)
+- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — the artifact this spec rotates is named the *release* trust bundle throughout, to keep it apart from SPEC-0044's CA trust bundle; **amended 2026-08-15 (T-0041)** — the release trust bundle gains its own additive field on agent/v1 `DesiredState` (`release_trust_bundle`), named and typed strictly apart from SPEC-0044's `ca_trust_bundle`)
 - **Owner:** platform
 - **Context(s):** Release machinery (signed operator image) · Control plane (registry, trust distribution, metering) · Data plane fleet (N planes per tenant) — ADR-0022
 - **ADRs:** 0065 (decides multi-plane readiness), 0044 (signing custody — extended, not replaced), 0035 (first-party images), 0013 (Helm + Operator), 0011 (outbound-only), 0061 (metering authority — unchanged), 0060
@@ -42,9 +42,14 @@ spec makes that readiness executable for Phase 3.1 epic **EP-22** (PR-20/PR-21).
 
 ## Contracts touched
 
-None. The release trust bundle travels as desired state on the stream the agent already holds (SPEC-0039's
-reconcile path); the registry's `data_plane_id` keying and per-plane states are backend state; the
-certificate already names tenant and data plane (ADR-0060 decision 3).
+`contracts/proto/agent/v1` — **additive** (ADR-0027): the staged release trust bundle needs a
+field the channel did not carry, so it rides the reconcile path (SPEC-0039) as desired state —
+`DesiredState.release_trust_bundle` (field 4), a `ReleaseTrustBundle` carrying a monotonic
+bundle revision, the trusted cosign release-signing keys (`ReleaseTrustKey`, `repeated` for the
+dual-validate overlap) and the `signing_key_id` new releases sign with. It is NOT SPEC-0044's
+`ca_trust_bundle`: a different artifact on a different field with a different type
+(this spec's two-bundles note). The registry's `data_plane_id` keying and per-plane states are
+backend state; the certificate already names tenant and data plane (ADR-0060 decision 3).
 
 ## Data owned
 

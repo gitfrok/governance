@@ -32,12 +32,15 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
-#   8. gitsaas.agent.v1.DesiredState carries the staged CA trust bundle as ca_trust_bundle and no
-#      release-trust-bundle naming (SPEC-0044 AC2 / Contracts touched; SPEC-0045's two-bundles
-#      note): the CA trust bundle of ADR-0064 and the release trust bundle of ADR-0044/ADR-0065
-#      are different artifacts, and no name on this surface may imply the release bundle. Both
-#      halves are TYPE PROPERTIES — asserted against the COMPILED descriptor, exactly as checks 5
-#      to 7 do. The paired fixture carries the defect and must be caught.
+#   8. gitsaas.agent.v1.DesiredState carries BOTH trust bundles as distinct artifacts
+#      (SPEC-0044 AC2 / SPEC-0045 AC2, Contracts touched): the CA trust bundle of ADR-0064
+#      rides as ca_trust_bundle and the release trust bundle of ADR-0044/ADR-0065 rides as
+#      release_trust_bundle — each on its own field with its own type, and neither bundle
+#      type may carry the other's vocabulary (SPEC-0045's two-bundles note: never one field
+#      or one type standing for both). All halves are TYPE PROPERTIES — asserted against the
+#      COMPILED descriptor, exactly as checks 5 to 7 do. The paired fixtures carry the
+#      defects — one bundle missing, and one bundle type carrying the other's vocabulary —
+#      and must each be caught.
 #
 # The baseline is the tip of main, overridable for local use. It is deliberately not a merge base:
 # the question this asks is "does what I am about to merge break what is already released", and main
@@ -295,50 +298,97 @@ else
   indent "$fixture_image"
 fi
 
-# --- 8. DesiredState carries the CA trust bundle, named apart from any release bundle ----------
+# --- 8. DesiredState carries BOTH trust bundles as distinct artifacts ----------------------
 
 # SPEC-0044 AC2 distributes the staged CA trust bundle — the agent-identity trust roots of
-# ADR-0064 — over the reconcile path: DesiredState gains ca_trust_bundle, additive, with a bundle
-# revision so consumers detect staging progress. The RELEASE trust bundle of SPEC-0045 (the
-# cosign release-signing keys of ADR-0044/ADR-0065) is a DIFFERENT artifact, and SPEC-0045's
-# two-bundles note forbids one field standing for both: no name on this surface may imply the
-# release bundle. Both halves are TYPE PROPERTIES asserted against the COMPILED descriptor,
-# exactly as checks 5 to 7 do — the presence of the CA field, and the absence of any
-# release-trust-bundle naming. --exclude-source-info keeps comments out of the image: the real
-# DesiredState's doc comment names the release bundle precisely to say this field is not it, and
-# prose is not what is under test. Imports are deliberately KEPT (as in checks 6 and 7): the
-# bundle's roots carry a google.protobuf.Timestamp expiry, and its descriptor carries none of
-# the markers. The markers are the release-bundle naming itself; the component's SignedRelease
-# type — a signed release REFERENCE — carries none of them either.
-ca_bundle_markers='release_trust_bundle|release_bundle'
+# ADR-0064 — as ca_trust_bundle; SPEC-0045 AC2 distributes the staged RELEASE trust bundle —
+# the cosign release-signing keys of ADR-0044/ADR-0065 — as release_trust_bundle. They are
+# DIFFERENT artifacts (SPEC-0045's two-bundles note): both ride the reconcile path as desired
+# state, each on its own field with its own type and its own monotonic bundle revision, and
+# neither bundle type may carry the other's vocabulary. All halves are TYPE PROPERTIES
+# asserted against the COMPILED descriptor, exactly as checks 5 to 7 do — the presence of
+# BOTH fields on DesiredState, and the vocabulary separation of the two bundle types.
+# --exclude-source-info keeps comments out of the image: the real messages' doc comments
+# name the other bundle precisely to say they are not it, and prose is not what is under
+# test. Imports are KEPT on the DesiredState question (as in checks 6 and 7): the bundle
+# descriptors it pulls in are exactly what the marker scans below then inspect on their own.
 
 if image_out=$(buf build contracts --type gitsaas.agent.v1.DesiredState \
   --exclude-source-info -o -#format=json 2>&1); then
   if ! grep -q 'ca_trust_bundle' <<<"$image_out"; then
     report "gitsaas.agent.v1.DesiredState carries no ca_trust_bundle field — the staged CA trust bundle rides the reconcile path as desired state (SPEC-0044 AC2)"
-  elif grep -Eiq "$ca_bundle_markers" <<<"$image_out"; then
-    report "gitsaas.agent.v1.DesiredState carries release-trust-bundle naming — the release trust bundle is SPEC-0045's different artifact; the two bundles never share or imply one another's name"
+  elif ! grep -q 'release_trust_bundle' <<<"$image_out"; then
+    report "gitsaas.agent.v1.DesiredState carries no release_trust_bundle field — the staged release trust bundle rides the reconcile path on its OWN field, never the CA bundle's (SPEC-0045 AC2)"
   else
-    echo "  ok    DesiredState carries ca_trust_bundle, named apart from the release bundle (SPEC-0044, SPEC-0045)"
+    echo "  ok    DesiredState carries both ca_trust_bundle and release_trust_bundle (SPEC-0044, SPEC-0045)"
   fi
 else
-  report "could not compile gitsaas.agent.v1.DesiredState for the CA-trust-bundle check:"
+  report "could not compile gitsaas.agent.v1.DesiredState for the two-bundles check:"
   indent "$image_out"
 fi
 
-# The fixture is the one shape the real DesiredState must never grow: the CA trust bundle named
-# as if it were the release bundle. The same descriptor question asked of it must find the
-# marker — a check that cannot fail is not a gate (the T-0002/T-0009 pattern).
-fixture=scripts/testdata/ca-bundle-release-field
-if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.DesiredState --exclude-imports \
+# Vocabulary separation: the CA bundle type carries no release naming, and the release bundle
+# type carries no CA-artifact vocabulary (ca_trust naming, certificate_pem roots, an issuance
+# root). Imports are KEPT (as on the DesiredState question): the CA root carries a
+# google.protobuf.Timestamp expiry the image must include, and that well-known descriptor
+# carries none of the markers either way.
+ca_bundle_markers='release'
+release_bundle_markers='ca_trust|certificate_pem|issuance_root'
+
+if ca_image=$(buf build contracts --type gitsaas.agent.v1.CATrustBundle \
   --exclude-source-info -o -#format=json 2>&1); then
-  if grep -Eiq "$ca_bundle_markers" <<<"$fixture_image"; then
-    echo "  ok    release-bundle-naming fixture caught (the CA-trust-bundle descriptor check can fail)"
+  if grep -Eiq "$ca_bundle_markers" <<<"$ca_image"; then
+    report "gitsaas.agent.v1.CATrustBundle carries release-trust-bundle vocabulary — the two trust bundles never share or imply one another's type (SPEC-0045's two-bundles note)"
   else
-    report "the release-bundle-naming fixture compiled with no release marker in its descriptor — the check is vacuous"
+    echo "  ok    CATrustBundle carries no release vocabulary (SPEC-0044, SPEC-0045)"
   fi
 else
-  report "the release-bundle-naming fixture did not compile:"
+  report "could not compile gitsaas.agent.v1.CATrustBundle for the two-bundles check:"
+  indent "$ca_image"
+fi
+
+if release_image=$(buf build contracts --type gitsaas.agent.v1.ReleaseTrustBundle \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$release_bundle_markers" <<<"$release_image"; then
+    report "gitsaas.agent.v1.ReleaseTrustBundle carries CA-trust-bundle vocabulary — the release trust bundle is SPEC-0045's different artifact, with its own type"
+  else
+    echo "  ok    ReleaseTrustBundle carries no CA vocabulary (SPEC-0045)"
+  fi
+else
+  report "could not compile gitsaas.agent.v1.ReleaseTrustBundle for the two-bundles check:"
+  indent "$release_image"
+fi
+
+# The first fixture is the shape the real DesiredState must never degrade to: only ONE of the
+# two bundles present, the release trust content left to ride the CA bundle's field. The same
+# descriptor question asked of it must miss the release field — a check that cannot fail is
+# not a gate (the T-0002/T-0009 pattern).
+fixture=scripts/testdata/release-bundle-missing-field
+if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.DesiredState --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if ! grep -q 'release_trust_bundle' <<<"$fixture_image"; then
+    echo "  ok    missing-release-field fixture caught (the two-bundles presence check can fail)"
+  else
+    report "the missing-release-field fixture compiled WITH a release_trust_bundle field — the presence check is vacuous"
+  fi
+else
+  report "the missing-release-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# The second fixture is the other shape the real bundle must never grow: a ReleaseTrustBundle
+# carrying CA-artifact vocabulary. The same vocabulary question asked of it must find the
+# marker — both failure modes of the two-bundles note are caught.
+fixture=scripts/testdata/release-bundle-ca-vocabulary
+if fixture_image=$(buf build "$fixture" --type gitsaas.agent.v1.ReleaseTrustBundle --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$release_bundle_markers" <<<"$fixture_image"; then
+    echo "  ok    CA-vocabulary fixture caught (the release-bundle descriptor check can fail)"
+  else
+    report "the CA-vocabulary fixture compiled with no CA marker in its descriptor — the check is vacuous"
+  fi
+else
+  report "the CA-vocabulary fixture did not compile:"
   indent "$fixture_image"
 fi
 

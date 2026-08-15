@@ -30,7 +30,14 @@ needs a direct response.
   and an `issuance_root_id` naming the root new certificates chain to — so CA rotation rides the
   reconcile path with no fleet re-enrolment. It is the agent-identity CA trust bundle; the
   release trust bundle of SPEC-0045 (cosign release-signing keys, ADR-0044/ADR-0065) is a
-  different artifact and never shares or implies this field's name
+  different artifact and never shares or implies this field's name. SPEC-0045 (ADR-0044,
+  ADR-0065) additively adds the staged RELEASE trust bundle to the same desired state:
+  `DesiredState` gains `release_trust_bundle` — a `ReleaseTrustBundle` with a monotonic bundle
+  revision, the trusted cosign release-signing keys (`ReleaseTrustKey`, `repeated`, more than
+  one while the dual-validate overlap window is open) and a `signing_key_id` naming the key new
+  releases sign with — so release-key rotation rides the reconcile path with no downtime. It
+  rides its OWN field with its OWN type: the two trust bundles never share a field or a type
+  (SPEC-0045's two-bundles note)
 - `proto/policy/v1/policy.proto` — the Policy Decision Point (ADR-0006, SPEC-0002). Synchronous
   against the usual preference for events, because a PEP cannot proceed without the answer; the
   rules themselves live in `../policies/` and never travel over this wire. T-0025 (SPEC-0029,

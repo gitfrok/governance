@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 8 (SPEC-0045 AC2, SPEC-0045's two-bundles note).
+//
+// It carries the other shape the real gitsaas.agent.v1.ReleaseTrustBundle must never grow:
+// CA-artifact vocabulary living on the release bundle type. The gate compiles this module and
+// asserts the descriptor DOES carry a CA marker — proving the vocabulary check can fail. In
+// contracts/, the release trust bundle of SPEC-0045 (the cosign release-signing keys of
+// ADR-0044/ADR-0065) is a DIFFERENT artifact from the CA trust bundle of SPEC-0044/ADR-0064
+// (the agent-identity roots): different owner, different rotation reasons, never one field or
+// one type, so the release bundle type carries no CA vocabulary.
+package gitsaas.agent.v1;
+
+message ReleaseTrustBundle {
+  int64 revision = 1;
+  // The defect under test: the release bundle trusting CA roots — CA vocabulary
+  // (certificate_pem) living on the release bundle type.
+  repeated CaRoot trusted_keys = 2;
+}
+
+message CaRoot {
+  string root_id = 1;
+  bytes certificate_pem = 2;
+}

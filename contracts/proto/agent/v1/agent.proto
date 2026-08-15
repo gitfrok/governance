@@ -200,6 +200,38 @@ message CATrustBundle {
 }
 
 // ---------------------------------------------------------------------------
+// Release trust bundle distribution  (SPEC-0045 AC2, ADR-0044, ADR-0065)
+// ---------------------------------------------------------------------------
+// The cosign RELEASE-SIGNING keys the data plane verifies signed release references
+// (SignedRelease.signature) against, distributed as desired state over the same reconcile
+// path (SPEC-0039). Rotation is staged, never a cut-over: a new key joins the bundle before
+// releases start signing with it, both keys VERIFY during an explicit overlap window, and
+// the outgoing key leaves only after no in-fleet release still signs with it (ADR-0044's
+// two-key overlap). The bundle carries more than one trusted key precisely while that
+// overlap is open.
+//
+// This is the RELEASE trust bundle of SPEC-0045 — the cosign release-signing keys of
+// ADR-0044/ADR-0065. It is a DIFFERENT artifact from the CA trust bundle above (the
+// agent-identity roots of SPEC-0044/ADR-0064): different owner, different rotation reasons,
+// never one field or one type (SPEC-0045's two-bundles note).
+
+// One trusted release-signing key in the bundle.
+message ReleaseTrustKey {
+  string key_id         = 1;                 // CP-assigned identity for this key; signing_key_id names one of these
+  bytes  public_key_pem = 2;                 // PEM public key in the cosign key form (ADR-0044); never a private key
+}
+
+// The staged release trust bundle. revision advances with every staging step — stage,
+// signing-key move, removal — so consumers detect staging progress the way
+// DesiredState.generation converges desired state.
+message ReleaseTrustBundle {
+  int64 revision = 1;                        // monotonic bundle epoch; planes apply the newest
+  repeated ReleaseTrustKey trusted_keys = 2; // every key currently valid; dual-validate overlap ⇒ > 1
+  string signing_key_id = 3;                 // key_id of the key NEW releases sign with; during overlap,
+                                             // old-key signatures still VALIDATE but do not sign
+}
+
+// ---------------------------------------------------------------------------
 // Health / telemetry  (no source code, no secrets)
 // ---------------------------------------------------------------------------
 enum HealthState {
@@ -323,9 +355,15 @@ message DesiredState {
   // The staged CA trust bundle (SPEC-0044 AC2, ADR-0064): the agent-identity trust roots the
   // data plane validates agent certificates against. Additive — an absent field means no
   // bundle update and the agent keeps its current roots. This is NOT the release trust
-  // bundle of SPEC-0045 (cosign release-signing keys): a different artifact that, when it
-  // gains a field of its own, must be named apart from this one.
+  // bundle of SPEC-0045 (cosign release-signing keys): a different artifact that rides its
+  // own field, release_trust_bundle, with its own type, named apart from this one.
   CATrustBundle ca_trust_bundle = 3;
+  // The staged RELEASE trust bundle (SPEC-0045 AC2, ADR-0044/ADR-0065): the cosign
+  // release-signing keys the data plane verifies SignedRelease references against. Additive —
+  // an absent field means no bundle update and the plane keeps its current keys. This is NOT
+  // the CA trust bundle of SPEC-0044 (agent-identity roots): a different artifact with its
+  // own field, type and rotation reasons (SPEC-0045's two-bundles note).
+  ReleaseTrustBundle release_trust_bundle = 4;
 }
 
 message Component {
