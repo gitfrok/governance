@@ -1,8 +1,6 @@
 # T-0038: Residency Declare wire surface — residency/v1, verified caller, control-plane implementation, PDP binding
 
-- **Status:** Todo — governance half (residency/v1 contracts + AC7 grant, bundle 0.10.0) landed at
-  governance@794f578; the backend half (control-plane service, caller verification, PDP binding —
-  AC1/AC5/AC6) remains Wave 3 work
+- **Status:** Done
 - **Phase / Epic:** 3.1 / EP-20 (residency Declare and placement hardening)
 - **Repo(s):** governance (additive `contracts/proto/residency/v1`, plus the `policies/` grant and
   its tests for AC7), backend (control-plane service and PDP binding) — ADR-0027 order, one
@@ -23,16 +21,16 @@ and the agent channel is never a declaration path (ADR-0063). This closes T-0033
 ## Acceptance criteria (test-first)
 
 SPEC-0043 AC1, AC5, AC6 and AC7 (AC2–AC4 are T-0039's):
-- [ ] AC1: an operator sets or replaces a tenant's declaration through the control-plane admin gRPC
+- [x] AC1: an operator sets or replaces a tenant's declaration through the control-plane admin gRPC
       surface in `residency/v1`; the surface is a PEP that asks the PDP action
       `residency.declaration.set` and refuses coarsely when refused; a replace appends a new
       effective-dated declaration and retains history; every declaration, replacement and refusal
       appends exactly one immutable audit record naming tenant, actor, previous and new pinning, and
       effective time.
-- [ ] AC5: no agent-channel declaration path exists — a wire tripwire test asserts that no message,
+- [x] AC5: no agent-channel declaration path exists — a wire tripwire test asserts that no message,
       field or path in `contracts/proto/agent/v1` can set, mutate or influence a residency
       declaration; `agent/v1` gains nothing.
-- [ ] AC6: the surface refuses a caller it has not verified, before the PDP is asked. Tenant, actor
+- [x] AC6: the surface refuses a caller it has not verified, before the PDP is asked. Tenant, actor
       and roles come from a verified principal carried in the request context (ADR-0045; the
       `identity/api` principal seam — `WithPrincipal`/`RequirePrincipal` — is what a verification
       step populates), never from the request body, and `residency/v1` declares no tenant, actor or
@@ -40,7 +38,7 @@ SPEC-0043 AC1, AC5, AC6 and AC7 (AC2–AC4 are T-0039's):
       for an unverified subject; a body field claiming a subject → refused, not believed; the AC1
       audit record names the verified actor. SPEC-0002's limit (d) covers the Phase-2 doors and is not
       extended to this one.
-- [ ] AC7: a tenant-scoped `platform_operator` principal (ADR-0046 binding, platform-administered) may
+- [x] AC7: a tenant-scoped `platform_operator` principal (ADR-0046 binding, platform-administered) may
       declare for the tenant it is bound to, beside the unchanged owner grant. Lands as a reviewed
       Rego change in `policies/` with its own tests — allowed on the bound tenant, denied for every
       non-owner tenant role, denied on tenant mismatch, denied on any resource kind but the tenant —
@@ -95,3 +93,45 @@ owner to declare.
 Depends on T-0037: SPEC-0043's assumption is that the durable declaration store lands with or before
 this surface. AC7 adds no new role — it reuses ADR-0046's `platform_operator` and adds one action to
 it. Refusals keep the same coarse shape as a nonexistent record — no surface error distinguishes tenants (SPEC-0001's rule).
+
+## Exit record (2026-08-15)
+
+Governance-first in ADR-0027 order, then the backend half. Governance half at **794f578** and
+**3b9e853** (additive `contracts/proto/residency/v1`, the `platform_operator` Rego grant under
+ADR-0067, bundle **0.10.0**); backend half merged to backend main at **f182761** (the Wave 3a
+commit: declare door + PlacementGate hardening). Every backend proof ran under `-race` against the
+real-Postgres harness with zero durability skips; the gate matrix (gofmt/vet/build, `internal/arch`
+fitness verbose, policy + tenant-isolation) was green at push.
+
+**SPEC-0043 AC1 — declare/replace over the wire, PDP-bound, one audit record per act:**
+the residency/v1 admin door is a PEP over `residency.declaration.set`, proven by
+`TestBundleOneAuditRecordPerActAndRefusal` (declaration, replacement AND refusal each append
+exactly one immutable audit record naming tenant, actor, previous and new pinning, and effective
+time), replace appends and retains history (the effective-dated durable store T-0037 landed,
+exercised concurrently under `-race` by `TestAC3_ConcurrentDeclareReplace`), and
+`TestEnforcementTieBreaksOnChainSeqForSameInstantReplace`.
+
+**SPEC-0043 AC5 — the agent channel is never a declaration path:**
+`TestAgentChannelHasNoDeclarationPath` — the wire tripwire: no message, field or path in
+`contracts/proto/agent/v1` can set, mutate or influence a residency declaration; `agent/v1` gained
+nothing for it (the additive field that DID land there later is T-0040's `ca_trust_bundle`, a
+distribution payload, not a declaration surface).
+
+**SPEC-0043 AC6 — verified caller, before the PDP:** `TestDeclareVerifiesWireCredentialBeforePolicy`
+and `TestDeclareRefusesUnverifiedBeforePolicy` (verification precedes the PDP ask),
+`TestDeclareRefusesUnverifiableCredentialBeforePolicy`, `TestDeclareRefusalIsOneCoarseShape` (the
+refusal is the same coarse shape as a nonexistent record — SPEC-0001's rule),
+`TestDeclareRecordsUnverifiedRefusalOnOperationalChannel`, and
+`TestDeclareUsesVerifiedPrincipalNotRequest` (tenant/actor/roles come from the verified principal
+in the request context, never from the body; the descriptor contract asserts no request field
+chooses subject).
+
+**SPEC-0043 AC7 — tenant-scoped platform_operator grant:** the Rego grant landed in governance
+(794f578/3b9e853, bundle 0.10.0) with its own policy tests, proven from the backend side by
+`TestBundlePlatformOperatorDeclaresBoundTenant` (allowed on the bound tenant) and
+`TestBundlePlatformOperatorTenantMismatchRefused` (denied on tenant mismatch); the owner grant is
+unchanged beside it.
+
+**Closes T-0033's recorded limit** — *Declare has no wire/RPC surface in Phase 3; the declaration
+is set by in-process composition only* — the same shape T-0037 used to discharge T-0033's store
+limit. The closure is recorded here and in the backlog.

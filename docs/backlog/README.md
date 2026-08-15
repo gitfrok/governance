@@ -229,8 +229,8 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
 | **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Done — AC1–AC6 proven real-Postgres (T-0036 backend@c9e58c5, T-0037 backend@816cb30) |
-| **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Planned |
-| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | T-0040 in flight — AC5 deployed + check-asserted (super-repo@31c9b45); custody packages landed unwired (backend@187c89e); additive `ca_trust_bundle` contract field landed (governance@ce455d4); composition swap, fitness, rotation wiring and runbook pending (Wave 3b) |
+| **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Done — T-0038 governance half at 794f578/3b9e853 (bundle 0.10.0) + backend half at backend@f182761; T-0039 at backend@f182761; closes T-0033's Declare-wire limit |
+| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Done — T-0040 AC1–AC5 proven at backend@b0ab32e (composition swap, reconcile distribution, fitness) + super-repo@f8449b8 (runbook §6b, wiring assertions) on the super-repo@31c9b45 deployment; live dev-OpenBao issuance round-trip proven, honest "not run" rows recorded |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
 
@@ -254,6 +254,30 @@ declaration store is in-memory and lost on a control-plane restart* — the last
 3 recorded. Carried, verbatim from T-0036: CI skips the durability proofs without
 `TEST_DATABASE_URL`. The super-repo governance pin bump still waits for Wave 3a (consumer residency
 codegen first, T-0020 AC5).
+
+**T-0038 and T-0039 are Done — EP-20 is complete** (exit records in
+`../tasks/T-0038-residency-declare-surface.md` and `../tasks/T-0039-placementgate-hardening.md`):
+backend@f182761, 2026-08-15, governance half at 794f578/3b9e853 (bundle 0.10.0) — the residency/v1
+Declare door (verified caller before the PDP, coarse refusals, one audit record per act, the
+agent-channel tripwire, the tenant-scoped `platform_operator` grant) and the PlacementGate
+hardening (contradiction and silence rendered in pack and findings with the existing vocabulary,
+gate refusal that never spends the token and fails closed on an unavailable store). They **close
+T-0033's carried limit** — *Declare has no wire/RPC surface in Phase 3*. Carried, verbatim from
+T-0036/T-0037: CI skips the durability proofs without `TEST_DATABASE_URL`.
+
+**T-0040 is Done — EP-21 is complete** (exit record in
+`../tasks/T-0040-agent-ca-custody-rotation.md`): backend@b0ab32e + super-repo@f8449b8, 2026-08-15
+— the production composition root composes the custody-backed issuer exclusively (AC1/AC3
+fitness-asserted), CA rotation distributes over reconcile as `DesiredState.ca_trust_bundle` on the
+staging epoch (AC2), MVP-RUNBOOK §6b covers rotation, unseal, outage, the SPEC-0042 AC6
+enrolment-mid-flight case (claim released, retry re-binds the same `data_plane_id`) and the
+clock-skew cross-reference (AC4), and the custody service stays deployed, pinned and check-
+asserted incl. the new wired-consumer assertion (AC5). ONE live issuance round-trip ran against the
+dev OpenBao through the shipped composition (Kubernetes-auth login, non-exportable transit key);
+throwaway keys deleted. Recorded "not run": no rotation against a real fleet, and the
+custody-enabled control-plane image is not yet built or deployed. Shared mechanism named per the
+task's ordering Note: T-0041's release trust bundle rides the same DesiredState channel as a
+separate field; naming and tests stay strictly apart.
 
 One line each (detail in the plan and the specs):
 
