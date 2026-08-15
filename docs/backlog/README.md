@@ -226,11 +226,21 @@ set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | Planned |
+| **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 | T-0036 Done — AC1, AC2, AC5 (agent half), AC6 proven real-Postgres; T-0037 open |
 | **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 | Planned |
 | **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 | Planned |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 | Planned |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 | Planned |
+
+**T-0036 is Done** (exit record in `../tasks/T-0036-durable-agent-stores.md`): backend@c9e58c5,
+2026-08-15 — the durable enrolment-token store and data-plane registry proven against a real-Postgres
+harness with zero skips (AC1 spend/revocation durability, AC2 staleness recomputation, AC5 agent
+migrations/RLS/hash-only persistence, AC6 release-the-claim on issuance failure — the user-approved
+interim posture a Phase 3.2 candidate ADR-0068 now explores superseding). Super-repo pin bump at
+super-repo@c7904d1 with the agent migration wired into `dev-provision.sh`. Carried: CI skips the
+durability proofs without `TEST_DATABASE_URL`, and the AC6 runbook edit rides T-0040's super-repo
+commit. The governance pin bump waits for Wave 3a — consumers must regenerate and commit the
+residency codegen first (freshness is gated at the super-repo pin, T-0020 AC5).
 
 One line each (detail in the plan and the specs):
 

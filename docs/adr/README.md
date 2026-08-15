@@ -87,6 +87,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0065](0065-multi-cluster-byo-readiness.md) | Multi-cluster BYO: signed operator image, N data planes per tenant, aggregate metering | Accepted |
 | [ADR-0066](0066-openbao-control-plane-custody-service.md) | OpenBao as the control-plane custody service (agent-CA first consumer, transit signing, Shamir unseal) | Accepted |
 | [ADR-0067](0067-platform-operator-residency-declaration.md) | A tenant-scoped platform operator may set a tenant's residency declaration (extends ADR-0046's role by one action) | Accepted |
+| [ADR-0068](0068-redpanda-durable-issuance-retry.md) | Redpanda-backed durable issuance retry — a custody outage never interrupts enrolment (Phase 3.2 candidate; would supersede SPEC-0042 AC6's interim release-the-claim posture) | Proposed |
 
 ## Open follow-ups
 
