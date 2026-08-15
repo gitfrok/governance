@@ -45,7 +45,10 @@ default allow := false
 # facts — a separate allow rule below, not a role-table entry; T-0030 (agent
 # enrolment, SPEC-0038) adds the owner-only agent.enrolment_token.* and
 # agent.dataplane.* actions; T-0033 (residency pinning, SPEC-0040) adds the
-# owner-only residency.declaration.set action.
+# owner-only residency.declaration.set action, which T-0038 (SPEC-0043 AC7,
+# ADR-0067) extends to the tenant-scoped platform_operator through a grant
+# rule below — the table itself stays owner-only; T-0034 (fair-use usage
+# view, SPEC-0041) adds usage.view.read.
 #
 # The search actions are granted to every role that reads a repository —
 # owner, member and reader — because a search result is repository text: the
@@ -122,13 +125,17 @@ default allow := false
 # code or reads text has not thereby been granted the surface that lists the
 # tenant's data planes.
 #
-# residency.declaration.set is owner-only too (T-0033, SPEC-0040 AC1): the
+# residency.declaration.set is owner-only in this table (T-0033, SPEC-0040 AC1): the
 # tenant's residency declaration — the cloud and region its work is pinned
 # to — is control-plane state recorded by an operator act. It is never
 # asserted by a data plane or a request (AC1), and changing it is a
 # compliance-bearing decision the accountable principal must own; a member
 # who pushes code has not thereby been granted the surface that moves where
-# the tenant's data must live.
+# the tenant's data must live. T-0038 (SPEC-0043 AC7, ADR-0067) extends the
+# SAME action to a tenant-scoped platform_operator principal through the
+# grant rule below — never by widening this table, so no tenant role other
+# than owner can re-read its grants as residency authority, exactly as
+# evidence.pack.read stays owner-only here while the auditor rule extends it.
 #
 # usage.view.read reaches the tenant's fair-use usage view (T-0034,
 # SPEC-0041): the counters and envelope conditions the control plane derives
@@ -496,6 +503,46 @@ valid_auditor_grant if {
 	# The pack's range sits inside the grant's range.
 	time.parse_rfc3339_ns(input.context.auditor_grant_range_from) <= time.parse_rfc3339_ns(input.context.pack_range_from)
 	time.parse_rfc3339_ns(input.context.pack_range_to) <= time.parse_rfc3339_ns(input.context.auditor_grant_range_to)
+}
+
+# --- T-0038 / SPEC-0043 AC7 / ADR-0067: tenant-scoped platform operator declares residency -----
+#
+# A tenant-scoped platform_operator principal — the ADR-0046 principal, platform-administered
+# binding, unreachable from tenant membership or any request field — may set or replace the
+# residency declaration of the tenant it is bound to, beside the owner grant which is unchanged
+# (ADR-0067 decision 1). The grant is this rule and nothing else: the role has NO entry in the
+# role table above, so holding it grants exactly this one action and nothing more — no repository
+# read/write, no tenant administration, no credential or policy-authoring grant. Two actions total
+# is the role's whole surface (ADR-0046 decision 4, surviving ADR-0067 decision 4 with a second
+# action named in it); a third action is a third decision.
+#
+# There is no cross-tenant path and no tenant claim on the wire: the tenant a declaration applies
+# to is the one the verified principal is scoped to, and the tenant-equality conjunct below is
+# ADR-0046 decision 2's condition unchanged — the principal's tenant equals the tenant the
+# declaration is about. Identity & Access maps an authenticated platform operator to this role
+# only through the platform-administered binding (ADR-0046 decision 1), so the scope is a server
+# fact the PEP supplies, never a caller assertion. The audit record of the act distinguishes an
+# owner declaration from a platform-operator one by verified actor and granted role (ADR-0067
+# decision 3) — that is the PEP's record, made from the same decision this rule produces.
+allow if {
+	# Every decision is tenant-scoped (invariant 1).
+	input.tenant_id != ""
+
+	# The principal's tenant equals the tenant the declaration is about. Holding the role
+	# bound to one tenant is not holding it in another — remove this conjunct and the grant
+	# becomes cross-tenant, which is exactly what ADR-0067 refuses.
+	input.subject.tenant_id == input.tenant_id
+
+	# Exactly one action, asked about the tenant — the declaration is tenant state
+	# (action_resource pins it to the tenant kind), never about a repository or a data plane.
+	input.action == "residency.declaration.set"
+	input.resource.type in action_resource[input.action]
+
+	# The role itself: present only when Identity & Access mapped the verified principal to
+	# a platform-administered tenant binding (ADR-0046 decision 1).
+	"platform_operator" in input.subject.roles
+
+	not deny
 }
 
 # reason explains the outcome in terms that are safe to return to the caller.

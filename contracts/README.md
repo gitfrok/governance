@@ -92,6 +92,15 @@ needs a direct response.
   `HistoryImported` event. A policy decision record carries the deciding bundle revision and input
   digest, and `ControlDecisionMode` is a closed enum with ENFORCED only, so a DRY_RUN decision is
   not representable in a control section (SPEC-0032 AC3)
+- `proto/residency/v1/residency.proto` — the residency Declare admin surface (SPEC-0043, T-0038,
+  ADR-0063): `ResidencyService.DeclareResidency` sets or replaces a tenant's declared cloud and
+  region, asking the PDP action `residency.declaration.set` and refusing coarsely when refused; a
+  replace appends a new effective-dated declaration and retains history (ADR-0062 decision 6). No
+  message in the package carries a tenant, actor or role field — the subject is the verified
+  principal on the call (SPEC-0043 AC6, ADR-0045), and `scripts/check-contracts.sh` asserts the
+  absence against the compiled descriptor. The grant set is the tenant's owner (bundle 0.9.0)
+  beside a tenant-scoped `platform_operator` (ADR-0067, AC7); the agent channel never declares
+  (ADR-0063 decision 5)
 - `proto/replica/v1/replica.proto` — sync-replica coordination for the Git write path (SPEC-0018,
   ADR-0016/0018/0042): shard records, fencing terms, durable-primary and sync acknowledgements,
   compare-and-swap auto-promotion, and the audited platform-operator force-promote

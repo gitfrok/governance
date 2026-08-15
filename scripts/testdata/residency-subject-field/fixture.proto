@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 7 (SPEC-0043 AC6, ADR-0067).
+//
+// It carries the one shape the real gitsaas.residency.v1 messages must never grow: a subject
+// field — here a tenant claim — on the declaration request. The gate compiles this module and
+// asserts the descriptor DOES carry a subject marker — proving the check can fail. In
+// contracts/, the subject is the verified principal on the call, never a message field: a
+// request field naming the tenant would be an unauthenticated routing claim (ADR-0045), and
+// AC7's platform-operator path is answered by who the principal is, not by a field.
+package gitsaas.residency.v1;
+
+message DeclareResidencyRequest {
+  string cloud = 1;
+  string region = 2;
+  // The defect under test: a subject claim living on the declaration request.
+  string tenant_id = 3;
+}

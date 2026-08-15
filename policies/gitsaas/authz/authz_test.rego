@@ -1760,3 +1760,93 @@ test_deny_usage_view_read_from_another_tenant if {
 		{"subject": {"id": "u-usage", "roles": ["member"], "tenant_id": "globex"}},
 	)
 }
+
+# --- T-0038 / SPEC-0043 AC7 / ADR-0067: a tenant-scoped platform operator may declare -----------
+
+# A verified platform_operator principal — the ADR-0046 binding shape, reused
+# without a new role — declares for the tenant it is bound to, beside the
+# owner grant which stands unchanged (ADR-0067 decision 1). The request shape
+# is the T-0033 section's residency_request: no tenant claim travels in it
+# beyond the decision's scope, and the subject's tenant is the binding's.
+test_allow_platform_operator_residency_declaration_set if {
+	authz.allow with input as residency_request("platform_operator", "tenant")
+}
+
+# The owner grant is unchanged by AC7: owner still declares on its own
+# tenant, and the platform-operator rule adds nothing to, and takes nothing
+# from, the table grant (ADR-0067 decision 1, tested both directions).
+test_allow_owner_residency_declaration_set_still_granted if {
+	authz.allow with input as residency_request("owner", "tenant")
+}
+
+# Every tenant role that is not owner stays denied under AC7: the platform
+# operator sits BESIDE the owner, not above the membership roles. member,
+# reader and auditor keep the T-0033 denials; platform_operator is the only
+# addition (ADR-0067 decision 5).
+test_deny_every_non_owner_tenant_role_residency_declaration_set if {
+	every role in {"member", "reader", "auditor"} {
+		not authz.allow with input as residency_request(role, "tenant")
+	}
+}
+
+# Denied on tenant mismatch: the grant holds only where the principal's
+# tenant equals the tenant the declaration is about (ADR-0046 decision 2,
+# ADR-0067 decision 2). There is no cross-tenant path — a binding to one
+# tenant is not a binding to another, whatever the request asks about.
+test_deny_platform_operator_residency_declaration_set_on_another_tenant if {
+	not authz.allow with input as object.union(
+		residency_request("platform_operator", "tenant"),
+		{"subject": {"id": "u-residency", "roles": ["platform_operator"], "tenant_id": "globex"}},
+	)
+}
+
+# Denied on any resource kind but the tenant: the declaration is tenant
+# state, and asking about a repository or a data plane is not the question
+# the grant answers (ADR-0067 decision 5).
+test_deny_platform_operator_residency_declaration_set_asked_about_a_repository if {
+	not authz.allow with input as residency_request("platform_operator", "repository")
+}
+
+test_deny_platform_operator_residency_declaration_set_asked_about_a_data_plane if {
+	not authz.allow with input as residency_request("platform_operator", "data_plane")
+}
+
+# The role stays narrow (ADR-0046 decision 4, ADR-0067 decision 4): holding
+# platform_operator grants the declaration action and nothing else — no
+# repository read or write, no tenant administration surface, no credential
+# issuance, no policy authoring, no evidence or metering read. The role has
+# no entry in the role table, and these denials are what that buys.
+platform_operator_probe(action, resource_type) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-platform-operator", "roles": ["platform_operator"], "tenant_id": "acme"},
+	"action": action,
+	"resource": {"type": resource_type, "id": "probed"},
+	"context": {},
+}
+
+test_deny_platform_operator_everything_but_the_declaration if {
+	not authz.allow with input as platform_operator_probe("repo.read", "repository")
+	not authz.allow with input as platform_operator_probe("repo.write", "repository")
+	not authz.allow with input as platform_operator_probe("repo.admin", "repository")
+	not authz.allow with input as platform_operator_probe("repository.import", "repository")
+	not authz.allow with input as platform_operator_probe("identity.pat.issue", "personal_access_token")
+	not authz.allow with input as platform_operator_probe("policy.dryrun", "tenant")
+	not authz.allow with input as platform_operator_probe("policy.decision.read", "decision")
+	not authz.allow with input as platform_operator_probe("evidence.pack.generate", "tenant")
+	not authz.allow with input as platform_operator_probe("auditor.grant.manage", "tenant")
+	not authz.allow with input as platform_operator_probe("agent.dataplane.read", "data_plane")
+	not authz.allow with input as platform_operator_probe("usage.view.read", "tenant")
+	not authz.allow with input as platform_operator_probe("search.query", "tenant")
+}
+
+# Denials stay coarse under AC7 too: a platform operator refused on tenant
+# mismatch and a member refused on role receive the same reason, so probing
+# the PDP cannot separate the causes (SPEC-0001, ADR-0067).
+test_deny_platform_operator_reasons_are_indistinguishable if {
+	member_set := authz.decision.reason with input as residency_request("member", "tenant")
+	cross_tenant := authz.decision.reason with input as object.union(
+		residency_request("platform_operator", "tenant"),
+		{"subject": {"id": "u-residency", "roles": ["platform_operator"], "tenant_id": "globex"}},
+	)
+	member_set == cross_tenant
+}

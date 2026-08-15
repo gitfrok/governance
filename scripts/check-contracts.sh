@@ -26,6 +26,12 @@
 #      a TYPE PROPERTY of the schema — asserted against the COMPILED descriptor, exactly as check 5
 #      does for triage — so the control claim cannot silently degrade at assembly time. The paired
 #      fixture carries the defect and must be caught.
+#   7. gitsaas.residency.v1 carries no tenant, actor or role field (SPEC-0043 AC6, ADR-0067): the
+#      subject of a declaration is the verified principal on the call, never a message field — a
+#      request field naming the tenant would be an unauthenticated routing claim (ADR-0045). The
+#      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
+#      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
+#      fixture carries the defect and must be caught.
 #
 # The baseline is the tip of main, overridable for local use. It is deliberately not a merge base:
 # the question this asks is "does what I am about to merge break what is already released", and main
@@ -235,6 +241,51 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.audit.v1.ControlSectionRe
   fi
 else
   report "the attested-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 7. the residency surface carries no subject field (SPEC-0043 AC6, ADR-0067) ----------------
+
+# The subject of a residency declaration is the verified principal on the call: tenant, actor and
+# roles come from the request context the verification step populates (ADR-0045), never from the
+# request body. So no message in gitsaas.residency.v1 may carry a tenant, actor or role field —
+# a field naming the tenant would be an unauthenticated routing claim, and AC7's platform-operator
+# path is answered by who the principal is, not by a field (ADR-0067). The check asks buf for the
+# COMPILED descriptors of the package's messages rather than grepping the source: a field shows up
+# in the descriptor whatever its name, type or spelling, and a proto that fails to compile fails
+# this check loudly instead of passing by absence. --exclude-source-info keeps comments out of the
+# image — the real messages' doc comments name the subject precisely to say it is carried nowhere
+# on this wire, and prose is not what is under test. Imports are deliberately KEPT (as in check 6):
+# the response references google.protobuf.Timestamp, whose descriptor carries no subject marker.
+subject_markers='tenant|actor|role'
+
+if image_out=$(buf build contracts \
+  --type gitsaas.residency.v1.DeclareResidencyRequest \
+  --type gitsaas.residency.v1.DeclareResidencyResponse \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$subject_markers" <<<"$image_out"; then
+    report "gitsaas.residency.v1 carries a tenant, actor or role field — the subject is the verified principal on the call, never a message field (SPEC-0043 AC6, ADR-0067)"
+  else
+    echo "  ok    residency/v1 carries no tenant, actor or role field (SPEC-0043 AC6)"
+  fi
+else
+  report "could not compile gitsaas.residency.v1 for the subject-exclusion check:"
+  indent "$image_out"
+fi
+
+# The fixture is the one shape the real residency messages must never grow: a subject claim on the
+# declaration request. The same descriptor question asked of it must find the marker — a check
+# that cannot fail is not a gate (the T-0002/T-0009 pattern).
+fixture=scripts/testdata/residency-subject-field
+if fixture_image=$(buf build "$fixture" --type gitsaas.residency.v1.DeclareResidencyRequest \
+  --exclude-imports --exclude-source-info -o -#format=json 2>&1); then
+  if grep -Eiq "$subject_markers" <<<"$fixture_image"; then
+    echo "  ok    subject-field fixture caught (the residency descriptor check can fail)"
+  else
+    report "the subject-field fixture compiled with no subject marker in its descriptor — the check is vacuous"
+  fi
+else
+  report "the subject-field fixture did not compile:"
   indent "$fixture_image"
 fi
 
