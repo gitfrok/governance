@@ -47,7 +47,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0040 | Agent-CA custody — OpenBao deployment, KMS signing, staged CA-trust-bundle rotation, runbook | 3.1 | Done — super-repo@31c9b45 deployment + backend@b0ab32e + super-repo@f8449b8; SPEC-0044 AC1–AC5 proven; EP-21 complete; honest "not run" rows recorded |
 | T-0041 | Signed operator image + cross-plane release-trust-bundle distribution/rotation | 3.1 | Done — SPEC-0045 AC1, AC2 harness half, AC4, AC5 proven; contracts governance@b5128b0, backend@762d5f0 + a669cef, super-repo@febf0f7; AC2 real-cluster half + AC3 carried to T-0042 |
 | T-0042 | Real-cluster conformance proof — GKE/EKS/AKS | 3.1 | Todo — SPEC-0045 AC3 + AC2 real half, SPEC-0039 AC8; EP-22; blocked-by T-0003 cluster lane |
-| T-0043 | Usage-view divergence health gates + envelope-state telemetry through bff → webfrontend | 3.1 | Todo — SPEC-0046 AC1–AC3/AC5; EP-23; blocked-by T-0035 |
+| T-0043 | Usage-view divergence health gates + envelope-state telemetry through bff → webfrontend | 3.1 | Done — backend@bc30abd + bff@4059a23 + webfrontend@08f42c4; SPEC-0046 AC1–AC3/AC5; additive contract governance-first (b425db0, 36f284b); AC3 live-cluster half carried to the E2E lane |
 | T-0044 | PR-7 durability read-only vs envelope-throttle distinction in UI/API | 3.1 | Todo — SPEC-0046 AC4/AC5; EP-23 |
 
 ## Retired numbers (never reused)
