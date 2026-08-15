@@ -94,9 +94,11 @@ general platform-secrets ADR can absorb it (ADR-0064 decision 2).
 
 ## Exit record (2026-08-15)
 
-Closed in two commits: backend main at **b0ab32e** (composition swap, reconcile distribution,
-fitness) and super-repo main at **f8449b8** (runbook §6b + custody-service wiring assertions), on
-top of the deployment half (super-repo **31c9b45**, `deploy/dev/openbao.yaml`) and the additive
+Closed in four landings: backend main at **b0ab32e** (composition swap, reconcile distribution,
+fitness); super-repo main at **f8449b8** (runbook §6b + custody-service wiring assertions) and
+**89157a3** (§6a wiring close-out — the full provisioning block as executed live, the
+`controlplane` ServiceAccount the custody role binds, backend pin to b0ab32e); on top of the
+deployment half (super-repo **31c9b45**, `deploy/dev/openbao.yaml`) and the additive
 `ca_trust_bundle` contract field (governance **ce455d4**). All backend proofs ran through the full
 gate sequence — gofmt/vet/build, `internal/arch` fitness verbose, and `go test -race ./...`
 against the real-Postgres harness at `127.0.0.1:15432` with zero durability skips.
