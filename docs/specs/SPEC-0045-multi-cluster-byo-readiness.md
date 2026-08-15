@@ -1,10 +1,10 @@
 # SPEC-0045: Multi-cluster BYO readiness
 
-- **Status:** Approved (2026-08-15)
+- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — the artifact this spec rotates is named the *release* trust bundle throughout, to keep it apart from SPEC-0044's CA trust bundle)
 - **Owner:** platform
 - **Context(s):** Release machinery (signed operator image) · Control plane (registry, trust distribution, metering) · Data plane fleet (N planes per tenant) — ADR-0022
 - **ADRs:** 0065 (decides multi-plane readiness), 0044 (signing custody — extended, not replaced), 0035 (first-party images), 0013 (Helm + Operator), 0011 (outbound-only), 0061 (metering authority — unchanged), 0060
-- **Task(s):** — (Phase 3.1, epic EP-22; task to be filed; real-cluster proof depends on T-0003's cluster lane)
+- **Task(s):** T-0041 (AC1, AC2 harness half, AC4, AC5), T-0042 (AC3, AC2 real-cluster half — depends on T-0003's cluster lane)
 
 ## Problem / context
 
@@ -16,7 +16,8 @@ depends on it either: a tenant that wants another region within the declared clo
 burst-CI plane, had no written answer.
 
 ADR-0065 (Accepted) writes the answer: the operator ships as a vendor-signed, digest-pinned image;
-the versioned trust bundle distributes and rotates across N data planes over the outbound-only
+the versioned **release trust bundle** (the cosign release-signing keys of ADR-0044) distributes
+and rotates across N data planes over the outbound-only
 channel that already exists; the registry keys planes by `data_plane_id`; metering aggregates per
 tenant; and any capability difference between the planes of one tenant is a defect, not a tier. This
 spec makes that readiness executable for Phase 3.1 epic **EP-22** (PR-20/PR-21).
@@ -41,7 +42,7 @@ spec makes that readiness executable for Phase 3.1 epic **EP-22** (PR-20/PR-21).
 
 ## Contracts touched
 
-None. The trust bundle travels as desired state on the stream the agent already holds (SPEC-0039's
+None. The release trust bundle travels as desired state on the stream the agent already holds (SPEC-0039's
 reconcile path); the registry's `data_plane_id` keying and per-plane states are backend state; the
 certificate already names tenant and data plane (ADR-0060 decision 3).
 
@@ -58,7 +59,7 @@ inputs. Each data plane owns its own operational counters, which remain non-auth
   manifest — **extends ADR-0044 and ADR-0035 with one more first-party image under the existing
   cosign custody, release manifest and verification tests; no new signing model, no new trust
   root.** The install stops depending on a customer-supplied operator image.
-- [ ] AC2: The versioned trust bundle distributes and rotates across at least two harness clusters
+- [ ] AC2: The versioned **release trust bundle** distributes and rotates across at least two harness clusters
   without downtime — the staged dual-validate overlap applied per fleet — and the same procedure then
   runs on the real clusters of the conformance matrix. No new endpoint, no inbound path.
 - [ ] AC3: The conformance matrix rows in `deploy/conformance/byo-dataplane.md` are executed on real
@@ -76,7 +77,7 @@ inputs. Each data plane owns its own operational counters, which remain non-auth
 ## Test plan
 
 - Harness-first execution scripts: bring up ≥2 harness data planes for one tenant, enrol both,
-  distribute and rotate the trust bundle across them, assert no downtime during overlap (AC2).
+  distribute and rotate the release trust bundle across them, assert no downtime during overlap (AC2).
 - Release gates: `check-signed-releases.sh` extended to the operator image's digest pin, and
   `check-byo-chart.sh` asserting the chart no longer carries a customer-supplied operator image
   requirement (AC1).
@@ -110,3 +111,10 @@ inputs. Each data plane owns its own operational counters, which remain non-auth
   applied to the spec's own dependency).
 - Assumed: per-plane rollout status rendering (SPEC-0039 AC7) needs no vocabulary change to render
   more than one plane — it lists planes today.
+- **Two bundles, one channel.** This spec's release trust bundle (cosign release-signing keys,
+  ADR-0044/ADR-0065) and SPEC-0044's CA trust bundle (agent identity roots, ADR-0064) both ride the
+  reconcile path and both stage with a dual-validate overlap, but they are different artifacts with
+  different owners, rotated for different reasons. Neither spec's ACs may be proven by the other's
+  test. If the implementation shares one staging mechanism between them, that reuse is stated in
+  T-0041's exit record together with the dependency it creates on T-0040 — silently sharing it is the
+  failure mode this note exists to prevent.

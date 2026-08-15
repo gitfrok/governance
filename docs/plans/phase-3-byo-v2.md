@@ -1,7 +1,13 @@
 # Plan — Phase 3.1: North Star (durability, custody, multi-cluster, commercial maturity)
 
 **Status:** **Planned (2026-08-15)** — plan accepted; **SPEC-0042…SPEC-0046 Approved** and
-**ADR-0062…ADR-0065 Accepted** (2026-08-15); every epic may go RED.
+**ADR-0062…ADR-0067 Accepted** (2026-08-15); every epic may go RED.
+**Amended 2026-08-15** after the plan review (`phase-3.1-plan-review.md`): ADR-0066 folded in as the
+phase's fifth decision, the custody service's deployment given an owner, the Declare surface given a
+verified caller, and the two trust bundles named apart. It also surfaced one decision the phase had
+been assuming rather than making — who may declare a tenant's residency — settled by **ADR-0067
+(Accepted 2026-08-15)**: the owner keeps the grant, a tenant-scoped platform operator gains it, and
+SPEC-0043 AC7 carries it.
 **Objective:** Phase 3's recorded limits become production posture — durable control-plane stores,
 residency's operator handle on a PDP-decided wire surface, agent-CA keys in custody with staged
 rotation, the conformance matrix answered on real clusters, honest divergence health gates through to
@@ -34,8 +40,8 @@ A production-ready multi-cluster posture. A tenant's data planes run where the t
 identity rooted in custody-held keys, and it is provable: declarations outlive control-plane
 restarts, contradictions are visible with the existing vocabulary, and evidence packs assemble from
 durable projections only. The operator ships as a vendor-signed, digest-pinned image; the versioned
-trust bundle distributes and rotates across N data planes without re-enrolment or downtime; and the
-conformance matrix answers on real GKE, EKS and AKS clusters — "not run" stops being the default.
+release trust bundle distributes and rotates across N data planes without re-enrolment or downtime;
+and the conformance matrix answers on real GKE, EKS and AKS clusters — "not run" stops being the default.
 Usage stays honest per dimension: divergence is shown with both numbers and never smoothed into a
 metered figure, the applied throttle is observable end to end, deferred dimensions read "not
 metered", and any read-only state names its cause. Git is never blockable in any envelope state; the
@@ -44,7 +50,7 @@ control plane remains the sole metering authority (ADR-0061); nothing opens an i
 
 ## What is already decided
 
-Like Phase 3, the architecture predates the plan — all four decisions are Accepted:
+Like Phase 3, the architecture predates the plan — all five decisions are Accepted:
 
 - **ADR-0062** — Postgres adapters behind the existing module ports, swapped at the composition
   root; additive module-owned migrations; RLS on every new table; effective-dated declarations; pack
@@ -53,19 +59,45 @@ Like Phase 3, the architecture predates the plan — all four decisions are Acce
   operators declare, the PDP decides, every act is audited; the agent channel is never a declaration
   path.
 - **ADR-0064** — CA keys live in platform-secrets/KMS custody behind a narrow interface holding key
-  references, never material; rotation is a staged trust bundle with a dual-validate window and no
+  references, never material; rotation is a staged CA trust bundle with a dual-validate window and no
   fleet re-enrolment; the dev CA is unreachable from the production composition root.
 - **ADR-0065** — the operator is a vendor-signed, digest-pinned first-party image; N data planes per
   tenant keyed by `data_plane_id`; metering aggregates per tenant; posture differences between a
   tenant's planes are defects, not tiers.
+- **ADR-0066** — the control-plane custody service is **OpenBao**, the agent CA its first consumer:
+  a non-exportable transit-held ECDSA P-256 key signed through ADR-0064's interface, PKI-engine
+  delegation rejected, Shamir quorum unseal (no cloud-KMS auto-unseal), Kubernetes auth, three-node
+  Raft control-plane-side only, image pinned per ADR-0034. It closes the provider question ADR-0064
+  left open **inside** that posture; it also brings a deployment, an unseal authority and an
+  availability coupling this phase must own rather than inherit silently (EP-21, T-0040).
+
+Two decisions the review found leaning on assumptions rather than decisions, both settled by
+**applying** Accepted ADRs rather than opening new ones:
+
+- **The Declare surface authenticates its caller** — ADR-0045 already decides that tenant, actor and
+  roles come from one verified identity source and never from caller input, and ADR-0006 leaves the
+  PDP deciding about that verified subject. A new surface that *writes* control state does not get to
+  inherit the Phase-2 posture where the subject is the caller's assertion (SPEC-0002's recorded
+  limit (d)). SPEC-0043 AC6 makes it testable; the limit stays recorded for the doors it still
+  describes.
+- **Who may declare** — bundle 0.9.0 grants the action to the tenant's owner only, which was an
+  unstated product decision rather than a settled one. **ADR-0067** (filed Proposed and Accepted
+  2026-08-15) settles it: reuse ADR-0046's tenant-scoped `platform_operator` for exactly one more
+  action, owner grant unchanged, no cross-tenant field — the tenant is a property of the verified
+  principal, so SPEC-0043 AC6 stands. SPEC-0043 AC7 and T-0038 carry the policy change; the role stays
+  at two actions and a third is a third decision.
+- **Token spend must not be burnt by a custody outage** — spend is durable (ADR-0062) and issuance is
+  now a network call to a quorum-serialized signer (ADR-0066). ADR-0060's rule is that one token
+  never mints two identities; nothing says a failed signature must consume the token. SPEC-0042 AC6
+  makes the intended behaviour explicit instead of leaving it to the adapter.
 
 ## Workstreams
 
 | Epic | Requirement | Tasks | Specs |
 |---|---|---|---|
 | **EP-19** Durable control-plane stores | PR-20, PR-22 | T-0036, T-0037 | SPEC-0042 |
-| **EP-20** Residency Declare & placement hardening | PR-22 | T-0038, T-0039 | SPEC-0043 |
-| **EP-21** Agent-CA custody & rotation | PR-20 | T-0040 | SPEC-0044 |
+| **EP-20** Residency Declare & placement hardening (surface authenticates its caller) | PR-22 | T-0038, T-0039 | SPEC-0043 |
+| **EP-21** Agent-CA custody & rotation, incl. the OpenBao custody service's deployment | PR-20 | T-0040 | SPEC-0044 |
 | **EP-22** Multi-cluster BYO readiness | PR-20, PR-21 | T-0041, T-0042 | SPEC-0045 |
 | **EP-23** Usage-view truth & PR-7 distinction | PR-23, PR-7 | T-0043, T-0044 | SPEC-0046 |
 
@@ -82,12 +114,18 @@ EP-22's multi-plane registry leans on the same durable liveness records — T-00
 adapter/migration pattern once and T-0037 repeats it for declarations and the pack assembly that
 reads them. EP-20 and EP-21 then run in parallel because they touch different modules —
 residency/audit versus the agent CA — and neither gates the other; within EP-20 the surface (T-0038)
-precedes the hardening that consumes its effective-dated changes (T-0039). EP-22's harness half
-(T-0041) precedes its real-cluster half (T-0042), which no amount of code can unblock — only the
-lane. EP-23 waits on T-0035, because SPEC-0046 AC3 is untestable until the data plane applies the
+precedes the hardening that consumes its effective-dated changes (T-0039). **Within EP-21 the custody
+service is deployed before the CA is wired to it**: T-0040 lands OpenBao (three-node Raft, Kubernetes
+auth, pinned image, unseal procedure) and only then swaps the composition root, because a fitness test
+that forbids a disk/env key is unshippable while the only other signer is the dev CA. EP-22's harness
+half (T-0041) precedes its real-cluster half (T-0042), which no amount of code can unblock — only the
+lane. **EP-21 and EP-22 rotate two different artifacts and neither gates the other**: the *CA trust
+bundle* (agent identity roots, ADR-0064, SPEC-0044 AC2, T-0040) and the *release trust bundle*
+(cosign release-signing keys, ADR-0044/0065, SPEC-0045 AC2, T-0041). Both ride the reconcile path and
+both stage with a dual-validate overlap; they are not the same bundle and must not share a test. EP-23 waits on T-0035, because SPEC-0046 AC3 is untestable until the data plane applies the
 throttle; the read-only distinction (T-0044) lands last, rendering against live states. Everything is
 additive-first per ADR-0027: the one contract change is a new versioned package (`residency/v1`),
-and the only other possible contract touch (trust-bundle staging) is conditional and explicitly
+and the only other possible contract touch (CA-trust-bundle staging) is conditional and explicitly
 under its own governance PR first.
 
 ## What this phase must not do
@@ -98,7 +136,8 @@ under its own governance PR first.
   out. Nothing in this phase bills.
 - **No customer-run operator binaries** — the operator is a first-party signed image (ADR-0065
   decision 1), not an install value a customer supplies.
-- **No features needing architectural decisions beyond the four Accepted ADRs.** A requirement that
+- **No features needing architectural decisions beyond the six Accepted ADRs** (0062–0067). A
+  requirement that
   needs a new decision stops the line at a Proposed ADR (ADR-0001) — it does not get designed inside
   a task.
 - **No GitLab-breadth chasing.** PRD §7 (non-goals) stands in full; scope here is the carried set
@@ -114,7 +153,12 @@ under its own governance PR first.
       unable to reach in-process stores (SPEC-0042 AC1–AC4).
 - [ ] Custody off-disk proofs: the production composition root cannot construct a CA from disk or
       env, the dev CA is unreachable, and staged rotation is proven with no re-enrolment
-      (SPEC-0044 AC1–AC3).
+      (SPEC-0044 AC1–AC3) — with the custody service itself deployed, pinned and unsealable by the
+      documented procedure (SPEC-0044 AC5).
+- [ ] The Declare surface refuses an unauthenticated or self-asserted caller before the PDP is asked,
+      and no request field can choose tenant, actor or roles (SPEC-0043 AC6).
+- [ ] A signing failure during enrolment behaves as SPEC-0042 AC6 specifies — proven by test with the
+      signer down, not reasoned about.
 - [ ] Divergence gates shipped through webfrontend: both numbers rendered, applied throttle
       observable end to end, never-zero/never-blocked pins failing the build on regression
       (SPEC-0046).
@@ -128,9 +172,20 @@ under its own governance PR first.
 - **The cluster lane bounds M3.** T-0042 is the only task whose blocker is infrastructure, and it is
   the phase's headline proof; if a lane is unavailable, the exit is an honestly annotated subset —
   the plan says so up front rather than discovering it at exit.
-- **KMS provider selection is open by design.** ADR-0064 keeps it a deployment concern; the risk is
-  the custody interface growing wide enough that a future general platform-secrets ADR cannot absorb
-  it — decision 2 exists to prevent exactly that.
+- **The custody service is a new operational authority in the control-plane blast domain.** ADR-0066
+  closed the provider question (OpenBao) but bought three obligations with it: a quorum unseal after
+  any cold restart (whoever holds the Shamir shares is a new operational authority), an availability
+  coupling — issuance and rotation now wait on a Raft quorum, and writes serialize through the active
+  node — and a pin-and-upgrade cadence against a project that maintains only its latest major (2.7
+  moves several built-in seals to plugins). The first two are runbook-shaped and land with T-0040;
+  the third outlives this phase and sits on ADR-0066's follow-ups. The interface risk ADR-0064
+  decision 2 guards against is unchanged: the custody seam must stay narrow enough for a future
+  general platform-secrets ADR to absorb it.
+- **A custody outage lands on the enrolment path.** Spend is durable from EP-19 onward and issuance is
+  a remote call from EP-21 onward, so the window between them is the one place an availability event
+  can consume a customer's token. SPEC-0042 AC6 fixes the behaviour rather than leaving it to
+  whichever adapter lands first; if the chosen shape is "spend stands", the runbook — not the code —
+  carries the operator recovery.
 - **T-0035's mechanism decides AC3's shape.** If the chosen throttle mechanism (claim gate, scaler
   input, or both) reports too little applied-state fact, SPEC-0046 AC3 carries honestly in T-0035's
   exit record rather than being weakened here.

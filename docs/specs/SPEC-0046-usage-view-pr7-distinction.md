@@ -4,7 +4,7 @@
 - **Owner:** platform
 - **Context(s):** Control plane (meters, derives the view) · BFF (aggregates for the browser) · Web frontend (renders) · Data plane (applies the throttle) — ADR-0022
 - **ADRs:** 0061 (metering authority — not revisited), 0018 (dual-loss fail-safe, the PR-7 read-only mode), 0008 (flat-rate + fair use)
-- **Task(s):** — (Phase 3.1, epic EP-23; task to be filed; AC3 depends on T-0035 landing first)
+- **Task(s):** T-0043 (AC1, AC2, AC3, AC5 — AC3 blocked-by T-0035), T-0044 (AC4, plus AC5's pins on the surfaces it labels)
 
 ## Problem / context
 

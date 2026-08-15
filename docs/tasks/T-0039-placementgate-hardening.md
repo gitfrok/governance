@@ -3,7 +3,7 @@
 - **Status:** Todo
 - **Phase / Epic:** 3.1 / EP-20 (residency Declare and placement hardening)
 - **Repo(s):** backend
-- **Spec:** docs/specs/SPEC-0043-residency-declare-surface.md (Approved 2026-08-15 — RED may begin)
+- **Spec:** docs/specs/SPEC-0043-residency-declare-surface.md (Approved 2026-08-15, amended 2026-08-15 — RED may begin)
 - **ADRs:** 0063, 0062, 0006, 0009, 0011, 0060
 - **Owner:** unassigned
 

@@ -89,8 +89,15 @@ ADR-0017's follow-up. A customer whose egress permits only an HTTP proxy cannot 
 ## Phase 3.1 — North Star: durability, custody, multi-cluster, commercial maturity · **Planned (2026-08-15)**
 
 Plan accepted: `../plans/phase-3-byo-v2.md`. Specs **SPEC-0042…SPEC-0046** Approved and ADRs
-**ADR-0062…ADR-0065** Accepted (both 2026-08-15), so every epic may go RED. Phase 3's recorded limits
-become production posture: durable control-plane stores behind the existing ports (Postgres adapters,
+**ADR-0062…ADR-0067** Accepted (both 2026-08-15), so every epic may go RED. Plan and specs amended
+2026-08-15 after the plan review: ADR-0066's OpenBao custody service is deployed under EP-21
+(SPEC-0044 AC5), the Declare surface verifies its caller rather than inheriting SPEC-0002's limit (d)
+(SPEC-0043 AC6), and a signing failure may not silently burn an enrolment token (SPEC-0042 AC6). One
+question the plan had been assuming is now decided rather than inherited: **ADR-0067** (Accepted
+2026-08-15) lets a tenant-scoped platform operator declare a tenant's residency beside the unchanged
+owner grant, with no cross-tenant path (SPEC-0043 AC7).
+
+Phase 3's recorded limits become production posture: durable control-plane stores behind the existing ports (Postgres adapters,
 RLS, effective-dated declarations, pack assembly from durable projections), residency's operator
 handle on a PDP-decided `residency/v1` wire surface, agent-CA keys in platform-secrets/KMS custody
 with staged trust-bundle rotation, the operator as a signed digest-pinned first-party image across N

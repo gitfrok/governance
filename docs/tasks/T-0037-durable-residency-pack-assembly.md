@@ -3,7 +3,7 @@
 - **Status:** Todo
 - **Phase / Epic:** 3.1 / EP-19 (durable control-plane stores)
 - **Repo(s):** backend
-- **Spec:** docs/specs/SPEC-0042-durable-agent-residency-stores.md (Approved 2026-08-15 — RED may begin)
+- **Spec:** docs/specs/SPEC-0042-durable-agent-residency-stores.md (Approved 2026-08-15, amended 2026-08-15 — RED may begin)
 - **ADRs:** 0062, 0003, 0023, 0025, 0055
 - **Owner:** unassigned
 

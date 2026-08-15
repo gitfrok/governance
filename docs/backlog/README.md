@@ -220,8 +220,9 @@ follow-up) stops an install outright for a customer whose egress permits only an
 
 ## Phase 3.1 — North Star *(planned 2026-08-15)*
 
-Plan: `../plans/phase-3-byo-v2.md` (accepted 2026-08-15). Turns Phase 3's carried set into production
-posture under **ADR-0062…ADR-0065** (Accepted) and **SPEC-0042…SPEC-0046** (Approved), all 2026-08-15.
+Plan: `../plans/phase-3-byo-v2.md` (accepted 2026-08-15, amended 2026-08-15). Turns Phase 3's carried
+set into production posture under **ADR-0062…ADR-0067** (Accepted) and **SPEC-0042…SPEC-0046**
+(Approved), all 2026-08-15.
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
@@ -236,12 +237,18 @@ One line each (detail in the plan and the specs):
 - **EP-19** — Postgres adapters behind the existing ports (enrolment-token store, data-plane registry,
   residency declarations), additive module-owned migrations, RLS everywhere, effective-dated
   declarations, pack assembly from durable projections only (ADR-0062).
-- **EP-20** — an additive `residency/v1` admin gRPC surface where the PDP decides and every act is
-  audited, plus placement contradiction/gap hardening and the agent-channel tripwire (ADR-0063).
-- **EP-21** — the agent CA signs through platform-secrets/KMS custody and rotates by staged trust
-  bundle with a dual-validate window, no fleet re-enrolment; the dev CA is test-only (ADR-0064).
-- **EP-22** — a vendor-signed, digest-pinned operator image and trust-bundle distribution across N
-  data planes per tenant, proven on real GKE/EKS/AKS (ADR-0065).
+- **EP-20** — an additive `residency/v1` admin gRPC surface where the caller is verified (ADR-0045),
+  the PDP decides and every act is audited, plus placement contradiction/gap hardening and the
+  agent-channel tripwire (ADR-0063). A tenant-scoped platform operator may declare on a tenant's
+  behalf beside the owner grant — **ADR-0067** (Accepted), carried as SPEC-0043 AC7 with its policy
+  change in T-0038.
+- **EP-21** — the agent CA signs through platform-secrets/KMS custody and rotates by a staged **CA
+  trust bundle** with a dual-validate window, no fleet re-enrolment; the dev CA is test-only
+  (ADR-0064); the custody service itself is OpenBao, deployed control-plane-side, unsealed by quorum
+  and pinned per ADR-0034 (ADR-0066, SPEC-0044 AC5).
+- **EP-22** — a vendor-signed, digest-pinned operator image and **release trust bundle** distribution
+  across N data planes per tenant, proven on real GKE/EKS/AKS (ADR-0065). Distinct artifact from
+  EP-21's CA trust bundle.
 - **EP-23** — divergence health gates with both numbers shown, envelope-state telemetry to the
   browser, and the PR-7 read-only distinction, with never-zero/never-blocked regression pins
   (ADR-0061/0018).

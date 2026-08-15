@@ -5,7 +5,7 @@
 - **Phase / Epic:** 3.1 / EP-22 (multi-cluster BYO readiness)
 - **Repo(s):** super-repo (conformance-matrix execution and evidence recording under
   `deploy/conformance/`)
-- **Spec:** docs/specs/SPEC-0045-multi-cluster-byo-readiness.md (Approved 2026-08-15 — RED may begin)
+- **Spec:** docs/specs/SPEC-0045-multi-cluster-byo-readiness.md (Approved 2026-08-15, amended 2026-08-15 — RED may begin)
 - **ADRs:** 0065, 0044, 0035, 0013, 0011
 - **Owner:** unassigned
 
@@ -21,7 +21,7 @@ forward/backward migration proof on real state are actually proven.
 
 - [ ] SPEC-0045 AC3: the conformance-matrix rows are executed on real GKE, EKS and AKS clusters —
       every row green or explicitly annotated with its cause; no row left silently "not run".
-- [ ] SPEC-0045 AC2 (real-cluster half): the trust-bundle distribution/rotation procedure proven on
+- [ ] SPEC-0045 AC2 (real-cluster half): the release-trust-bundle distribution/rotation procedure proven on
       harness clusters in T-0041 then runs on the real clusters of the matrix, without downtime
       during the overlap.
 - [ ] The carried phase-3 exit criterion: the whole path — install from the chart plus an enrolment
