@@ -1,6 +1,6 @@
 # T-0045: Design token foundation, self-hosted fonts, and the app shell
 
-- **Status:** Todo — **blocked-by ADR-0069 acceptance** (a Proposed ADR may not be built against)
+- **Status:** In progress (2026-08-17) — ADR-0069 Accepted, so RED may begin
 - **Phase / Epic:** 3.5 / EP-24 (design system)
 - **Repo(s):** webfrontend
 - **Spec:** ../specs/SPEC-0047-cvd-first-design-system.md (AC1–AC4)

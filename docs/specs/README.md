@@ -52,4 +52,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0044 | Agent-CA custody and rotation operations | Approved (amended 2026-08-15) | T-0040 |
 | SPEC-0045 | Multi-cluster BYO readiness | Approved (amended 2026-08-15) | T-0041, T-0042 |
 | SPEC-0046 | Usage view truth and the PR-7 read-only distinction | Approved | T-0043, T-0044 |
-| SPEC-0047 | CVD-first design system for the web frontend | Proposed (2026-08-17) — blocked-by ADR-0069 | T-0045, T-0046, T-0047, T-0048 |
+| SPEC-0047 | CVD-first design system for the web frontend | Approved (2026-08-17) | T-0045, T-0046, T-0047, T-0048 |
