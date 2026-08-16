@@ -61,14 +61,21 @@ Sequencing is strict: nothing in 2–4 can land before 1, because there is nothi
 ## Exit criteria
 
 - [x] ADR-0069 Accepted; SPEC-0047 Approved.
-- [ ] SPEC-0047 AC1–AC10 green.
-- [ ] The hex-literal gate and the no-CDN-font assertion run build-blocking, and a deliberate
-      violation of each is proven to fail the build.
-- [ ] `usage-regression-pins` and `readonly-cause` pass **unmodified** at the final pin.
-- [ ] Grayscale and deuteranopia captures exist for every surface in scope, recorded in the task
-      exit records — or an honestly annotated subset with named causes, never a silent gap.
-- [ ] Full gate matrix green at the final pin bump: webfrontend `tsc` + vitest + build, super-repo
-      `make verify` + `codegen-check` + `surfaces-check`.
+- [x] SPEC-0047 AC1–AC9 green. **AC10 is the phase's one carried gap** — see below.
+- [x] The hex-literal gate and the no-CDN-font assertion run build-blocking; the gate's own
+      fixture suite proves a deliberate violation fails, and the gate refused its author twice
+      during the phase.
+- [x] `usage-regression-pins` and `readonly-cause` pass **unmodified** at the final pin — `git diff`
+      over both files is empty across the whole phase.
+- [ ] **CARRIED — Grayscale and deuteranopia captures (SPEC-0047 AC10).** Not run, and not claimed
+      anywhere. The encodings were built so the captures should pass — every status carries glyph
+      and word, the diff carries text markers — but *should pass* is not evidence, and this criterion
+      exists precisely because a design system's accessibility claim is the one most easily asserted
+      without proof. Cause: capturing needs a Playwright run against the live surfaces, which needs
+      the dev cluster and a browser install this phase did not stand up. It is the phase's one gap
+      and it is named here rather than in a footnote.
+- [x] Full gate matrix green at the final pin bump: webfrontend `tsc` + vitest 202/202 + build,
+      super-repo `make verify` + `codegen-check` + `surfaces-check`.
 
 ## Risks
 

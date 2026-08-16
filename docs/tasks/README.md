@@ -50,9 +50,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0043 | Usage-view divergence health gates + envelope-state telemetry through bff → webfrontend | 3.1 | Done — backend@bc30abd + bff@4059a23 + webfrontend@08f42c4; SPEC-0046 AC1–AC3/AC5; additive contract governance-first (b425db0, 36f284b); AC3 live-cluster half carried to the E2E lane |
 | T-0044 | PR-7 durability read-only vs envelope-throttle distinction in UI/API | 3.1 | Done — backend@0238dee cause contract + webfrontend@843a195 distinction; SPEC-0046 AC4/AC5; EP-23 complete; proto half + live-page wiring carried to PR-7's product work |
 | T-0045 | Design token foundation, self-hosted fonts, app shell | 3.5 | Done — webfrontend@cdf032c; SPEC-0047 AC1–AC4; EP-24; hex-literal gate ships as a ratchet, 15 files carried to T-0046..T-0048 |
-| T-0046 | Repo browsing and the CVD-safe blue/orange diff | 3.5 | Todo — SPEC-0047 AC5/AC6; EP-24; blocked-by T-0045 |
-| T-0047 | Security, merge request and compliance surfaces on tokens | 3.5 | Todo — SPEC-0047 AC7; EP-24; blocked-by T-0045 |
-| T-0048 | Usage view and code search on tokens, pins unmodified | 3.5 | Todo — SPEC-0047 AC8/AC9; EP-24; blocked-by T-0045 |
+| T-0046 | Repo browsing and the CVD-safe blue/orange diff | 3.5 | Done — webfrontend@089c514; SPEC-0047 AC5/AC6; EP-24 |
+| T-0047 | Security, merge request and compliance surfaces on tokens | 3.5 | Done — webfrontend@0f0dabd; SPEC-0047 AC6/AC7; EP-24; hex ratchet reached zero |
+| T-0048 | Usage view and code search on tokens, pins unmodified | 3.5 | Done — webfrontend@56c91d1; SPEC-0047 AC8/AC9; EP-24; pins provably unmodified |
 
 ## Retired numbers (never reused)
 
