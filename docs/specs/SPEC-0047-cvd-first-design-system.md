@@ -84,7 +84,7 @@ none of which is in scope here (see Out of scope).
 - [ ] **AC9 — charts use the Okabe–Ito order.** Any chart or multi-series visual uses the fixed
       eight-colour order, varies dash pattern on lines, and ships a visible legend. No series pair is
       red vs green.
-- [ ] **AC10 — the grayscale gate is an artifact, not a promise.** For each surface in scope, a
+- [x] **AC10 — the grayscale gate is an artifact, not a promise.** For each surface in scope, a
       Playwright screenshot is captured under a grayscale filter and under a deuteranopia
       simulation, and the run is recorded in the task's exit record. Automating the *comparison* is
       ADR-0069's open decision 4 and is not required here; capturing the evidence is.

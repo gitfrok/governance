@@ -57,4 +57,26 @@ silently: tokens, the gate's own fixture, the diff, the status vocabulary, the c
 
 **Gates:** hex-literals clean at zero, `tsc` clean, vitest **202/202**, `astro build` clean.
 
-**Honest not-run:** SPEC-0047 AC10 captures — the phase's one carried gap.
+**AC10 closed (2026-08-17, webfrontend@ad075f4).** `e2e/cvd-captures.spec.ts` produces 15 artifacts
+— five surfaces × colour, grayscale, deuteranopia — against the real production build and the real
+stylesheet, using the Viénot-Brettel-Mollon coefficients Chrome DevTools' own emulation uses. Run
+with `npm run cvd`; the PNGs are gitignored because 1 MB regenerated per run would churn, and the
+verdict below is what a reviewer can disagree with.
+
+**Reviewed verdict.** Grayscale: the diff reads from its `+`/`−` markers and the "1 added, 1
+removed" summary with every tint flattened; severity reads `✕ Critical 4/4` … `○ Low 1/4`; lifecycle
+reads `! Open` / `✓ Resolved`; the three envelope states read `● WITHIN`, `! NEAR`, `✕ EXCEEDED`
+with `↑ ↓ →` trends; "Not metered yet" and the telemetry gap stay distinct from any number.
+Deuteranopia: added lines read blue, removed read yellow-brown, and no two states in the reviewed
+set collapse together. No surface in scope depends on hue for meaning.
+
+**What the review caught that the unit tests could not.** Astro renders a style-object value
+verbatim, so `gap: 24` shipped as `gap:24` and the browser dropped it — React adds the `px`, Astro
+does not. **197 spacing, size and radius values across nine files were being silently discarded**,
+which is why the dashboard's facet columns collided. Fixed, with a test that walks `src/**.astro`
+and fails on a bare number in a length property. This is the argument for AC10 existing: a suite
+asserting "the marker is in the DOM" passes happily on a page whose layout has collapsed.
+
+**Scope of the claim.** The run uses the stub BFF, not a cluster — deliberately, because the
+fixtures are state-dense in a way live data on a given day is not. It proves the ENCODINGS survive
+CVD simulation; it does not stand in for the live-cluster walk T-0003's lane owns.
