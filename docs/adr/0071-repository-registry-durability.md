@@ -1,7 +1,7 @@
 # ADR-0071: The repository registry is durable, and it is the product's truth for existence
 
-- **Status:** Proposed
-- **Date:** 2026-08-18
+- **Status:** Accepted
+- **Date:** 2026-08-18 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (found while scoping PR-24, ADR-0070 Tier B)
 - **Supersedes / superseded by:** —
 - **Related:** ADR-0003 (tenancy and RLS), ADR-0062 (durable control-plane stores — the precedent
