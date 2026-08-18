@@ -89,6 +89,13 @@ skimmed it stopped there and took the pack as complete. That is the exact failur
 prevent, and every assertion passed while it was on screen. The notice now precedes the badge, the
 badge is labelled `assembly ·`, and a test asserts the document order rather than mere presence.
 
+**Capture review addendum (webfrontend `195ef83`).** Every one of the twelve new capture variants
+was opened, not a sample. No encoding defect surfaced beyond the badge-order one above — but the
+complete-pack capture depicted a state no real backend produces: its status table listed four
+control sections above a stream that had delivered two, because the two fixtures had been written
+independently. Fixed, because a reviewer who learns to skip a section-count mismatch in the
+reference capture would skip a real one.
+
 **Carried:** a pack is rendered, never downloaded — no route serves it as a file (SPEC-0050 open
 question 1). Assembly is asynchronous with no notification and the page deliberately does not poll:
 the backend has never told this layer how long assembly takes, so a timer would be the frontend
