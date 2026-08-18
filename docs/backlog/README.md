@@ -345,7 +345,7 @@ Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Propo
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | In progress — T-0049 open (SPEC-0048 Approved); T-0050…T-0052 not yet specced |
+| **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | In progress — T-0049 Done (webfrontend@6d61827, SPEC-0048 AC1–AC11); T-0050…T-0052 not yet specced |
 | **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | — | — | Not started — each item is backend-first under the route-before-pixel law; no task may open before its backend port exists |
 | **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 (all proposed) | — | — | Blocked — ADR-0070 must be Accepted and the PRD amended first; each of issues, releases, settings and admin is a bounded context under ADR-0022 needing its own Proposed ADR |
 

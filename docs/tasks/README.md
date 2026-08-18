@@ -53,7 +53,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0046 | Repo browsing and the CVD-safe blue/orange diff | 3.5 | Done — webfrontend@089c514; SPEC-0047 AC5/AC6; EP-24 |
 | T-0047 | Security, merge request and compliance surfaces on tokens | 3.5 | Done — webfrontend@0f0dabd; SPEC-0047 AC6/AC7; EP-24; hex ratchet reached zero |
 | T-0048 | Usage view and code search on tokens, pins unmodified | 3.5 | Done — webfrontend@56c91d1, AC10 captures @ad075f4; SPEC-0047 AC8/AC9/AC10; EP-24; the capture review found 197 dropped spacing values |
-| T-0049 | Open, review and merge a merge request from the web UI | 4 | In review — SPEC-0048 AC1–AC11 green in the working tree, uncommitted; EP-25; found the form-encoding and enum-name traps before code |
+| T-0049 | Open, review and merge a merge request from the web UI | 4 | Done — webfrontend@6d61827; SPEC-0048 AC1–AC11; EP-25; found the form-encoding and enum-name traps before code |
 
 ## Retired numbers (never reused)
 

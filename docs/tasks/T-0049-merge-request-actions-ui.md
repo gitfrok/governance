@@ -1,6 +1,6 @@
 # T-0049: Open, review and merge a merge request from the web UI
 
-- **Status:** In review (2026-08-18) — implementation complete in the `webfrontend` working tree, all eleven SPEC-0048 criteria green; not yet committed
+- **Status:** Done (2026-08-18) — webfrontend@6d61827; SPEC-0048 AC1–AC11 proven
 - **Phase / Epic:** 4 / EP-25 (the full product surface)
 - **Repo(s):** webfrontend
 - **Spec:** ../specs/SPEC-0048-merge-request-actions.md (AC1–AC11)
@@ -69,7 +69,7 @@ See ../process/definition-of-done.md. `full` ceremony. Captures per SPEC-0047 AC
 
 ## Exit record (2026-08-18)
 
-**All eleven criteria green.** `webfrontend` only; no contract, backend or bff change.
+**All eleven criteria green.** Closed in one webfrontend landing: **6d61827**. `webfrontend` only; no contract, backend or bff change.
 
 **What now exists.** `src/lib/bff.ts` gains three form-encoded writes (`openMergeRequest`,
 `submitMergeRequestReview`, `mergeMergeRequest`) plus `MR_DISPOSITION_WIRE`; `src/lib/mrAction.ts` is
