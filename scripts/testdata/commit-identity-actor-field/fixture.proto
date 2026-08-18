@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 12 (SPEC-0053 AC8).
+//
+// It carries the one shape the real gitsaas.repository.v1.CommitIdentity must never grow: a field
+// naming a platform principal. A commit's author is whatever the committer's git config said, and
+// git verifies none of it; a field called actor_id on this message would invite a consumer to
+// render an unverified string as an authenticated account.
+//
+// The gate compiles this module and asserts the descriptor DOES carry the marker, which is what
+// proves the check against the real contract can fail.
+package gitsaas.repository.v1;
+
+message CommitIdentity {
+  string git_author_name = 1;
+  string git_author_email = 2;
+  // The defect: a platform principal on a message that carries only git's word for who did this.
+  string actor_id = 3;
+}

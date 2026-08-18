@@ -32,6 +32,12 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  12. gitsaas.repository.v1.CommitIdentity carries no platform principal (SPEC-0053 AC8): a
+#      commit's author and committer are whatever the committer's git config said and git verifies
+#      neither, so an actor_id or principal_id on that message would invite a consumer to render an
+#      unverified string as an authenticated account — the line ADR-0029 already draws for an
+#      imported record's declared_actor. Asserted against the COMPILED descriptor, and paired with
+#      a fixture carrying the defect.
 #   8. gitsaas.agent.v1.DesiredState carries BOTH trust bundles as distinct artifacts
 #      (SPEC-0044 AC2 / SPEC-0045 AC2, Contracts touched): the CA trust bundle of ADR-0064
 #      rides as ca_trust_bundle and the release trust bundle of ADR-0044/ADR-0065 rides as
@@ -208,6 +214,37 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 12. CommitIdentity carries no platform principal (SPEC-0053 AC8) --------------------------
+
+# Blame and history answer "who touched this line", and the answer is git's, not the platform's.
+# A field named actor_id or principal_id on CommitIdentity would let a consumer render an
+# unverified string as an authenticated account. The question is asked of the COMPILED descriptor
+# so a field counts whatever its type or comment says.
+if image_out=$(buf build contracts --type gitsaas.repository.v1.CommitIdentity --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qiE '"name": *"(actor_id|principal_id|user_id|account_id)"' <<<"$image_out"; then
+    report "gitsaas.repository.v1.CommitIdentity carries a platform principal field — a commit author is git's word, not an authenticated actor (SPEC-0053 AC8)"
+  else
+    echo "  ok    CommitIdentity carries no platform principal (SPEC-0053 AC8)"
+  fi
+else
+  report "could not compile gitsaas.repository.v1.CommitIdentity for the identity-separation check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/commit-identity-actor-field
+if fixture_image=$(buf build "$fixture" --type gitsaas.repository.v1.CommitIdentity --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qiE '"name": *"actor_id"' <<<"$fixture_image"; then
+    echo "  ok    commit-identity fixture caught (the CommitIdentity descriptor check can fail)"
+  else
+    report "the commit-identity fixture compiled with no actor_id in its descriptor — the check is vacuous"
+  fi
+else
+  report "the commit-identity fixture did not compile:"
   indent "$fixture_image"
 fi
 

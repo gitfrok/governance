@@ -13,6 +13,11 @@ service RepositoryReader {
   // target branch, and nothing on this surface computed a merge base before.
   // Authorization stays server-side exactly as for the other reads.
   rpc GetMergeBase(GetMergeBaseRequest) returns (GetMergeBaseResponse);
+  // GetHistory and GetBlame complete PR-8, which has named both since Phase 1.
+  // Additive for SPEC-0053. They belong here, unlike the registry list: both
+  // are reads of one named repository, which is what this surface is.
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc GetBlame(GetBlameRequest) returns (GetBlameResponse);
 }
 
 // RepositoryRegistry answers which repositories exist for a caller (SPEC-0052,
@@ -77,6 +82,61 @@ message DiffChunk { bytes data = 1; bool eof = 2; }
 // GetMergeBaseRequest names the two sides of the comparison as refs or
 // commit identifiers — a merge request's source ref and target ref are the
 // SPEC-0028 shape. An empty side is rejected; resolution is server-side.
+// CommitIdentity is the author and committer AS GIT RECORDS THEM.
+//
+// Every field here is named git_* on purpose. These values are whatever the
+// person running `git commit` had in their local config: git verifies none of
+// them, and anyone can commit as anyone. The platform does know who PUSHED —
+// that identity is authenticated and audited — but it is a different fact and
+// frequently a different person (a merge, an import, a rebase, a script).
+//
+// A field called `author` invites a consumer to render it as an account, which
+// asserts that the platform vouches for it. It does not. The naming refuses
+// that reading at the point where it would start, the same line ADR-0029 draws
+// for an imported record's declared_actor.
+//
+// There is deliberately no actor_id and no principal_id on this message, and a
+// contract test forbids adding one.
+message CommitIdentity {
+  string git_author_name = 1;
+  string git_author_email = 2;
+  string git_committer_name = 3;
+  string git_committer_email = 4;
+  string authored_at = 5;
+  string committed_at = 6;
+}
+
+message Commit {
+  string commit_id = 1;
+  CommitIdentity identity = 2;
+  string subject = 3;
+}
+
+message GetHistoryRequest {
+  ReadContext context = 1;
+  string revision = 2;
+  // Optional: narrow the history to one path. It reaches a command line, so
+  // the server places it after `--` and validates it before building one.
+  string path = 3;
+  string page_token = 4;
+  int32 page_size = 5;
+}
+message GetHistoryResponse { repeated Commit commits = 1; string next_page_token = 2; }
+
+message GetBlameRequest { ReadContext context = 1; string revision = 2; string path = 3; }
+// One contiguous run of lines attributed to one commit.
+message BlameRange {
+  int32 start_line = 1;
+  int32 end_line = 2;
+  string commit_id = 3;
+  CommitIdentity identity = 4;
+}
+// capped reports that the file was longer than this build will attribute. It
+// exists so a partial attribution can never be rendered as a whole one: the
+// ranges below cover the first lines only, and the consumer is told so rather
+// than left to infer it from a line count it has no reason to check.
+message GetBlameResponse { repeated BlameRange ranges = 1; bool capped = 2; }
+
 message GetMergeBaseRequest { ReadContext context = 1; string ref_a = 2; string ref_b = 3; }
 // GetMergeBaseResponse names the merge base. A pair with no common ancestor
 // (unrelated histories) is not an error: found is false and merge_base stays
