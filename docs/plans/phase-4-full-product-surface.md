@@ -52,7 +52,7 @@ needs its own spec. None may start before its backend port exists.
 
 | # | Surface | Why it is blocked | PRD |
 |---|---|---|---|
-| 1 | Repository list | No `GET /v1/repositories` anywhere; no `ListRepositories` in `bff/internal` or `backend/modules/repository`. `webfrontend/src/pages/index.astro` is still the T-0001 stub for this reason. | PR-24 (proposed) |
+| 1 | Repository list | Worse than "no route": the Repository context has **no durable store at all**. Its only adapter is `memstore`, whose own header says the Postgres adapter was owed with T-0004 and T-0010 — both Done, neither delivered it. See **ADR-0071**. | PR-24 |
 | 2 | Blame and history | PR-8 names both; neither has a BFF route. | PR-25 (proposed), PR-8 |
 | 3 | Pipelines and job logs | `modules/ci` exists; no browser-facing route does. | PR-26 (proposed), PR-11 |
 | 4 | Policy authoring | PR-16 requires author/version/dry-run/enforce; the policies are real, the authoring surface is not. | PR-27 (proposed), PR-16 |
@@ -60,6 +60,14 @@ needs its own spec. None may start before its backend port exists.
 The repository list is the phase's most load-bearing item and the least visible: without it there is
 no honest landing page, and its refusal semantics are the whole of G1 — a repository the caller may
 not see must be indistinguishable from one that does not exist.
+
+**It also grew a subtask that nobody had recorded.** Scoping it found that the Repository context's
+registry is a `map` — `memstore` is its only adapter, and there is no `repositories` table in any
+migration. That survived because every existing surface asks about one repository by ID, so an empty
+registry looks like a not-found, which SPEC-0001 wants anyway. A **list** is different: one that
+omits a repository asserts it does not exist, to a caller who may be looking at its clone URL. The
+durable store is therefore its own piece of work, in EP-26's ordering, decided by **ADR-0071** —
+the same move ADR-0062 made for the agent and residency stores.
 
 ## Wave 3 — Tier C: adopted from the prototype, and a context each
 
