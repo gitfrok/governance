@@ -1,7 +1,7 @@
 # ADR-0072: CI keeps a durable job history; job logs are a separate decision it does not make
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (found while scoping PR-26, ADR-0070 Tier B)
 - **Related:** ADR-0071 (the same finding for the repository registry), ADR-0062 (the durability
   precedent), ADR-0005 and ADR-0012 (CI sandboxes), ADR-0058 (the pipeline format), ADR-0070,

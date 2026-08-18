@@ -59,3 +59,5 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0051 | Auditor grants — issue, list and revoke scoped evidence access | Implemented (2026-08-18) | T-0052 |
 | SPEC-0052 | A durable repository registry, and the list it makes possible | Implemented (2026-08-18) | T-0053, T-0054, T-0055 |
 | SPEC-0053 | Blame and history, and the git-author/platform-actor distinction | Implemented (2026-08-19) | T-0056, T-0057, T-0058 |
+| SPEC-0054 | Pipeline runs, and the plain statement that job output is gone | Approved (2026-08-19) | T-0059, T-0060, T-0061 |
+| SPEC-0055 | Policy visibility — what is in force and what decided an outcome | Approved (2026-08-19) | T-0062, T-0063 |

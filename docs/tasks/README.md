@@ -66,6 +66,12 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0057 | GetHistory and GetBlame on the wire, and the BFF routes | 4 | Done — governance@eb7b131, bff@1f38368; SPEC-0053 AC7–AC9; EP-26; check-contracts gained check 12 |
 | T-0058 | The blame and history views | 4 | Done — webfrontend@38fcd95; SPEC-0053 AC10–AC14; EP-26; no avatar, no profile link, no `<img>` |
 
+| T-0059 | Durable CI job history and the runs list | 4 | Todo — SPEC-0054 AC1–AC6; EP-26 |
+| T-0060 | ListJobs on the wire, and the BFF route | 4 | Todo — SPEC-0054 AC7–AC9; EP-26 |
+| T-0061 | The pipeline runs view | 4 | Todo — SPEC-0054 AC10–AC14; EP-26 |
+| T-0062 | Bundle status on the wire, and the BFF route | 4 | Todo — SPEC-0055 AC1–AC3; EP-26 |
+| T-0063 | The policy visibility view | 4 | Todo — SPEC-0055 AC4–AC10; EP-26 |
+
 ## Retired numbers (never reused)
 
 - **T-0019** — review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review

@@ -1,7 +1,7 @@
 # ADR-0073: Policy authoring in the product needs a per-tenant policy source, which governance does not have
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (found while scoping PR-27, ADR-0070 Tier B)
 - **Related:** ADR-0001 (governance is the Source of Truth), ADR-0006 (deny-by-default PDP),
   ADR-0007, ADR-0053/0054 (how work lands), ADR-0070, ADR-0022
