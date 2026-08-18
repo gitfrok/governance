@@ -13,6 +13,22 @@ service RepositoryReader {
   // target branch, and nothing on this surface computed a merge base before.
   // Authorization stays server-side exactly as for the other reads.
   rpc GetMergeBase(GetMergeBaseRequest) returns (GetMergeBaseResponse);
+  // ListRepositories answers which repositories the caller may see. Additive
+  // for SPEC-0052 / PR-24, and the first read on this surface that is not
+  // about one named repository.
+  //
+  // That difference is why the request has its own context message rather
+  // than reusing ReadContext: ReadContext carries a repository_id, and a
+  // list has no repository to name. Reusing it would leave a field the
+  // caller could populate to mean something the server would then have to
+  // ignore, which is the kind of ambiguity SPEC-0035 AC2 removes by having
+  // no field at all.
+  //
+  // The listable set is derived server-side from the caller's authorization
+  // at request time. There is deliberately no repository set, filter, owner
+  // or visibility field: a caller cannot widen what it is shown, because
+  // there is nothing to widen it with (ADR-0071 decision 4).
+  rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse);
 }
 // Roles are verified principal attributes supplied to the Repository/Git PDP
 // input. They are not a caller-provided authorization result.
@@ -23,6 +39,23 @@ message ReadContext {
   string request_id = 4;
   repeated string actor_roles = 5;
 }
+// ListContext is a ReadContext without a repository: the caller is verified,
+// and there is no repository to name because the answer is which ones exist.
+message ListContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+  string request_id = 3;
+  repeated string actor_roles = 4;
+}
+message ListRepositoriesRequest { ListContext context = 1; string page_token = 2; int32 page_size = 3; }
+// The response carries no total, and that absence is load-bearing: no field
+// here is capable of expressing how many repositories the caller may NOT see,
+// so non-enumeration is a property of the contract rather than a discipline
+// each consumer has to remember (SPEC-0052 AC5, as SPEC-0035 AC3 does for
+// search).
+message ListRepositoriesResponse { repeated RepositorySummary repositories = 1; string next_page_token = 2; }
+message RepositorySummary { string repository_id = 1; string name = 2; }
+
 message GetTreeRequest { ReadContext context = 1; string revision = 2; string page_token = 3; int32 page_size = 4; }
 message GetTreeResponse { repeated TreeEntry entries = 1; string next_page_token = 2; }
 message TreeEntry { string path = 1; EntryKind kind = 2; string object_id = 3; uint32 mode = 4; int64 size_bytes = 5; }
