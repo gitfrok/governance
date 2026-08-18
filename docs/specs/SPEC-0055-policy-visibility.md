@@ -51,31 +51,31 @@ None.
 
 ### The wire and the BFF (T-0062)
 
-- [ ] **AC1** `GetBundleStatus` returns the revision in force and its load time. Additive; `buf
+- [x] **AC1** `GetBundleStatus` returns the revision in force and its load time. Additive; `buf
       breaking` passes.
-- [ ] **AC2** **The contract carries no authoring verb.** A descriptor test asserts
+- [x] **AC2** **The contract carries no authoring verb.** A descriptor test asserts
       `PolicyDecisionPoint` has no RPC whose name begins `Put`, `Create`, `Update`, `Delete` or
       `Author` — ADR-0073's deferral as a type property, so it cannot arrive as a convenience before
       the per-tenant policy source is decided.
-- [ ] **AC3** The BFF shapes and forwards under the session; one coarse refusal. A decision record
+- [x] **AC3** The BFF shapes and forwards under the session; one coarse refusal. A decision record
       the caller may not read is absent, not forbidden.
 
 ### The view (T-0063)
 
-- [ ] **AC4** The policy surface renders the bundle revision in force and when it was loaded.
-- [ ] **AC5** A decision record renders its action, resource, outcome, deciding revision, input
+- [x] **AC4** The policy surface renders the bundle revision in force and when it was loaded.
+- [x] **AC5** A decision record renders its action, resource, outcome, deciding revision, input
       digest and mode — which is PR-16's "the deciding policy version is recorded on the decision",
       made visible for the first time.
-- [ ] **AC6** **The absence of authoring is stated plainly and accurately.** The copy says policy is
+- [x] **AC6** **The absence of authoring is stated plainly and accurately.** The copy says policy is
       authored in the governance repository and not here. A test enumerates it: no rendered string
       may say "coming soon", "not yet supported", or imply the capability exists behind a permission
       the reader lacks — the reader is not missing a role, the product is missing a feature.
-- [ ] **AC7** No disabled control, no greyed-out form, nothing that looks like authoring waiting to
+- [x] **AC7** No disabled control, no greyed-out form, nothing that looks like authoring waiting to
       be unlocked. A test asserts the markup contains no `disabled` control on this surface.
-- [ ] **AC8** Outcome and mode carry glyph and word through `src/lib/status.ts`; allow and deny are
+- [x] **AC8** Outcome and mode carry glyph and word through `src/lib/status.ts`; allow and deny are
       not encoded as a green/red pair.
-- [ ] **AC9** No hex literal; units on every length; the two regression pins unmodified.
-- [ ] **AC10** The stub serves both reads and a refusal; captures regenerated and reviewed in
+- [x] **AC9** No hex literal; units on every length; the two regression pins unmodified.
+- [x] **AC10** The stub serves both reads and a refusal; captures regenerated and reviewed in
       grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)

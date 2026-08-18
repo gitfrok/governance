@@ -1,6 +1,6 @@
 # T-0062: Bundle status on the wire, and the BFF route
 
-- **Status:** Todo
+- **Status:** Done (2026-08-19) — governance@4364870, backend@a09042f, bff@790e8d5; SPEC-0055 AC1–AC3 proven
 - **Phase / Epic:** 4 / EP-26 (Tier B)
 - **Repo(s):** governance, bff
 - **Spec:** ../specs/SPEC-0055-*.md (AC1–AC3)
@@ -13,7 +13,7 @@ See the spec. This task is one repository's share of it, split along the ADR-002
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0055 AC1–AC3 — as written in the spec; the spec is the authority and this file does not restate it.
+- [x] SPEC-0055 AC1–AC3 — as written in the spec; the spec is the authority and this file does not restate it.
 
 ## Tests to write first
 

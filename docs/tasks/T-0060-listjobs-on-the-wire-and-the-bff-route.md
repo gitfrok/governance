@@ -1,6 +1,6 @@
 # T-0060: ListJobs on the wire, and the BFF route
 
-- **Status:** Todo
+- **Status:** Done (2026-08-19) — governance@5a696d5, backend@a7e467c, bff@6ce38c6; SPEC-0054 AC7–AC9 proven
 - **Phase / Epic:** 4 / EP-26 (Tier B)
 - **Repo(s):** governance, bff
 - **Spec:** ../specs/SPEC-0054-*.md (AC7–AC9)
@@ -13,7 +13,7 @@ See the spec. This task is one repository's share of it, split along the ADR-002
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0054 AC7–AC9 — as written in the spec; the spec is the authority and this file does not restate it.
+- [x] SPEC-0054 AC7–AC9 — as written in the spec; the spec is the authority and this file does not restate it.
 
 ## Tests to write first
 

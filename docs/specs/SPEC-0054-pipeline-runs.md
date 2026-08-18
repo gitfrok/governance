@@ -53,39 +53,39 @@ The CI context gains a tenant-scoped `ci.jobs` table: module-owned migration, RL
 
 ### The durable store and the list (T-0059)
 
-- [ ] **AC1** A job survives the process that enqueued it: written, the store rebuilt against the
+- [x] **AC1** A job survives the process that enqueued it: written, the store rebuilt against the
       same database, the job still readable with its state, timings and outcome intact.
-- [ ] **AC2** The table is tenant-scoped with RLS and its migration passes T-0004's boundary linter.
-- [ ] **AC3** Cross-tenant reads are absent rather than forbidden — not gettable, not listable.
-- [ ] **AC4** `List` returns only jobs whose repository the PDP allows, one decision per candidate at
+- [x] **AC2** The table is tenant-scoped with RLS and its migration passes T-0004's boundary linter.
+- [x] **AC3** Cross-tenant reads are absent rather than forbidden — not gettable, not listable.
+- [x] **AC4** `List` returns only jobs whose repository the PDP allows, one decision per candidate at
       request time, with no caller-assertable scope. A caller allowed nothing gets an empty list,
       never an error.
-- [ ] **AC5** The list pages by an opaque cursor and carries **no total**.
-- [ ] **AC6** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
+- [x] **AC5** The list pages by an opaque cursor and carries **no total**.
+- [x] **AC6** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
       the observed skip count, not merely that the run was green (carried limit 5).
 
 ### The wire and the BFF (T-0060)
 
-- [ ] **AC7** Additive: `buf breaking` passes.
-- [ ] **AC8** **No field on the wire carries or gestures at job output.** A descriptor test asserts
+- [x] **AC7** Additive: `buf breaking` passes.
+- [x] **AC8** **No field on the wire carries or gestures at job output.** A descriptor test asserts
       `CIJob` and the list messages carry no field named `log`, `logs`, `output`, `stdout` or
       `stderr` — ADR-0072's deferral expressed as a type property, so it cannot erode into a
       convenience field before the log decision is taken.
-- [ ] **AC9** The BFF shapes and forwards under the session; one coarse refusal.
+- [x] **AC9** The BFF shapes and forwards under the session; one coarse refusal.
 
 ### The view (T-0061)
 
-- [ ] **AC10** Runs render with state, trigger, ref, short commit, queued/started/finished times and
+- [x] **AC10** Runs render with state, trigger, ref, short commit, queued/started/finished times and
       the outcome summary, reachable from the repository surface.
-- [ ] **AC11** **The absence of logs is stated, not implied.** The surface says output is not
+- [x] **AC11** **The absence of logs is stated, not implied.** The surface says output is not
       retained, and a test enumerates the copy: no rendered string may say "coming soon", "not yet
       available" or otherwise imply the logs exist elsewhere — because "we do not keep them" and
       "they are behind a door you have not found" are different facts.
-- [ ] **AC12** Job state carries a glyph and a word, entering `src/lib/status.ts` under the ADR-0069
+- [x] **AC12** Job state carries a glyph and a word, entering `src/lib/status.ts` under the ADR-0069
       laws; a state added later with colour alone fails the enumeration test.
-- [ ] **AC13** No hex literal; units on every length; a refusal names no cause; the two regression
+- [x] **AC13** No hex literal; units on every length; a refusal names no cause; the two regression
       pins unmodified.
-- [ ] **AC14** The stub serves the list including an empty case and a refusal; captures regenerated
+- [x] **AC14** The stub serves the list including an empty case and a refusal; captures regenerated
       and reviewed in grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)
