@@ -62,9 +62,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0054 | ListRepositories on the wire, and the BFF route | 4 | Done — governance@1534a70, backend@0c853b1, bff@1c52899; SPEC-0052 AC7–AC9; EP-26; the first contract commit put the RPC on the process that cannot answer it |
 | T-0055 | The repository landing page, replacing the T-0001 stub | 4 | Done — webfrontend@39e224b; SPEC-0052 AC10–AC13; EP-26; the AC11 enumeration caught its own copy |
 
-| T-0056 | History and blame in git-storaged | 4 | Todo — SPEC-0053 AC1–AC6; EP-26; a path reaching a command line can become a flag |
-| T-0057 | GetHistory and GetBlame on the wire, and the BFF routes | 4 | Todo — SPEC-0053 AC7–AC9; EP-26; the contract names git identity as git identity |
-| T-0058 | The blame and history views | 4 | Todo — SPEC-0053 AC10–AC14; EP-26; a git author is not a platform actor |
+| T-0056 | History and blame in git-storaged | 4 | Done — backend@d72998d; SPEC-0053 AC1–AC6; EP-26; AC4 amended — a leading dash is a legal filename, the separator is its defence |
+| T-0057 | GetHistory and GetBlame on the wire, and the BFF routes | 4 | Done — governance@eb7b131, bff@1f38368; SPEC-0053 AC7–AC9; EP-26; check-contracts gained check 12 |
+| T-0058 | The blame and history views | 4 | Done — webfrontend@38fcd95; SPEC-0053 AC10–AC14; EP-26; no avatar, no profile link, no `<img>` |
 
 ## Retired numbers (never reused)
 

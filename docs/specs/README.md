@@ -58,4 +58,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0050 | Evidence packs — request, watch and read a date-ranged pack | Implemented (2026-08-18) | T-0051 |
 | SPEC-0051 | Auditor grants — issue, list and revoke scoped evidence access | Implemented (2026-08-18) | T-0052 |
 | SPEC-0052 | A durable repository registry, and the list it makes possible | Implemented (2026-08-18) | T-0053, T-0054, T-0055 |
-| SPEC-0053 | Blame and history, and the git-author/platform-actor distinction | Approved (2026-08-19) | T-0056, T-0057, T-0058 |
+| SPEC-0053 | Blame and history, and the git-author/platform-actor distinction | Implemented (2026-08-19) | T-0056, T-0057, T-0058 |

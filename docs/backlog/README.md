@@ -346,7 +346,7 @@ Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Propo
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
 | **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | **Done** — T-0049 (webfrontend@6d61827), T-0051 + T-0052 (@1141bc5), T-0050 (@a668de5). Every BFF route that had no UI now has one |
-| **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | T-0053, T-0054, T-0055 | SPEC-0052 | In progress — **surface 1 (repository list, PR-24) Done end to end** under ADR-0071: backend@79479a8+0c853b1, governance@1534a70, bff@1c52899, webfrontend@39e224b. Surfaces 2–4 (blame/history, pipelines, policy authoring) not yet specced |
+| **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | T-0053…T-0058 | SPEC-0052, SPEC-0053 | In progress — **surface 1 (repository list, PR-24)** and **surface 2 (blame + history, PR-25/PR-8)** both Done end to end. Surfaces 3–4 (pipelines, policy authoring) not yet specced |
 | **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 | — | — | Unblocked at the PRD level (ADR-0070 Accepted 2026-08-18, PR-28…PR-32 carried). Still gated on a Proposed ADR per bounded context — issues, releases, settings and admin are each a context under ADR-0022, not a screen |
 
 One line each:

@@ -1,6 +1,6 @@
 # SPEC-0053: Blame and history — and the difference between a git author and a platform actor
 
-- **Status:** Approved (2026-08-19) — no new decision is required; PR-8 has named blame and history
+- **Status:** Approved (2026-08-19), amended 2026-08-19 (AC4 — see *Amendments*) — no new decision is required; PR-8 has named blame and history
   since Phase 1 and neither was ever built. ADR-0070 Tier B, PR-25.
 - **Owner:** platform
 - **Context(s):** Repository/Git (git-storaged serves it) · BFF (shapes) · Web frontend (renders)
@@ -69,45 +69,46 @@ None. Every field comes from git via git-storaged.
 
 ### git-storaged (T-0056)
 
-- [ ] **AC1** `GetHistory` returns a ref's commits — id, author name and email, committer name and
+- [x] **AC1** `GetHistory` returns a ref's commits — id, author name and email, committer name and
       email, both timestamps, and the subject — newest first, paged by an opaque cursor bound to
       tenant, repository, revision and path.
-- [ ] **AC2** `GetBlame` returns one file's line ranges at a revision, each carrying the commit id
+- [x] **AC2** `GetBlame` returns one file's line ranges at a revision, each carrying the commit id
       that last touched it and that commit's author fields, with the range's start and end lines.
-- [ ] **AC3** Both are `repo.read` decisions through the same `prepareRead` path as every other read
+- [x] **AC3** Both are `repo.read` decisions through the same `prepareRead` path as every other read
       on this surface. No new authorization path, no second decision.
-- [ ] **AC4** **A path can never become a flag.** Every git invocation places `--` before any
-      caller-supplied path, and a path that fails `validRepositoryPath` is refused before a command
-      is built. A test drives paths beginning `-`, `--upload-pack=`, containing `..`, and NUL, and
-      asserts no command is constructed.
-- [ ] **AC5** Both are bounded: a page size cap on history, a line cap on blame, and a refusal
+- [x] **AC4** **A path can never become a flag, and the mechanism is the separator.** Every git
+      invocation places `--` before any caller-supplied path and after the revision, asserted
+      against the argument list rather than by running git. Separately, `validRepositoryPath`
+      refuses traversal, absolute paths and NUL before a command is assembled. A test drives both
+      halves: the argument order, and the paths that must never reach an argument list at all.
+- [x] **AC5** Both are bounded: a page size cap on history, a line cap on blame, and a refusal
       rather than a truncation that could read as a whole answer. A blame that hits its cap says so.
-- [ ] **AC6** Every failure is the one coarse `unavailable()` this surface already returns —
+- [x] **AC6** Every failure is the one coarse `unavailable()` this surface already returns —
       nonexistent repository, unknown revision, unreadable path and unauthorized are the same answer.
 
 ### The wire and the BFF (T-0057)
 
-- [ ] **AC7** Additive: `buf breaking` passes; no existing field number or enum value moves.
-- [ ] **AC8** **The contract names git identity as git identity.** The author and committer fields
+- [x] **AC7** Additive: `buf breaking` passes; no existing field number or enum value moves.
+- [x] **AC8** **The contract names git identity as git identity.** The author and committer fields
       are `git_author_name`, `git_author_email`, `git_committer_name`, `git_committer_email` — not
       `actor_id`, not `author`, not `user`. A caller cannot mistake them for a platform principal
       because the field names refuse the reading. A descriptor test asserts no field on these
       messages is named `actor_id` or `principal_id`.
-- [ ] **AC9** The BFF shapes and forwards under the session; every failure is one coarse refusal.
+- [x] **AC9** The BFF shapes and forwards under the session; every failure is one coarse refusal.
 
 ### The views (T-0058)
 
-- [ ] **AC10** History renders on the file and tree surfaces; blame renders on the file surface.
-- [ ] **AC11** **Git identity is labelled as git identity, every time it appears.** The rendered
+- [x] **AC10** History renders on the file and tree surfaces; blame renders on the file surface.
+- [x] **AC11** **Git identity is labelled as git identity, every time it appears.** The rendered
       output states that these names come from the commits themselves and are not platform
       identities. A test enumerates the copy: no rendered string may present an author as an
       account, a member, a user, or a platform actor, and the surface renders no avatar, no profile
       link and nothing else that would imply a platform principal behind the name.
-- [ ] **AC12** A blame that hit its line cap says so, and does not present a partial attribution as
+- [x] **AC12** A blame that hit its line cap says so, and does not present a partial attribution as
       a whole one.
-- [ ] **AC13** No hex literal; units on every length; a refusal names no cause; the two regression
+- [x] **AC13** No hex literal; units on every length; a refusal names no cause; the two regression
       pins unmodified.
-- [ ] **AC14** The e2e stub serves both routes including the capped-blame case; captures
+- [x] **AC14** The e2e stub serves both routes including the capped-blame case; captures
       regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)
@@ -131,3 +132,18 @@ None. Every field comes from git via git-storaged.
    commit that is not render identically, which is honest and unhelpful — closing that needs a
    decision about trust roots.
 3. **Blame is at a revision, not at a line's whole life.** It answers what git answers.
+
+## Amendments
+
+**2026-08-19, AC4 — the separator is the defence against a leading dash, not the validator.** AC4
+originally required `validRepositoryPath` to refuse a path beginning `-`. Writing the test showed it
+does not, and tightening it would have been wrong rather than merely late: **a filename beginning
+with a dash is legal in a repository**, and rejecting it would make those files unbrowsable through
+`GetTree`, `GetFile` and `GetDiff` — a regression to three shipped surfaces in the name of a defence
+that is already in place. Every call site on this surface places `--` before the path and after the
+revision, which is what makes a leading dash inert.
+
+So the criterion now names both mechanisms for what they each do: the **separator** neutralises
+argument injection, and **`validRepositoryPath`** stops traversal, absolute paths and NUL. The test
+asserts the argument ORDER rather than executing git, because running git would only prove that this
+git, today, tolerated the input.
