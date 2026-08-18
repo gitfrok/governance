@@ -93,6 +93,11 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0071](0071-repository-registry-durability.md) | The repository registry is durable and is the product's truth for existence — the Postgres adapter owed since T-0004; a repo on disk with no row is absent by consequence, not by defect | Accepted |
 | [ADR-0072](0072-ci-job-history-and-logs.md) | CI keeps a durable job history; job logs are a separate decision it does not make — PR-26 is delivered in half, deliberately | Accepted |
 | [ADR-0073](0073-tenant-policy-authoring.md) | Policy authoring needs a per-tenant policy source governance does not have; a tenant policy may only ever narrow | Accepted |
+| [ADR-0074](0074-issues-context.md) | Issues is a bounded context, and the largest permanent widening proposed — recommends considering an external tracker instead | Proposed |
+| [ADR-0075](0075-releases-context.md) | Releases is a bounded context whose promises are supply-chain promises; tenant signing does not reuse the release trust bundle | Proposed |
+| [ADR-0076](0076-repository-settings-context.md) | Repository settings is where policy quietly becomes a UI toggle, which PR-10 forbids; visibility and deletion deferred | Proposed |
+| [ADR-0077](0077-admin-area-context.md) | The admin area reaches the audit log through a grant, not a role; `admin` is not a new authorization primitive | Proposed |
+| [ADR-0078](0078-marketing-surface-separation.md) | The marketing page is served by a surface that never holds a session, on a different origin | Proposed |
 
 ## Open follow-ups
 

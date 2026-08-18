@@ -80,6 +80,20 @@ follow-up, and it is not a formality: adopting a context adopts its maintenance 
 Issues (PR-28), releases (PR-29), repository settings (PR-30), the admin area with its audit-log
 browser and runners view (PR-31), and the marketing landing page (PR-32).
 
+**The five context ADRs were written 2026-08-19 and none of them adopts its surface.** Each fixes
+the boundaries most likely to be crossed under delivery pressure and records what adoption would
+cost. Read together they say something the tier's framing did not: **Tier C is not four screens and
+a page, it is four contexts and a deployment**, and two of the five ADRs recommend a smaller
+alternative over the thing PR-28…PR-32 describe.
+
+| ADR | Surface | What it fixes | What it recommends |
+|---|---|---|---|
+| 0074 | Issues | Own context; issue text never enters a control section; attachments out of scope | **Consider linking an external tracker instead** |
+| 0075 | Releases | Unsigned artifacts are named as unverified; tenant signing does not reuse the release trust bundle | **Tags + notes, no artifacts, as the first increment** |
+| 0076 | Settings | No setting may change an authorization or policy outcome (PR-10); visibility and deletion deferred | Name, description and archival only |
+| 0077 | Admin | Audit reached through a grant, not a role; `admin` is not a new primitive; runner state is a dated report | Possibly no audit panel — point at the evidence pack |
+| 0078 | Marketing | Separate surface, separate origin, never receives a session | Possibly not this repository at all |
+
 PR-32 is the odd one and the cheapest: a landing page has no context behind it, and ADR-0070's open
 follow-up asks whether it belongs in `webfrontend` at all or in a surface that never holds a session
 cookie.
