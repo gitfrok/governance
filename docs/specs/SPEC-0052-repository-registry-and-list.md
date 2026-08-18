@@ -52,45 +52,45 @@ timestamps. Module-owned migration, RLS on `tenant_id`, no cross-context reads (
 
 ### The durable store (T-0053)
 
-- [ ] **AC1** The Repository context persists through a process restart: a repository created, the
+- [x] **AC1** The Repository context persists through a process restart: a repository created, the
       store reconstructed against the same database, and the repository still loadable. The existing
       `Store` port is unchanged, so `app.Service` is untouched by the swap.
-- [ ] **AC2** The table is tenant-scoped with RLS, and the migration passes the boundary linter that
+- [x] **AC2** The table is tenant-scoped with RLS, and the migration passes the boundary linter that
       fails a tenant table lacking `tenant_id` + RLS (T-0004).
-- [ ] **AC3** **Cross-tenant reads return absent, never forbidden.** A repository belonging to tenant
+- [x] **AC3** **Cross-tenant reads return absent, never forbidden.** A repository belonging to tenant
       B is not loadable, not listable and not countable by tenant A, and the refusal is
       indistinguishable from one that does not exist (invariant 1, SPEC-0001).
-- [ ] **AC4** `List` returns only what the PDP allows, derived server-side. The caller passes no
+- [x] **AC4** `List` returns only what the PDP allows, derived server-side. The caller passes no
       repository set, filter or scope — there is no parameter for one. A test asserts a caller with
       no roles receives an empty list rather than an error, because "you may see none" and "there are
       none" must be the same answer.
-- [ ] **AC5** The list is paged by an opaque token, and carries **no total** — the same
+- [x] **AC5** The list is paged by an opaque token, and carries **no total** — the same
       non-enumeration property code search has (SPEC-0035 AC3). A test asserts the response type has
       no field capable of expressing how many repositories the caller may not see.
-- [ ] **AC6** **The isolation proofs actually ran.** The suite reports zero skipped tests for this
+- [x] **AC6** **The isolation proofs actually ran.** The suite reports zero skipped tests for this
       adapter's isolation and tenancy cases. Carried limit 5 means integration tests skip silently
       without `TEST_DATABASE_URL`, and a skipped isolation proof is not a proof — the exit record
       states the skip count it observed, not merely that the run was green.
 
 ### The wire and the BFF (T-0054)
 
-- [ ] **AC7** `ListRepositories` is additive: `buf breaking` passes against the previous contract,
+- [x] **AC7** `ListRepositories` is additive: `buf breaking` passes against the previous contract,
       and no existing field number or enum value moves.
-- [ ] **AC8** `GET /v1/repositories` shapes and forwards only. Identity comes from the session; the
+- [x] **AC8** `GET /v1/repositories` shapes and forwards only. Identity comes from the session; the
       request carries no tenant, actor, role or repository set, and there is no field for one.
-- [ ] **AC9** Every failure — dead session, PDP refusal, backend down — is the one coarse refusal
+- [x] **AC9** Every failure — dead session, PDP refusal, backend down — is the one coarse refusal
       that distinguishes nothing.
 
 ### The landing page (T-0055)
 
-- [ ] **AC10** `src/pages/index.astro` stops being the T-0001 stub and lists the caller's
+- [x] **AC10** `src/pages/index.astro` stops being the T-0001 stub and lists the caller's
       repositories, each linking to its tree.
-- [ ] **AC11** **An empty list never claims the tenant has no repositories.** The copy says what is
+- [x] **AC11** **An empty list never claims the tenant has no repositories.** The copy says what is
       true — that there is nothing here for this caller to see — and does not assert absence, in the
       same way SPEC-0049 AC4 governs the empty search page. A test enumerates the copy.
-- [ ] **AC12** No total or count is rendered. A refusal names no cause. Tokens gate at zero, units on
+- [x] **AC12** No total or count is rendered. A refusal names no cause. Tokens gate at zero, units on
       every length, the two regression pins unmodified.
-- [ ] **AC13** The e2e stub serves the route with a populated list, an empty list, and a refusal;
+- [x] **AC13** The e2e stub serves the route with a populated list, an empty list, and a refusal;
       captures regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)

@@ -58,9 +58,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0051 | Request, watch and read an evidence pack from the web UI | 4 | Done — webfrontend@1141bc5; SPEC-0050 AC1–AC11; EP-25; the capture review caught a "Ready" badge above a truncation notice |
 | T-0052 | Issue, list and revoke auditor grants from the web UI | 4 | Done — webfrontend@1141bc5; SPEC-0051 AC1–AC11; EP-25; no function here turns an expiry into a state |
 
-| T-0053 | Durable repository registry — the Postgres store owed since T-0004 | 4 | Todo — SPEC-0052 AC1–AC6; EP-26; ADR-0071 |
-| T-0054 | ListRepositories on the wire, and the BFF route | 4 | Todo — SPEC-0052 AC7–AC9; EP-26; additive contract change, governance first |
-| T-0055 | The repository landing page, replacing the T-0001 stub | 4 | Todo — SPEC-0052 AC10–AC13; EP-26 |
+| T-0053 | Durable repository registry — the Postgres store owed since T-0004 | 4 | Done — backend@79479a8+0c853b1; SPEC-0052 AC1–AC6; EP-26; isolation proofs 6/6 with **0 skips**, and the arch gate refused the first design |
+| T-0054 | ListRepositories on the wire, and the BFF route | 4 | Done — governance@1534a70, backend@0c853b1, bff@1c52899; SPEC-0052 AC7–AC9; EP-26; the first contract commit put the RPC on the process that cannot answer it |
+| T-0055 | The repository landing page, replacing the T-0001 stub | 4 | Done — webfrontend@39e224b; SPEC-0052 AC10–AC13; EP-26; the AC11 enumeration caught its own copy |
 
 ## Retired numbers (never reused)
 
