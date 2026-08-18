@@ -81,43 +81,43 @@ assertions, forwarded — this layer computes none of them, so it cannot get any
 
 ## Acceptance criteria (each becomes a test)
 
-- [ ] **AC1** A pack can be requested for a closed range with an optional repository scope. The
+- [x] **AC1** A pack can be requested for a closed range with an optional repository scope. The
       request posts RFC3339 timestamps as JSON; an open, inverted or unparseable range is refused
       before a request is compiled, so the cause is visible here rather than arriving as the coarse
       404 the BFF returns for everything.
-- [ ] **AC2** The pack's assembly state renders from the status route: state, the four control
+- [x] **AC2** The pack's assembly state renders from the status route: state, the four control
       sections with their record counts, the appendix count, the range and any repository scope.
       Counts render as counts; no record content appears on this surface.
-- [ ] **AC3** **`final_chunk` is the only completeness signal.** The stream reader treats a stream
+- [x] **AC3** **`final_chunk` is the only completeness signal.** The stream reader treats a stream
       whose last chunk lacks `final_chunk: true` as **truncated**, regardless of HTTP status. A test
       drives a `200 OK` response whose body ends without a final chunk and asserts the result is
       truncated — a reader that used `response.ok` fails it.
-- [ ] **AC4** **A truncated pack never renders as a complete one.** The rendered page says the pack
+- [x] **AC4** **A truncated pack never renders as a complete one.** The rendered page says the pack
       is incomplete and that what is shown is not authoritative, and it does so in words and a glyph,
       not by omission or by a colour. A test enumerates the copy: no rendered string may state or
       imply the pack is complete when `final_chunk` was not seen.
-- [ ] **AC5** **A degraded section renders degraded.** A section with `complete: false` or any entry
+- [x] **AC5** **A degraded section renders degraded.** A section with `complete: false` or any entry
       in `gaps[]` renders its incompleteness beside its record count, with each gap's bounds and
       reason shown. A test drives a section that is `complete: false` with zero gaps and one that is
       `complete: true` with a gap, and asserts both render as incomplete — neither field alone is
       the whole claim.
-- [ ] **AC6** A refusal names no cause. Every failure of request, status or stream — dead session,
+- [x] **AC6** A refusal names no cause. Every failure of request, status or stream — dead session,
       unknown pack, cross-tenant, policy refusal, malformed range — is the same coarse 404, so the
       copy enumeration from SPEC-0048 AC4 applies here verbatim: no rendered string may contain
       "permission", "denied", "not allowed", "unauthorized", "blocked by policy" or "does not exist".
-- [ ] **AC7** `ASSEMBLING` enters `src/lib/status.ts` beside the existing `PENDING`, `READY` and
+- [x] **AC7** `ASSEMBLING` enters `src/lib/status.ts` beside the existing `PENDING`, `READY` and
       `FAILED`; the four pack states carry pairwise-distinct glyphs and words, so a reader tells them
       apart with hue removed. `FAILED` renders its `failure_reason` when the wire carries one, and
       renders nothing invented when it does not.
-- [ ] **AC8** The Compliance destination appears in the shell exactly once, marked current by
+- [x] **AC8** The Compliance destination appears in the shell exactly once, marked current by
       `aria-current` plus weight plus a rule rather than by colour, and points at a page backed by a
       BFF route. A test asserts no nav destination lacks a route — the ordering law's mechanical
       check, applied to the shell as it now stands.
-- [ ] **AC9** No hex literal is introduced; `npm run check:tokens` stays at zero, and every style
+- [x] **AC9** No hex literal is introduced; `npm run check:tokens` stays at zero, and every style
       value carrying a length ships its unit.
-- [ ] **AC10** `tests/usage-regression-pins.test.ts` and `tests/readonly-cause.test.ts` pass
+- [x] **AC10** `tests/usage-regression-pins.test.ts` and `tests/readonly-cause.test.ts` pass
       **unmodified**; `git diff` over both is empty for the whole task.
-- [ ] **AC11** The e2e stub BFF serves all three routes, including an **NDJSON stream that never
+- [x] **AC11** The e2e stub BFF serves all three routes, including an **NDJSON stream that never
       sends a final chunk** and a section that is `complete: false`, so AC3, AC4 and AC5 are
       exercised end to end. Capture fixtures are write-free from the start. CVD captures are
       regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.

@@ -54,8 +54,8 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0047 | Security, merge request and compliance surfaces on tokens | 3.5 | Done — webfrontend@0f0dabd; SPEC-0047 AC6/AC7; EP-24; hex ratchet reached zero |
 | T-0048 | Usage view and code search on tokens, pins unmodified | 3.5 | Done — webfrontend@56c91d1, AC10 captures @ad075f4; SPEC-0047 AC8/AC9/AC10; EP-24; the capture review found 197 dropped spacing values |
 | T-0049 | Open, review and merge a merge request from the web UI | 4 | Done — webfrontend@6d61827; SPEC-0048 AC1–AC11; EP-25; found the form-encoding and enum-name traps before code |
-| T-0051 | Request, watch and read an evidence pack from the web UI | 4 | Todo — SPEC-0050; EP-25; adds the Compliance destination; `final_chunk` is the only completeness signal |
-| T-0052 | Issue, list and revoke auditor grants from the web UI | 4 | Todo — SPEC-0051; EP-25; the server may bound the requested expiry, and state is never computed here |
+| T-0051 | Request, watch and read an evidence pack from the web UI | 4 | Done — webfrontend@1141bc5; SPEC-0050 AC1–AC11; EP-25; the capture review caught a "Ready" badge above a truncation notice |
+| T-0052 | Issue, list and revoke auditor grants from the web UI | 4 | Done — webfrontend@1141bc5; SPEC-0051 AC1–AC11; EP-25; no function here turns an expiry into a state |
 
 ## Retired numbers (never reused)
 

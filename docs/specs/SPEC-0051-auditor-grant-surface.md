@@ -71,39 +71,39 @@ None.
 
 ## Acceptance criteria (each becomes a test)
 
-- [ ] **AC1** A grant can be issued: the form posts JSON with RFC3339 timestamps and at least one
+- [x] **AC1** A grant can be issued: the form posts JSON with RFC3339 timestamps and at least one
       pack ID. An unparseable timestamp, an open or inverted range, a missing auditor or an empty
       pack list is refused before a request is compiled — the BFF's `ValidateGrantIssue` refuses the
       same shapes, and its refusal is the coarse 404 that names nothing.
-- [ ] **AC2** **The issued grant renders from the response, never from the request.** A test drives
+- [x] **AC2** **The issued grant renders from the response, never from the request.** A test drives
       a response whose `expires_at` is earlier than the one posted and asserts the rendered expiry is
       the returned one. Echoing the submitted value is the failing case.
-- [ ] **AC3** The tenant's grants list renders scope, state and lifecycle: auditor principal, range,
+- [x] **AC3** The tenant's grants list renders scope, state and lifecycle: auditor principal, range,
       repository scope if any, pack IDs, expiry, who granted it, when it was issued, and when it was
       revoked if it was. It renders no pack contents.
-- [ ] **AC4** **State is never computed here.** The rendered state is the `state` string the server
+- [x] **AC4** **State is never computed here.** The rendered state is the `state` string the server
       sent. A test drives a grant whose `expires_at` is in the past but whose state is `ACTIVE` and
       asserts it renders as active — the server's record is the fact, and the browser's clock has no
       standing (SPEC-0033 AC7).
-- [ ] **AC5** A grant can be revoked through an SSR relay that issues the upstream `DELETE`; the
+- [x] **AC5** A grant can be revoked through an SSR relay that issues the upstream `DELETE`; the
       control is a plain form, so it works with no client script. After revocation the page renders
       the returned grant, not an assumed one.
-- [ ] **AC6** A refusal names no cause. Nonexistent, cross-tenant, revoked, expired, malformed and
+- [x] **AC6** A refusal names no cause. Nonexistent, cross-tenant, revoked, expired, malformed and
       unauthorized are one coarse refusal (SPEC-0033, SPEC-0001), so SPEC-0048 AC4's copy
       enumeration applies verbatim to this surface.
-- [ ] **AC7** No affordance is a permission claim. Issuing and revoking are owner-only PDP
+- [x] **AC7** No affordance is a permission claim. Issuing and revoking are owner-only PDP
       decisions this surface is never told; the controls render for every session and nothing is
       hidden or disabled to signal an outcome. A test asserts the controls are present and nothing
       is disabled.
-- [ ] **AC8** `ACTIVE`, `REVOKED` and `EXPIRED` enter `src/lib/status.ts`. **They form their own
+- [x] **AC8** `ACTIVE`, `REVOKED` and `EXPIRED` enter `src/lib/status.ts`. **They form their own
       distinctness set** — they render side by side in the list, so no two share a glyph or a word,
       and the pair `ACTIVE`/`REVOKED` is not the success/danger pair. A test asserts pairwise
       distinctness across the grant states specifically, not merely across the whole vocabulary.
-- [ ] **AC9** No hex literal is introduced; `npm run check:tokens` stays at zero, and every style
+- [x] **AC9** No hex literal is introduced; `npm run check:tokens` stays at zero, and every style
       value carrying a length ships its unit.
-- [ ] **AC10** `tests/usage-regression-pins.test.ts` and `tests/readonly-cause.test.ts` pass
+- [x] **AC10** `tests/usage-regression-pins.test.ts` and `tests/readonly-cause.test.ts` pass
       **unmodified**; `git diff` over both is empty for the whole task.
-- [ ] **AC11** The e2e stub BFF serves all three routes, including a **bounded-expiry fixture** (the
+- [x] **AC11** The e2e stub BFF serves all three routes, including a **bounded-expiry fixture** (the
       issued grant comes back with an earlier expiry than requested) and a grant whose `expires_at`
       is past while its state is `ACTIVE`, so AC2 and AC4 are exercised end to end. Capture fixtures
       are write-free. CVD captures regenerated per SPEC-0047 AC10 and reviewed in grayscale and
