@@ -114,6 +114,30 @@ Requirements are numbered `PR-#`. Each maps to existing roadmap phases, backlog 
 | PR-22 | Tenant data and compute stay pinned to the tenant's declared region/cloud, and that pinning is demonstrable in the evidence pack | G7, G6 | 0009, 0010 | **New** |
 | PR-23 | Usage is metered per fair-use dimension and visible to the customer before an envelope is reached | G8 | 0008 | **New** |
 
+### Phase 4 — the full product surface
+
+Added 2026-08-18 by **ADR-0070 (Accepted)**, which found that three inventories of the web surface
+disagreed: the BFF served eighteen routes and ten had a UI, several `PR-#` rows above rendered
+nowhere, and the `./UI` prototype showed a larger product than either. PR-24…PR-27 name behaviour
+the platform already has and no person can reach. PR-28…PR-32 adopt surfaces the prototype shows;
+ADR-0070 records, in its own consequences, that their evidence is a mockup rather than a user, and
+that each of the first four is a bounded context under ADR-0022 rather than a screen.
+
+**Every row here is bound by ADR-0070's route-before-pixel law:** no UI before the BFF route it
+reads, and no route before the backend port it shapes.
+
+| ID | Requirement | G | ADR | Spec / Task |
+|---|---|---|---|---|
+| PR-24 | A developer can list the repositories they may see, and only those; a repository they may not see is not distinguishable from one that does not exist | G1, G2 | 0070 | **New** |
+| PR-25 | A developer can read a file's blame and a ref's commit history in the web UI | — | 0070, 0015 | **New** (PR-8's unbuilt half) |
+| PR-26 | A developer can see pipeline runs and job logs for a repository, scoped by the same permissions as the repository read | G1 | 0070, 0005 | **New** (PR-11's browser half) |
+| PR-27 | A policy owner can author, version, dry-run and enforce a policy from the web UI, with the deciding version recorded | G4, G6 | 0070, 0006 | **New** (PR-16's authoring half) |
+| PR-28 | A team can open, assign, label, discuss and close issues, and link them to merge requests | G4 | 0070 | **New** — needs its own context ADR first |
+| PR-29 | A team can cut and publish a release from a tag, with its artifacts and notes | — | 0070 | **New** — needs its own context ADR first |
+| PR-30 | A repository owner can read and change repository settings — name, description, visibility, members and archival — each change audited | G2, G5 | 0070 | **New** — needs its own context ADR first |
+| PR-31 | An org administrator can read the org's members, roles, runners and audit log from an admin area, without gaining repository read access | G2, G5, G6 | 0070 | **New** — needs its own context ADR first |
+| PR-32 | An unauthenticated visitor is served a marketing landing page that never leaks tenant existence or content | G1 | 0070 | **New** |
+
 ## 6. Pricing & fair use (product behavior only)
 
 ADR-0008 fixes **flat-rate + fair-use**. This PRD does **not** set prices or tier names — the
@@ -226,6 +250,9 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
 | Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
+| Phase-4 requirements PR-24…PR-27 | full product surface | backend ports + BFF routes + web UI, in that order (ADR-0070's ordering law); specs and tasks under EP-26 |
+| Phase-4 requirements PR-28…PR-31 | full product surface | **a Proposed ADR each, first** — issues, releases, repository settings and the admin area are bounded contexts under ADR-0022, with their own storage, events, permissions and audit obligations. A screen is not a context. EP-27 |
+| PR-32 marketing landing page | full product surface | open: whether it belongs in `webfrontend` at all, or in a surface that never holds a session cookie (ADR-0070 follow-up) |
 
 ### 12.2 Drift to reconcile in governance
 

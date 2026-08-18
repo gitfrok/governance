@@ -1,7 +1,7 @@
 # ADR-0070: The prototype's six absent surfaces become product, gated by a route-before-pixel law
 
-- **Status:** Proposed
-- **Date:** 2026-08-18
+- **Status:** Accepted
+- **Date:** 2026-08-18 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (requested by the product owner: "implement all UI/UX with all features we
   have", 2026-08-18)
 - **Supersedes / superseded by:** supersedes SPEC-0047's *Out of scope* record for the six
@@ -82,7 +82,14 @@ widens *what* is built; it relaxes nothing about *how*.
 **5. Tier C's PRD requirements are proposed, not assumed.** This ADR proposes the rows below. Until
 it is Accepted and the PRD amended, no Tier C spec is written and no Tier C code is committed.
 
+*Discharged 2026-08-18:* this ADR is Accepted and the PRD carries PR-24…PR-32 in its Phase 4 table.
+The gate this clause set has been passed, not removed — the requirements were defended on their
+merits at acceptance, which is what the clause asked for.
+
 ## New PRD requirements this ADR proposes
+
+*Accepted 2026-08-18 and now carried by the PRD's Phase 4 table. The table below is the record of
+what was decided here; the PRD is where they bind.*
 
 | Proposed | Requirement | Tier |
 |---|---|---|
@@ -134,8 +141,8 @@ supersedes it.
 
 ## Follow-ups
 
-- Amend the PRD with PR-24…PR-32 once this ADR is Accepted; until then the rows above are proposals
-  and the PRD is unchanged.
+- ~~Amend the PRD with PR-24…PR-32 once this ADR is Accepted.~~ **Done 2026-08-18** — the PRD's
+  Phase 4 table carries all nine.
 - A Proposed ADR per Tier C bounded context (issues, releases, settings, admin) — each is a context
   under ADR-0022, and none can be a screen bolted onto an existing one.
 - Decide whether the marketing landing page belongs in `webfrontend` at all, or in a separate

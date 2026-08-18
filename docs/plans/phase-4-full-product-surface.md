@@ -5,8 +5,9 @@ inventories describe the web surface today and they disagree: the BFF serves eig
 which have a UI; the PRD requires twenty-three `PR-#` rows, several of which no surface renders; and
 the `./UI` prototype shows a product larger than either.
 
-**Decided by** [ADR-0070](../adr/0070-full-product-surface.md) (Proposed) — the tiering, the
-route-before-pixel ordering law, and the nine PRD requirements Tier C would need.
+**Decided by** [ADR-0070](../adr/0070-full-product-surface.md) (**Accepted 2026-08-18**) — the
+tiering, the route-before-pixel ordering law, and the nine PRD requirements PR-24…PR-32, which the
+PRD's Phase 4 table now carries.
 
 **Design system.** Everything here rides [ADR-0069](../adr/0069-cvd-first-design-system.md) and the
 gates [SPEC-0047](../specs/SPEC-0047-cvd-first-design-system.md) left behind. Phase 4 widens what is
@@ -60,17 +61,20 @@ The repository list is the phase's most load-bearing item and the least visible:
 no honest landing page, and its refusal semantics are the whole of G1 — a repository the caller may
 not see must be indistinguishable from one that does not exist.
 
-## Wave 3 — Tier C: the prototype shows it, nothing requires it
+## Wave 3 — Tier C: adopted from the prototype, and a context each
 
-**Blocked on ADR-0070 being Accepted and the PRD amended.** Until then no Tier C spec is written and
-no Tier C code is committed — that is the condition ADR-0070 §5 sets, and `HANDOFF.md` limit 19 is
-the reason it exists.
+**Unblocked 2026-08-18:** ADR-0070 is Accepted and the PRD carries PR-28…PR-32. The second gate
+still stands and is the harder one — **each of issues, releases, repository settings and the admin
+area needs its own Proposed ADR before a spec**, because each is a bounded context under ADR-0022
+with its own storage, events, permissions and audit obligations. ADR-0070 sets that as its own
+follow-up, and it is not a formality: adopting a context adopts its maintenance permanently.
 
 Issues (PR-28), releases (PR-29), repository settings (PR-30), the admin area with its audit-log
-browser and runners view (PR-31), and the marketing landing page (PR-32). Each of the first four is
-a **bounded context** under ADR-0022 with its own storage, events, permissions and audit
-obligations — not a screen bolted onto an existing context — and each needs a Proposed ADR of its
-own before a spec.
+browser and runners view (PR-31), and the marketing landing page (PR-32).
+
+PR-32 is the odd one and the cheapest: a landing page has no context behind it, and ADR-0070's open
+follow-up asks whether it belongs in `webfrontend` at all or in a surface that never holds a session
+cookie.
 
 ## Exit criteria
 
