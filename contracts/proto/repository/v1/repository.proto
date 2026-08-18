@@ -13,21 +13,26 @@ service RepositoryReader {
   // target branch, and nothing on this surface computed a merge base before.
   // Authorization stays server-side exactly as for the other reads.
   rpc GetMergeBase(GetMergeBaseRequest) returns (GetMergeBaseResponse);
-  // ListRepositories answers which repositories the caller may see. Additive
-  // for SPEC-0052 / PR-24, and the first read on this surface that is not
-  // about one named repository.
+}
+
+// RepositoryRegistry answers which repositories exist for a caller (SPEC-0052,
+// PR-24). Additive, and deliberately a SECOND service rather than another RPC
+// on RepositoryReader.
+//
+// They are served by different processes, and that is the whole reason.
+// RepositoryReader is git-storaged: it reads bare repositories from block
+// volumes and holds no record of which repositories the product knows about.
+// The registry is the Repository context in the data plane, and per ADR-0071
+// it — not the disk — is the product's truth for existence. Putting the list
+// on RepositoryReader would have asked the process that cannot answer.
+service RepositoryRegistry {
+  // ListRepositories answers which repositories the caller may see.
   //
-  // That difference is why the request has its own context message rather
-  // than reusing ReadContext: ReadContext carries a repository_id, and a
-  // list has no repository to name. Reusing it would leave a field the
-  // caller could populate to mean something the server would then have to
-  // ignore, which is the kind of ambiguity SPEC-0035 AC2 removes by having
-  // no field at all.
-  //
-  // The listable set is derived server-side from the caller's authorization
-  // at request time. There is deliberately no repository set, filter, owner
-  // or visibility field: a caller cannot widen what it is shown, because
-  // there is nothing to widen it with (ADR-0071 decision 4).
+  // The listable set is derived server-side from the caller's authorization at
+  // request time. There is deliberately no repository set, filter, owner or
+  // visibility field: a caller cannot widen what it is shown, because there is
+  // nothing to widen it with (ADR-0071 decision 4, as SPEC-0035 AC2 does for
+  // a search query).
   rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse);
 }
 // Roles are verified principal attributes supplied to the Repository/Git PDP
@@ -41,6 +46,10 @@ message ReadContext {
 }
 // ListContext is a ReadContext without a repository: the caller is verified,
 // and there is no repository to name because the answer is which ones exist.
+// Reusing ReadContext would have left a repository_id the caller could
+// populate to mean something the server must then ignore, and a field that
+// must be ignored is worse than no field — someone eventually stops ignoring
+// it.
 message ListContext {
   string tenant_id = 1;
   string actor_id = 2;
