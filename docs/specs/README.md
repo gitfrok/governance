@@ -54,5 +54,6 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0046 | Usage view truth and the PR-7 read-only distinction | Approved | T-0043, T-0044 |
 | SPEC-0047 | CVD-first design system for the web frontend | Approved (2026-08-17) | T-0045, T-0046, T-0047, T-0048 |
 | SPEC-0048 | Merge-request actions — open, review, merge from the web UI | Approved (2026-08-18) | T-0049 |
+| SPEC-0049 | Code search — query, page, and an honest empty state | Approved (2026-08-18) | T-0050 |
 | SPEC-0050 | Evidence packs — request, watch and read a date-ranged pack | Implemented (2026-08-18) | T-0051 |
 | SPEC-0051 | Auditor grants — issue, list and revoke scoped evidence access | Implemented (2026-08-18) | T-0052 |
