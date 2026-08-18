@@ -123,6 +123,37 @@ the runbook current.
 - **Proxy-only egress stays open** on its own track (ADR-0017's remaining follow-up) — unchanged by
   this phase and still able to block an install outright.
 
+## Phase 3.5 — the design system · **Complete (2026-08-17)**
+
+Plan: `../plans/phase-3-5-design-system.md`. **ADR-0069** (Accepted) adopts `gitfrok-brand-identity-v2`
+and makes its three CVD laws binding; **SPEC-0047** says what "adopted" means in testable terms.
+Tasks **T-0045…T-0048**, epic **EP-24**, `webfrontend` only.
+
+**Exit (met):** all ten SPEC-0047 criteria green. Every colour resolves from `src/styles/tokens.css`,
+`scripts/check-hex-literals.mjs` fails the build on a literal anywhere else, severity stopped being a
+red-to-green heat ramp, and the diff's meaning moved from tint to text markers. The AC10 grayscale
+capture run earned its place on first use: it found that Astro renders style-object values verbatim,
+so **197 unitless spacing values across nine files were being silently discarded** by the browser —
+a defect no DOM assertion could see.
+
+## Phase 4 — the full product surface · **Planned (2026-08-18)**
+
+Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Proposed). Closes the
+distance between what the platform can do and what a person can reach: eight BFF routes have no UI at
+all, and PR-9's write half — open, review, merge — has been reachable by `curl` and by nothing else
+since T-0016.
+
+Three waves under a **route-before-pixel** ordering law: **Tier A** (route exists, UI does not —
+merge-request actions, code search, evidence packs, auditor grants; `webfrontend` only, may begin
+now), **Tier B** (the PRD requires it, no route serves it — repository list, blame/history,
+pipelines, policy authoring; backend first), **Tier C** (the `./UI` prototype shows it, nothing
+requires it — issues, releases, settings, admin, marketing page; blocked until ADR-0070 is Accepted
+and the PRD carries PR-24…PR-32).
+
+**Exit:** every BFF route has a UI or a recorded reason it does not; no nav destination lacks a
+route; PR-9's loop is executable by a person in a browser; every new surface passes the ADR-0069
+gates; `usage-regression-pins` and `readonly-cause` unmodified throughout.
+
 ## Architecture evolution (ADR-0025 → ADR-0026)
 
 Phases 0–3 ship as a **modular monolith per plane** (ADR-0025). A module becomes its own **coarse

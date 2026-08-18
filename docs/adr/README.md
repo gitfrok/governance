@@ -89,6 +89,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0067](0067-platform-operator-residency-declaration.md) | A tenant-scoped platform operator may set a tenant's residency declaration (extends ADR-0046's role by one action) | Accepted |
 | [ADR-0068](0068-redpanda-durable-issuance-retry.md) | Redpanda-backed durable issuance retry — a custody outage never interrupts enrolment (Phase 3.2 candidate; would supersede SPEC-0042 AC6's interim release-the-claim posture) | Proposed |
 | [ADR-0069](0069-cvd-first-design-system.md) | The product design system is CVD-first, token-only and light by default — discharges ADR-0015's design-system follow-up; diffs become blue/orange with gutter markers | Accepted |
+| [ADR-0070](0070-full-product-surface.md) | The prototype's six absent surfaces become product, gated by a route-before-pixel law — supersedes SPEC-0047's scope record and proposes PR-24…PR-32 | Proposed |
 
 ## Open follow-ups
 

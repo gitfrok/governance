@@ -331,6 +331,37 @@ EP-18's books, and gating T-0043. **Proxy-only egress is unchanged** (ADR-0017's
 able to block an install outright). Closed by the review and carried nowhere: the CA trust-ordering
 fix (backend@e722046) and the derived no-inbound fitness tree — neither is open here.
 
+## Phase 3.5 — the design system *(complete 2026-08-17)*
+
+Plan: `../plans/phase-3-5-design-system.md`.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-24** CVD-first design system | PR-8, PR-14, PR-17, PR-18, PR-23 | T-0045, T-0046, T-0047, T-0048 | SPEC-0047 | Done — all ten ACs proven; `webfrontend` only (T-0045 cdf032c, T-0046 089c514, T-0047 0f0dabd, T-0048 56c91d1, captures ad075f4) |
+
+## Phase 4 — the full product surface *(planned 2026-08-18)*
+
+Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Proposed).
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | In progress — T-0049 open (SPEC-0048 Approved); T-0050…T-0052 not yet specced |
+| **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | — | — | Not started — each item is backend-first under the route-before-pixel law; no task may open before its backend port exists |
+| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 (all proposed) | — | — | Blocked — ADR-0070 must be Accepted and the PRD amended first; each of issues, releases, settings and admin is a bounded context under ADR-0022 needing its own Proposed ADR |
+
+One line each:
+
+- **EP-25** — merge-request open/review/merge (the write half of PR-9, form-encoded and served since
+  T-0016 but never called), permission-filtered code search (`CommandPalette.tsx` is navigation, not
+  search — nothing has ever called the search API), evidence-pack request/status/fetch, and auditor
+  grant issue/list/revoke. `webfrontend` only; no contract change.
+- **EP-26** — repository list first, because without it there is no honest landing page and
+  `index.astro` stays the T-0001 stub; then blame and history (PR-8's unbuilt half), pipelines and
+  job logs, and the policy authoring surface PR-16 requires.
+- **EP-27** — adopted from a mockup rather than a customer, which ADR-0070 records as the risk it is
+  most likely to be wrong about. The gate is deliberate: someone must defend PR-28…PR-32 on their
+  merits at ADR acceptance, not on the prototype's existence.
+
 ## Parked — needs a human decision first
 
 Force-promote tenant self-service (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017) ·
