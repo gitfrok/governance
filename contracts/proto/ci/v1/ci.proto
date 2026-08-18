@@ -15,6 +15,14 @@ service CIJobService {
   rpc EnqueueJob(EnqueueJobRequest) returns (EnqueueJobResponse);
   rpc GetJob(GetJobRequest) returns (GetJobResponse);
   rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+  // ListJobs answers which runs the caller may see. Additive for SPEC-0054.
+  //
+  // The listable set is derived server-side from the caller's authorization at
+  // request time — one decision per candidate's repository, because being told
+  // a run happened is being told something about the repository. There is no
+  // job set, state filter or repository allow-list a caller could use to widen
+  // it; repository_id only narrows, and every candidate is decided anyway.
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
 }
 
 // JobContext is derived from a verified request or RefUpdated event. It is
@@ -82,6 +90,26 @@ message CancelJobResponse {
 // CIJob is bounded operational state. It deliberately excludes source bytes,
 // raw logs, credentials, runner capabilities, Kubernetes names, node names,
 // service-account tokens, and authorization results.
+message ListJobsRequest {
+  JobContext context = 1;
+  // Optional: narrow to one repository. It cannot widen anything.
+  string repository_id = 2;
+  string page_token = 3;
+  int32 page_size = 4;
+}
+// No total, and no logs.
+//
+// The total is absent for the reason it is absent on every list in this
+// product: no field may be capable of expressing how many runs the caller may
+// NOT see.
+//
+// The logs are absent because ADR-0072 defers retaining job output to its own
+// decision — capture, redaction, retention, access and residency — and a field
+// here is precisely how that deferral would erode. check-contracts.sh check 13
+// asserts no message in this package carries one, so the deferral is a
+// property of the contract rather than an intention someone remembers.
+message ListJobsResponse { repeated CIJob jobs = 1; string next_page_token = 2; }
+
 message CIJob {
   string job_id = 1;
   string attempt_id = 2;

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 13 (SPEC-0054 AC8, ADR-0072).
+//
+// It carries the one shape gitsaas.ci.v1.CIJob must never grow before the job-log
+// decision is taken: a field holding job output. The gate compiles this module and
+// asserts the descriptor DOES carry the marker, which is what proves the check
+// against the real contract can fail.
+package gitsaas.ci.v1;
+
+message CIJob {
+  string job_id = 1;
+  // The defect: retained job output, arriving as a convenience before anyone
+  // decided capture, redaction, retention, access or residency.
+  string logs = 2;
+}

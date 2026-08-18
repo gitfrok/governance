@@ -32,6 +32,9 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  13. no gitsaas.ci.v1 message carries job output (SPEC-0054 AC8, ADR-0072): the ADR delivers
+#      pipeline runs and defers log retention to its own decision. A log field arriving as a
+#      convenience is how that deferral erodes, and it erodes quietly. Paired with a fixture.
 #  12. gitsaas.repository.v1.CommitIdentity carries no platform principal (SPEC-0053 AC8): a
 #      commit's author and committer are whatever the committer's git config said and git verifies
 #      neither, so an actor_id or principal_id on that message would invite a consumer to render an
@@ -214,6 +217,41 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 13. no CI message carries job output (SPEC-0054 AC8, ADR-0072) ---------------------------
+
+# ADR-0072 delivers pipeline RUNS and defers job LOGS to their own decision, covering capture,
+# redaction, retention, access and residency. A log field arriving here as a convenience is exactly
+# how that deferral erodes, and it would erode quietly — nobody reviews a new string field twice.
+# Asked of the COMPILED descriptor so a field counts whatever its type or comment says.
+# Unlike checks 5 and 12, this one does NOT pass --exclude-imports: CIJob references
+# google.protobuf.Timestamp, and excluding imports makes the type uncompilable rather than smaller.
+# Including them is harmless here because the grep names specific field names, and Timestamp's are
+# seconds and nanos.
+if image_out=$(buf build contracts --type gitsaas.ci.v1.CIJob \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qiE '"name": *"(log|logs|output|stdout|stderr|log_url|log_ref)"' <<<"$image_out"; then
+    report "gitsaas.ci.v1.CIJob carries a job-output field — retaining job output is ADR-0072's deferred decision, not a field (SPEC-0054 AC8)"
+  else
+    echo "  ok    CIJob carries no job output (SPEC-0054 AC8, ADR-0072)"
+  fi
+else
+  report "could not compile gitsaas.ci.v1.CIJob for the job-output check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/cijob-output-field
+if fixture_image=$(buf build "$fixture" --type gitsaas.ci.v1.CIJob --exclude-imports \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qiE '"name": *"logs"' <<<"$fixture_image"; then
+    echo "  ok    cijob-output fixture caught (the CIJob descriptor check can fail)"
+  else
+    report "the cijob-output fixture compiled with no logs field in its descriptor — the check is vacuous"
+  fi
+else
+  report "the cijob-output fixture did not compile:"
   indent "$fixture_image"
 fi
 
