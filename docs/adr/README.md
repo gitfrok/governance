@@ -91,6 +91,8 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0069](0069-cvd-first-design-system.md) | The product design system is CVD-first, token-only and light by default — discharges ADR-0015's design-system follow-up; diffs become blue/orange with gutter markers | Accepted |
 | [ADR-0070](0070-full-product-surface.md) | The prototype's six absent surfaces become product, gated by a route-before-pixel law — supersedes SPEC-0047's scope record; PR-24…PR-32 now in the PRD | Accepted |
 | [ADR-0071](0071-repository-registry-durability.md) | The repository registry is durable and is the product's truth for existence — the Postgres adapter owed since T-0004; a repo on disk with no row is absent by consequence, not by defect | Accepted |
+| [ADR-0072](0072-ci-job-history-and-logs.md) | CI keeps a durable job history; job logs are a separate decision it does not make — PR-26 is delivered in half, deliberately | Proposed |
+| [ADR-0073](0073-tenant-policy-authoring.md) | Policy authoring needs a per-tenant policy source governance does not have; a tenant policy may only ever narrow | Proposed |
 
 ## Open follow-ups
 
