@@ -32,6 +32,9 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  14. gitsaas.policy.v1 carries no policy-authoring verb (SPEC-0055 AC2, ADR-0073): policies live
+#      in governance/ and ADR-0001 makes governance the Source of Truth, so a write verb here is a
+#      second source of truth for the same decisions. Paired with a fixture.
 #  13. no gitsaas.ci.v1 message carries job output (SPEC-0054 AC8, ADR-0072): the ADR delivers
 #      pipeline runs and defers log retention to its own decision. A log field arriving as a
 #      convenience is how that deferral erodes, and it erodes quietly. Paired with a fixture.
@@ -217,6 +220,38 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 14. PolicyDecisionPoint has no authoring verb (SPEC-0055 AC2, ADR-0073) ------------------
+
+# ADR-0073 records that policy authoring is structurally absent, not missing: policies live in
+# governance/ and ADR-0001 makes governance the Source of Truth, so a write verb here would be a
+# second source of truth for the same decisions. It would also arrive as a convenience — a "just an
+# upload endpoint" — long before anyone decided how a tenant policy composes with the platform
+# bundle. The question is asked of the COMPILED descriptor, so a verb counts whatever its comment
+# claims.
+if image_out=$(buf build contracts --path contracts/proto/policy/v1 \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -oE '"name": *"(Put|Create|Update|Delete|Author|Set|Write)[A-Za-z]*"' <<<"$image_out" | grep -q .; then
+    report "gitsaas.policy.v1 carries a policy-authoring verb — a per-tenant policy source is ADR-0073's deferred decision (SPEC-0055 AC2)"
+  else
+    echo "  ok    PolicyDecisionPoint has no authoring verb (SPEC-0055 AC2, ADR-0073)"
+  fi
+else
+  report "could not compile gitsaas.policy.v1 for the authoring-verb check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/policy-authoring-rpc
+if fixture_image=$(buf build "$fixture" --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qE '"name": *"PutPolicy"' <<<"$fixture_image"; then
+    echo "  ok    policy-authoring fixture caught (the authoring-verb check can fail)"
+  else
+    report "the policy-authoring fixture compiled with no PutPolicy in its descriptor — the check is vacuous"
+  fi
+else
+  report "the policy-authoring fixture did not compile:"
   indent "$fixture_image"
 fi
 

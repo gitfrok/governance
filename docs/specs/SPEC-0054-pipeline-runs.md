@@ -26,7 +26,12 @@ so in words, once, where a reader looking for them will be.
 
 - A durable, tenant-scoped CI job store behind the existing port.
 - `List` on the `Jobs` port, derived server-side from the caller's authorization.
-- The runs view: state, trigger, ref, commit, timings, outcome summary, delay cause.
+- The runs view: state, trigger, ref, commit, timings and outcome summary — the fields AC10 names.
+
+  **Not the delay cause.** `api.Job` records why a job waited (SPEC-0041 AC5) but `CIJob` carries no
+  field for it on the wire, and adding one for a fact no acceptance criterion tests would be scope
+  arriving through the back door. An earlier draft of this line listed it; AC10 never did, and AC10
+  is what gets tested.
 
 ## Out of scope
 

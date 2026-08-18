@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 14 (SPEC-0055 AC2, ADR-0073).
+//
+// It carries the one shape gitsaas.policy.v1.PolicyDecisionPoint must never grow
+// before the per-tenant policy source is decided: a verb that writes policy. The
+// gate compiles this module and asserts the descriptor DOES carry it, which is
+// what proves the check against the real contract can fail.
+package gitsaas.policy.v1;
+
+message PutPolicyRequest { string tenant_id = 1; string rego = 2; }
+message PutPolicyResponse { string revision = 1; }
+
+service PolicyDecisionPoint {
+  // The defect: a write verb, arriving before anyone decided what a
+  // tenant-authored policy is or how it composes with the platform bundle.
+  rpc PutPolicy(PutPolicyRequest) returns (PutPolicyResponse);
+}

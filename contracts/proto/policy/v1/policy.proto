@@ -50,6 +50,17 @@ service PolicyDecisionPoint {
   // decided it": a decision is only useful as evidence if it can be read back,
   // by ID, with its deciding bundle revision, input digest and mode.
   rpc GetDecision(GetDecisionRequest) returns (GetDecisionResponse);
+  // GetBundleStatus reports which policy bundle is in force. Additive for
+  // SPEC-0055.
+  //
+  // Read only, and note what this service still has no verb for: writing a
+  // policy. ADR-0073 records why that is structural rather than missing —
+  // policies live in governance/ and ADR-0001 makes governance the Source of
+  // Truth, so a web form that writes policy is a second source of truth for
+  // the same decisions. check-contracts.sh check 14 asserts no RPC here begins
+  // Put, Create, Update, Delete or Author, so the deferral is a property of
+  // the contract rather than an intention someone remembers.
+  rpc GetBundleStatus(GetBundleStatusRequest) returns (GetBundleStatusResponse);
 }
 
 // Subject is the principal an action is attributed to.
@@ -280,4 +291,17 @@ message GetDecisionResponse {
   // Absent when no such decision exists in this tenant; absence and denial are
   // the same coarse shape (SPEC-0001, SPEC-0030 AC6).
   DecisionRecord record = 1;
+}
+
+message GetBundleStatusRequest {
+  // The tenant the read runs under. Every read is tenant-scoped (invariant 1),
+  // even one whose answer is the same platform bundle for everyone: the caller
+  // must still be a verified caller.
+  string tenant_id = 1;
+}
+// The bundle in force. Deliberately no policy SOURCE: the bundle is a platform
+// artifact and its contents are not a tenant read (SPEC-0055 out of scope).
+message GetBundleStatusResponse {
+  string bundle_revision = 1;
+  string loaded_at = 2;
 }
