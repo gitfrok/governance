@@ -71,40 +71,40 @@ None.
 
 ## Acceptance criteria (each becomes a test)
 
-- [ ] **AC1** A query runs in each of the three modes the contract names — `SUBSTRING`, `REGEX`,
+- [x] **AC1** A query runs in each of the three modes the contract names — `SUBSTRING`, `REGEX`,
       `SYMBOL` — posted as JSON. A mode the contract does not name is refused before a request is
       compiled; the BFF's `ModeOf` refuses it too, as the coarse 404 that names nothing.
-- [ ] **AC2** Results render with repository, revision, path, line span and matched content, in the
+- [x] **AC2** Results render with repository, revision, path, line span and matched content, in the
       order the backend returned them. A test asserts the rendered order matches the response order
       and that no result is dropped, added or re-sorted.
-- [ ] **AC3** Enriched file metadata renders when present and its absence changes nothing else. A
+- [x] **AC3** Enriched file metadata renders when present and its absence changes nothing else. A
       test drives a result with `metadata` absent and asserts the result still renders — enrichment
       failure degrades to no metadata, never to no result (the BFF's own contract).
-- [ ] **AC4** **An empty page never says "no results".** The copy states what is true of both
+- [x] **AC4** **An empty page never says "no results".** The copy states what is true of both
       possibilities — that this query returned nothing the caller can see — and does not assert that
       nothing matched, that nothing exists, or that anything was withheld. A test enumerates the
       copy: no rendered string on this surface may contain "no results", "no matches", "nothing
       exists", "0 results", "not found", or any count of what was not returned.
-- [ ] **AC5** **The index's freshness is shown beside the empty state, not instead of it.** When a
+- [x] **AC5** **The index's freshness is shown beside the empty state, not instead of it.** When a
       query returns nothing, the page renders what the status route says about the index. A test
       drives three cases and asserts three different renderings: entries present and fresh; entries
       present but stale; and **an empty entry list**, which reads as "nothing is indexed" rather
       than as freshness data the reader can act on.
-- [ ] **AC6** **A failed status read never becomes an index claim.** If the status route refuses, the
+- [x] **AC6** **A failed status read never becomes an index claim.** If the status route refuses, the
       page says the index state is unknown. A test asserts it does not fall back to "nothing is
       indexed", which is a different fact and would be an invention.
-- [ ] **AC7** No total, count or coverage figure is rendered anywhere on this surface. A test asserts
+- [x] **AC7** No total, count or coverage figure is rendered anywhere on this surface. A test asserts
       the rendered output contains no "of N" construction and that the client type carries no total
       field to render.
-- [ ] **AC8** Paging follows `next_page_token` only. A test asserts the next request carries the
+- [x] **AC8** Paging follows `next_page_token` only. A test asserts the next request carries the
       token verbatim and that the page never computes an offset, page number or "page 2 of".
-- [ ] **AC9** A refusal names no cause — SPEC-0048 AC4's copy enumeration applies verbatim.
-- [ ] **AC10** Search is reachable from the app shell, marked current by `aria-current` plus weight
+- [x] **AC9** A refusal names no cause — SPEC-0048 AC4's copy enumeration applies verbatim.
+- [x] **AC10** Search is reachable from the app shell, marked current by `aria-current` plus weight
       plus a rule, and backed by a BFF route.
-- [ ] **AC11** No hex literal is introduced; `npm run check:tokens` stays at zero; every style value
+- [x] **AC11** No hex literal is introduced; `npm run check:tokens` stays at zero; every style value
       carrying a length ships its unit; `usage-regression-pins` and `readonly-cause` pass
       **unmodified** with `git diff` over both empty.
-- [ ] **AC12** The e2e stub BFF serves both routes, including an **empty page with a populated index
+- [x] **AC12** The e2e stub BFF serves both routes, including an **empty page with a populated index
       status**, an **empty page with an empty index status**, and a **status route that refuses**, so
       AC4, AC5 and AC6 are exercised end to end. Capture fixtures are write-free. CVD captures
       regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.

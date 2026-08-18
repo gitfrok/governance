@@ -345,9 +345,9 @@ Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Propo
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | In progress — T-0049 Done (webfrontend@6d61827); T-0051 + T-0052 Done (webfrontend@1141bc5, SPEC-0050 + SPEC-0051 AC1–AC11 each); **T-0050 code search is the last Tier A item and is not yet specced** |
+| **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | **Done** — T-0049 (webfrontend@6d61827), T-0051 + T-0052 (@1141bc5), T-0050 (@a668de5). Every BFF route that had no UI now has one |
 | **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | — | — | Not started — each item is backend-first under the route-before-pixel law; no task may open before its backend port exists |
-| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 (all proposed) | — | — | Blocked — ADR-0070 must be Accepted and the PRD amended first; each of issues, releases, settings and admin is a bounded context under ADR-0022 needing its own Proposed ADR |
+| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 | — | — | Unblocked at the PRD level (ADR-0070 Accepted 2026-08-18, PR-28…PR-32 carried). Still gated on a Proposed ADR per bounded context — issues, releases, settings and admin are each a context under ADR-0022, not a screen |
 
 One line each:
 
