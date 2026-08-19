@@ -62,4 +62,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0054 | Pipeline runs, and the plain statement that job output is gone | Implemented (2026-08-19) | T-0059, T-0060, T-0061 |
 | SPEC-0055 | Policy visibility — what is in force and what decided an outcome | Implemented (2026-08-19) | T-0062, T-0063 |
 | SPEC-0056 | Releases — a tag, some notes, and an honest answer when the tag moves | Implemented (2026-08-19) | T-0064, T-0065, T-0066 |
-| SPEC-0057 | Repository settings — a name, a description, an archive label, and a record of who changed it | Approved (2026-08-19) | T-0068, T-0069, T-0070 |
+| SPEC-0057 | Repository settings — a name, a description, an archive label, and a record of who changed it | Implemented (2026-08-19) | T-0068, T-0069, T-0070 |

@@ -134,8 +134,8 @@ reads, and no route before the backend port it shapes.
 | PR-26 | A developer can see pipeline runs and job logs for a repository, scoped by the same permissions as the repository read | G1 | 0070, 0005 | **New** (PR-11's browser half) |
 | PR-27 | A policy owner can author, version, dry-run and enforce a policy from the web UI, with the deciding version recorded | G4, G6 | 0070, 0006 | **New** (PR-16's authoring half) |
 | PR-28 | A team can open, assign, label, discuss and close issues, and link them to merge requests | G4 | 0070 | **New** — needs its own context ADR first |
-| PR-29 | A team can cut and publish a release from a tag, with its artifacts and notes | — | 0070 | **New** — needs its own context ADR first |
-| PR-30 | A repository owner can read and change repository settings — name, description, visibility, members and archival — each change audited | G2, G5 | 0070 | **New** — needs its own context ADR first |
+| PR-29 | A team can cut and publish a release from a tag, with its artifacts and notes | — | 0070, 0075 | **Delivered in part (2026-08-19)** — SPEC-0056, T-0064…T-0066. Tags and notes ship; **artifacts are NOT delivered**, held by check 15 (§12.1) |
+| PR-30 | A repository owner can read and change repository settings — name, description, visibility, members and archival — each change audited | G2, G5 | 0070, 0076 | **Delivered in part (2026-08-19)** — SPEC-0057, T-0068…T-0070. Name, description and archival ship; **visibility and members are NOT delivered** and deletion is out of scope, each held by check 16 rather than by intention (§12.1) |
 | PR-31 | An org administrator can read the org's members, roles, runners and audit log from an admin area, without gaining repository read access | G2, G5, G6 | 0070 | **New** — needs its own context ADR first |
 | ~~PR-32~~ | ~~An unauthenticated visitor is served a marketing landing page that never leaks tenant existence or content~~ | G1 | 0070, 0078 | **Withdrawn 2026-08-19** — see §5.1 |
 
@@ -289,7 +289,9 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
 | Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
 | Phase-4 requirements PR-24…PR-27 | full product surface | backend ports + BFF routes + web UI, in that order (ADR-0070's ordering law); specs and tasks under EP-26 |
-| Phase-4 requirements PR-28…PR-31 | full product surface | **a Proposed ADR each, first** — issues, releases, repository settings and the admin area are bounded contexts under ADR-0022, with their own storage, events, permissions and audit obligations. A screen is not a context. EP-27 |
+| Phase-4 requirements PR-28, PR-31 | full product surface | **a Proposed ADR each, first** — issues and the admin area are bounded contexts under ADR-0022, with their own storage, events, permissions and audit obligations. A screen is not a context. ADR-0074 and ADR-0077 are written and Proposed; neither adopts its surface. EP-27 |
+| PR-29 artifacts | releases | **Closed as deferred 2026-08-19**: ADR-0075 Accepted the tags-and-notes increment and check 15 holds the absence at the wire. Artifacts re-open signing, custody, retention and metering at once |
+| PR-30 visibility, members, deletion | repository settings | **Closed as deferred 2026-08-19**: ADR-0076 Accepted name, description and archival; check 16 holds the absence at the wire. Visibility and per-repository membership are authorization-model changes, not settings, and deletion is the one operation an operator cannot undo |
 | ~~PR-32 marketing landing page~~ | — | **Closed 2026-08-19**: the requirement is withdrawn (§5.1). ADR-0078 settled *how* such a surface must be built; what it could not settle is *where*, and nobody owns one. The rule survives the requirement |
 
 ### 12.2 Drift to reconcile in governance

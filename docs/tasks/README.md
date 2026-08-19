@@ -78,9 +78,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 
 | T-0067 | Guard the authenticated root against becoming a marketing page | 4 | Done — webfrontend@ea0677f; ADR-0078 decision 3; EP-27; verified it fails on a splash page |
 
-| T-0068 | Repository settings on the registry record, and an audited write path | 4 | Not started — SPEC-0057 AC1–AC9; EP-27 |
-| T-0069 | The settings contract, the gate that keeps policy off it, and the BFF routes | 4 | Not started — SPEC-0057 AC10–AC14; EP-27 |
-| T-0070 | The settings view, and an absence that is not a permission | 4 | Not started — SPEC-0057 AC15–AC20; EP-27 |
+| T-0068 | Repository settings on the registry record, and an audited write path | 4 | Done — backend@6fe014c; SPEC-0057 AC1–AC9; EP-27; 13 real-Postgres proofs, **0 skips** |
+| T-0069 | The settings contract, the gate that keeps policy off it, and the BFF routes | 4 | Done — governance@9122a0d, bff@f7d6067; SPEC-0057 AC10–AC14; EP-27; check 16 keeps visibility, membership, policy and deletion off the surface |
+| T-0070 | The settings view, and an absence that is not a permission | 4 | Done — webfrontend@dc8307e; SPEC-0057 AC15–AC20; EP-27; the capture review caught a doubled glyph |
 
 ## Retired numbers (never reused)
 
