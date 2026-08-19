@@ -1,6 +1,6 @@
 # SPEC-0014: Shell portability gate (macOS lane)
 
-- **Status:** Approved (implemented)
+- **Status:** Implemented (2026-08-09) — every acceptance criterion is proven by its task(s); approved (implemented)
 - **Owner:** platform
 - **Context(s):** process (CI + super-repo tooling — no runtime code)
 - **ADRs:** 0024 (Minikube local dev — "one cross-platform tool (macOS/Linux/Windows), no macOS

@@ -1,6 +1,6 @@
 # SPEC-0029: Security & approval policy — versioned, dry-run, enforced at merge
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Policy (PDP), Code Review, Security/Findings, Audit
 - **ADRs:** 0006, 0007, 0029, 0015, 0022

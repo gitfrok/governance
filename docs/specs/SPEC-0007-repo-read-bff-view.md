@@ -1,6 +1,6 @@
 # SPEC-0007: Repository read APIs & BFF view aggregation
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git + BFF
 - **ADRs:** 0022, 0015

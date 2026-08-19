@@ -1,6 +1,6 @@
 # SPEC-0055: Policy visibility — what is in force, at what revision, and what decided a given outcome
 
-- **Status:** Approved (2026-08-19) — ADR-0073 Accepted; RED may begin
+- **Status:** Implemented (2026-08-19) — every acceptance criterion is proven by its task(s); approved (2026-08-19) — ADR-0073 Accepted; RED may begin
 - **Owner:** platform
 - **Context(s):** Policy (owns the bundle and the decision records) · BFF · Web frontend
 - **ADRs:** 0073 (decides this), 0001 (governance is the Source of Truth — the reason authoring is

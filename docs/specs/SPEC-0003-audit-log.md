@@ -1,6 +1,6 @@
 # SPEC-0003: Append-only, tamper-evident audit log
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-06) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Audit
 - **ADRs:** 0007, 0022

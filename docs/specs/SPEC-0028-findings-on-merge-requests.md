@@ -1,6 +1,6 @@
 # SPEC-0028: Findings on merge requests
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Security/Findings, Code Review, CI/CD, Policy, Audit
 - **ADRs:** 0015, 0005, 0012, 0006, 0007, 0022, 0032

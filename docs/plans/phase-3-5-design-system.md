@@ -1,6 +1,6 @@
 # Phase 3.5 — The design system, and the product that renders on it
 
-- **Status:** Active (2026-08-17) — ADR-0069 Accepted, SPEC-0047 Approved
+- **Status:** **Complete (2026-08-17)** — ADR-0069 Accepted, SPEC-0047 Implemented (T-0045…T-0048). The roadmap has recorded this phase as Complete since it closed; this line had been left at Active.
 - **Depends on:** Phase 3.1 (implementation-complete; T-0042 blocked on the cluster lane and does
   not gate this phase)
 - **Decisions:** ADR-0069 (CVD-first, token-only, light by default) — Accepted 2026-08-17
@@ -60,7 +60,7 @@ Sequencing is strict: nothing in 2–4 can land before 1, because there is nothi
 
 ## Exit criteria
 
-- [x] ADR-0069 Accepted; SPEC-0047 Approved.
+- [x] ADR-0069 Accepted; SPEC-0047 Approved, and Implemented 2026-08-17 by T-0045…T-0048.
 - [x] SPEC-0047 AC1–AC10 green.
 - [x] The hex-literal gate and the no-CDN-font assertion run build-blocking; the gate's own
       fixture suite proves a deliberate violation fails, and the gate refused its author twice

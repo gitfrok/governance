@@ -1,6 +1,6 @@
 # SPEC-0001: Tenant isolation & row-level security
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-06) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** all data-owning contexts (baseline)
 - **ADRs:** 0003 (shared DB + RLS + cells), 0022 (per-context schema ownership)

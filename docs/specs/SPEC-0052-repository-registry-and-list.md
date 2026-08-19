@@ -1,6 +1,6 @@
 # SPEC-0052: A durable repository registry, and the list it makes possible
 
-- **Status:** Approved (2026-08-18) — ADR-0071 Accepted; RED may begin
+- **Status:** Implemented (2026-08-18) — every acceptance criterion is proven by its task(s); approved (2026-08-18) — ADR-0071 Accepted; RED may begin
 - **Owner:** platform
 - **Context(s):** Repository (owns the registry and the listable set) · BFF (shapes) · Web frontend
   (renders) — ADR-0022

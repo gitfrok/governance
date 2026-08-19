@@ -1,6 +1,6 @@
 # SPEC-0049: Code search — query, page, and say honestly what an empty page means
 
-- **Status:** Approved (2026-08-18) — no new decision is required; PR-19 already binds, SPEC-0034 and
+- **Status:** Implemented (2026-08-18) — every acceptance criterion is proven by its task(s); approved (2026-08-18) — no new decision is required; PR-19 already binds, SPEC-0034 and
   SPEC-0035 already fix the behaviour, and the BFF has served both routes since T-0028. ADR-0070
   Tier A.
 - **Owner:** platform

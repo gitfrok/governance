@@ -1,6 +1,6 @@
 # SPEC-0050: Evidence packs — request, watch, and read a date-ranged pack
 
-- **Status:** Approved (2026-08-18) — no new decision is required; PR-17 already binds, ADR-0029,
+- **Status:** Implemented (2026-08-18) — every acceptance criterion is proven by its task(s); approved (2026-08-18) — no new decision is required; PR-17 already binds, ADR-0029,
   SPEC-0031 and SPEC-0032 already fix the behaviour, and the BFF has served all three routes since
   T-0026. ADR-0070 places this in Tier A, which may begin before that ADR is Accepted.
 - **Owner:** platform

@@ -1,6 +1,6 @@
 # SPEC-0048: Merge-request actions — open, review, merge from the web UI
 
-- **Status:** Approved (2026-08-18), amended 2026-08-18 (AC2 and AC8 — see *Amendments*) — no new decision is required; PR-9 and PR-10 already bind and
+- **Status:** Implemented (2026-08-18) — every acceptance criterion is proven by its task(s); approved (2026-08-18), amended 2026-08-18 (AC2 and AC8 — see *Amendments*) — no new decision is required; PR-9 and PR-10 already bind and
   the BFF routes already exist. ADR-0070 places this in Tier A, which may begin before that ADR is
   Accepted.
 - **Owner:** platform

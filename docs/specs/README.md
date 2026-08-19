@@ -4,56 +4,69 @@ Spec-first behavioral descriptions (`../process/spec-driven-development.md`). Co
 → `SPEC-####-<slug>.md`; a task's spec must be **Approved** before RED (tests). Approved specs
 below carry Open Questions that flag any still-parked human decision.
 
+**The lifecycle is `Draft → Approved → Implemented`** (`../process/spec-driven-development.md`), and
+this index carries the same status as each spec's own file. **Reconciled 2026-08-19:** 52 specs whose
+every task was Done had never left `Approved` — the state advanced in the tasks and not in the specs,
+so the index answered "what may go RED" and not "what is built". Each now carries the date its last
+task completed, taken from that task's exit record. A spec stays `Approved` while any of its tasks is
+open: **SPEC-0045** is the only one, waiting on T-0042's real-cluster proof.
+
+**SPEC-0012, SPEC-0013 and SPEC-0036 carry no task**, so nothing in the task table can advance them
+and the reconcile deliberately left them alone. Each is enforced by a gate that exists —
+`check-ceremony-tier.sh`, `check-dispatch-scope.sh`, and the modern-Go idiom pass respectively — so
+`Approved` understates them; inferring a completion date from a script's existence would be inventing
+one, which is worse than a status that is merely behind.
+
 | Spec | Title | Status | Task(s) |
 |------|-------|--------|---------|
-| SPEC-0001 | Tenant isolation & RLS | Approved | T-0004 |
-| SPEC-0002 | Policy Decision Point | Approved | T-0005 |
-| SPEC-0003 | Append-only audit log | Approved | T-0006 |
-| SPEC-0004 | Git storage & transport | Approved | T-0010, T-0011 |
-| SPEC-0005 | Durable writes & failover | Approved | T-0012 |
-| SPEC-0006 | Identity & access | Approved | T-0013 |
-| SPEC-0007 | Repo read & BFF view | Approved | T-0014 |
-| SPEC-0008 | Web repo browsing UX | Approved | T-0015 |
-| SPEC-0009 | Merge requests & approval policy | Approved | T-0016 |
-| SPEC-0010 | CI v0 ephemeral isolation | Approved | T-0017 |
-| SPEC-0011 | Repository & review-history import | Approved | T-0018 |
+| SPEC-0001 | Tenant isolation & RLS | Implemented (2026-08-06) | T-0004 |
+| SPEC-0002 | Policy Decision Point | Implemented (2026-08-06) | T-0005 |
+| SPEC-0003 | Append-only audit log | Implemented (2026-08-06) | T-0006 |
+| SPEC-0004 | Git storage & transport | Implemented (2026-08-10) | T-0010, T-0011 |
+| SPEC-0005 | Durable writes & failover | Implemented (2026-08-10) | T-0012 |
+| SPEC-0006 | Identity & access | Implemented (2026-08-10) | T-0013 |
+| SPEC-0007 | Repo read & BFF view | Implemented (2026-08-10) | T-0014 |
+| SPEC-0008 | Web repo browsing UX | Implemented (2026-08-14) | T-0015 |
+| SPEC-0009 | Merge requests & approval policy | Implemented (2026-08-10) | T-0016 |
+| SPEC-0010 | CI v0 ephemeral isolation | Implemented (2026-08-10) | T-0017 |
+| SPEC-0011 | Repository & review-history import | Implemented (2026-08-11) | T-0018 |
 | SPEC-0012 | Ceremony tiers & session modes | Approved | — |
 | SPEC-0013 | Dispatch scope boundary & worktree isolation | Approved | — |
-| SPEC-0014 | Shell portability gate (macOS lane) | Approved | T-0003 |
-| SPEC-0015 | Git-RPC v1 contract | Approved | T-0010 |
-| SPEC-0016 | Identity credential authentication contract | Approved | T-0013, T-0011 |
-| SPEC-0017 | Repository read RPC contract | Approved | T-0014, T-0015 |
-| SPEC-0018 | Replica coordination & fencing contract | Approved | T-0012 |
-| SPEC-0019 | Merge request, review, and branch-protection contract | Approved | T-0016, T-0018 |
-| SPEC-0020 | CI v0 job dispatch and isolated-runner contract | Approved | T-0017 |
-| SPEC-0021 | Browser repository-view HTTP contract | Approved | T-0015 |
-| SPEC-0022 | SSH verifier-key routing | Approved | T-0013, T-0011 |
-| SPEC-0023 | Git LFS transport and object store | Approved | T-0010, T-0018 |
-| SPEC-0024 | Normalized findings model & scanner ingestion | Approved | T-0022 |
-| SPEC-0025 | Findings ingestion and read contract | Approved | T-0022 |
-| SPEC-0026 | Unified security dashboard & triage | Approved | T-0023 |
-| SPEC-0027 | Triage and dashboard-read contract | Approved | T-0023 |
-| SPEC-0028 | Findings on merge requests | Approved | T-0024 |
-| SPEC-0029 | Security & approval policy — versioned, dry-run, enforced | Approved | T-0025 |
-| SPEC-0030 | Policy decision-provenance and dry-run contract | Approved | T-0025 |
-| SPEC-0031 | Date-ranged evidence pack export | Approved | T-0026 |
-| SPEC-0032 | Evidence export contract | Approved | T-0026 |
-| SPEC-0033 | Scoped, read-only, time-boxed auditor access | Approved | T-0027 |
-| SPEC-0034 | Permission-filtered code search | Approved | T-0028 |
-| SPEC-0035 | Code search query and indexing contract | Approved | T-0028 |
+| SPEC-0014 | Shell portability gate (macOS lane) | Implemented (2026-08-09) | T-0003 |
+| SPEC-0015 | Git-RPC v1 contract | Implemented (2026-08-09) | T-0010 |
+| SPEC-0016 | Identity credential authentication contract | Implemented (2026-08-10) | T-0013, T-0011 |
+| SPEC-0017 | Repository read RPC contract | Implemented (2026-08-14) | T-0014, T-0015 |
+| SPEC-0018 | Replica coordination & fencing contract | Implemented (2026-08-10) | T-0012 |
+| SPEC-0019 | Merge request, review, and branch-protection contract | Implemented (2026-08-11) | T-0016, T-0018 |
+| SPEC-0020 | CI v0 job dispatch and isolated-runner contract | Implemented (2026-08-10) | T-0017 |
+| SPEC-0021 | Browser repository-view HTTP contract | Implemented (2026-08-14) | T-0015 |
+| SPEC-0022 | SSH verifier-key routing | Implemented (2026-08-10) | T-0013, T-0011 |
+| SPEC-0023 | Git LFS transport and object store | Implemented (2026-08-11) | T-0010, T-0018 |
+| SPEC-0024 | Normalized findings model & scanner ingestion | Implemented (2026-08-14) | T-0022 |
+| SPEC-0025 | Findings ingestion and read contract | Implemented (2026-08-14) | T-0022 |
+| SPEC-0026 | Unified security dashboard & triage | Implemented (2026-08-14) | T-0023 |
+| SPEC-0027 | Triage and dashboard-read contract | Implemented (2026-08-14) | T-0023 |
+| SPEC-0028 | Findings on merge requests | Implemented (2026-08-14) | T-0024 |
+| SPEC-0029 | Security & approval policy — versioned, dry-run, enforced | Implemented (2026-08-14) | T-0025 |
+| SPEC-0030 | Policy decision-provenance and dry-run contract | Implemented (2026-08-14) | T-0025 |
+| SPEC-0031 | Date-ranged evidence pack export | Implemented (2026-08-14) | T-0026 |
+| SPEC-0032 | Evidence export contract | Implemented (2026-08-14) | T-0026 |
+| SPEC-0033 | Scoped, read-only, time-boxed auditor access | Implemented (2026-08-14) | T-0027 |
+| SPEC-0034 | Permission-filtered code search | Implemented (2026-08-14) | T-0028 |
+| SPEC-0035 | Code search query and indexing contract | Implemented (2026-08-14) | T-0028 |
 | SPEC-0036 | Modern Go idiom adoption across backend and bff | Approved | — |
-| SPEC-0037 | CI scan report handoff to the findings plane | Approved | T-0029 |
-| SPEC-0038 | Agent enrolment and data-plane self-registration | Approved | T-0030 |
-| SPEC-0039 | BYO packaging, per-cloud drivers, signed reconcile upgrades | Approved | T-0031, T-0032 |
-| SPEC-0040 | Region and cloud pinning, demonstrable in the evidence pack | Approved | T-0033 |
-| SPEC-0041 | Fair-use metering and envelope behaviour | Approved | T-0034 |
-| SPEC-0042 | Durable agent and residency stores | Approved (amended 2026-08-15) | T-0036, T-0037 |
-| SPEC-0043 | Residency Declare surface and placement hardening | Approved (amended 2026-08-15) | T-0038, T-0039 |
-| SPEC-0044 | Agent-CA custody and rotation operations | Approved (amended 2026-08-15) | T-0040 |
+| SPEC-0037 | CI scan report handoff to the findings plane | Implemented (2026-08-14) | T-0029 |
+| SPEC-0038 | Agent enrolment and data-plane self-registration | Implemented (2026-08-15) | T-0030 |
+| SPEC-0039 | BYO packaging, per-cloud drivers, signed reconcile upgrades | Implemented (2026-08-15) | T-0031, T-0032 |
+| SPEC-0040 | Region and cloud pinning, demonstrable in the evidence pack | Implemented (2026-08-15) | T-0033 |
+| SPEC-0041 | Fair-use metering and envelope behaviour | Implemented (2026-08-15) | T-0034 |
+| SPEC-0042 | Durable agent and residency stores | Implemented (2026-08-15) | T-0036, T-0037 |
+| SPEC-0043 | Residency Declare surface and placement hardening | Implemented (2026-08-15) | T-0038, T-0039 |
+| SPEC-0044 | Agent-CA custody and rotation operations | Implemented (2026-08-15) | T-0040 |
 | SPEC-0045 | Multi-cluster BYO readiness | Approved (amended 2026-08-15) | T-0041, T-0042 |
-| SPEC-0046 | Usage view truth and the PR-7 read-only distinction | Approved | T-0043, T-0044 |
-| SPEC-0047 | CVD-first design system for the web frontend | Approved (2026-08-17) | T-0045, T-0046, T-0047, T-0048 |
-| SPEC-0048 | Merge-request actions — open, review, merge from the web UI | Approved (2026-08-18) | T-0049 |
+| SPEC-0046 | Usage view truth and the PR-7 read-only distinction | Implemented (2026-08-16) | T-0043, T-0044 |
+| SPEC-0047 | CVD-first design system for the web frontend | Implemented (2026-08-17) | T-0045, T-0046, T-0047, T-0048 |
+| SPEC-0048 | Merge-request actions — open, review, merge from the web UI | Implemented (2026-08-18) | T-0049 |
 | SPEC-0049 | Code search — query, page, and an honest empty state | Implemented (2026-08-18) | T-0050 |
 | SPEC-0050 | Evidence packs — request, watch and read a date-ranged pack | Implemented (2026-08-18) | T-0051 |
 | SPEC-0051 | Auditor grants — issue, list and revoke scoped evidence access | Implemented (2026-08-18) | T-0052 |

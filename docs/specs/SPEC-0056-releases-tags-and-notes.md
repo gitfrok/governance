@@ -1,6 +1,6 @@
 # SPEC-0056: Releases — a tag, some notes, and an honest answer when the tag moves
 
-- **Status:** Approved (2026-08-19) — ADR-0075 Accepted with this increment; RED may begin
+- **Status:** Implemented (2026-08-19) — every acceptance criterion is proven by its task(s); approved (2026-08-19) — ADR-0075 Accepted with this increment; RED may begin
 - **Owner:** platform
 - **Context(s):** Release (new, owns the release record) · Repository/Git (serves the tags) · BFF ·
   Web frontend — ADR-0022

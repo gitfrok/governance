@@ -1,6 +1,6 @@
 # SPEC-0010: CI v0 — ephemeral, isolated job execution
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** CI/CD
 - **ADRs:** 0005, 0012

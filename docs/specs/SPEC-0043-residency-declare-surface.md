@@ -1,6 +1,6 @@
 # SPEC-0043: Residency Declare surface and placement hardening
 
-- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — AC6 requires a verified caller, applying ADR-0045 rather than inheriting SPEC-0002's recorded limit (d); AC7 adds the platform-operator declare path per ADR-0067, Accepted the same day)
+- **Status:** Implemented (2026-08-15) — every acceptance criterion is proven by its task(s); approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — AC6 requires a verified caller, applying ADR-0045 rather than inheriting SPEC-0002's recorded limit (d); AC7 adds the platform-operator declare path per ADR-0067, Accepted the same day)
 - **Owner:** platform
 - **Context(s):** Control plane (declares, enforces, evidences) · Agent (reports witnessed placement only) — ADR-0022
 - **ADRs:** 0063 (decides the surface), 0062 (durable declaration store), 0006 (PDP decides, surfaces ask), 0046 (tenant-scoped platform-operator principal — AC7's model), 0067 (extends that role to this action — AC7), 0045 (verified claims → tenant-scoped principal; caller input never chooses tenant/actor/roles), 0043 (credential verification through a narrow gateway), 0009, 0011, 0060

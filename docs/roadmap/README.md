@@ -77,7 +77,7 @@ the residency Declare wire surface — all in `../backlog/`, since reclassified 
 **EP-19…EP-23** (next section).
 
 Plan: `../plans/phase-3-byo.md`. Scope PR-20…PR-23 as epics **EP-15…EP-18**, tasks **T-0030…T-0034**,
-specs **SPEC-0038…SPEC-0041** (all Approved 2026-08-14). The architecture was decided in
+specs **SPEC-0038…SPEC-0041** (Approved 2026-08-14; all four Implemented by 2026-08-15). The architecture was decided in
 Phase 0/1 (ADR-0009/0010/0011/0013/0017); the two decisions that were open are settled by **ADR-0060**
 (one-time enrolment token, control-plane-issued short-lived certificates — closing ADR-0017's
 cert-issuance follow-up) and **ADR-0061** (the control plane is the metering authority; a customer's
@@ -86,9 +86,9 @@ cluster never reports the number it is measured against).
 **Still open, and able to block an install outright:** proxy-only egress — the remaining half of
 ADR-0017's follow-up. A customer whose egress permits only an HTTP proxy cannot install today.
 
-## Phase 3.1 — North Star: durability, custody, multi-cluster, commercial maturity · **Planned (2026-08-15)**
+## Phase 3.1 — North Star: durability, custody, multi-cluster, commercial maturity · **Implementation complete (2026-08-16) — cluster-lane proof pending**
 
-Plan accepted: `../plans/phase-3-byo-v2.md`. Specs **SPEC-0042…SPEC-0046** Approved and ADRs
+Plan accepted: `../plans/phase-3-byo-v2.md`. Specs **SPEC-0042…SPEC-0046** Approved (four of the five now Implemented — see the status note below) and ADRs
 **ADR-0062…ADR-0067** Accepted (both 2026-08-15), so every epic may go RED. Plan and specs amended
 2026-08-15 after the plan review: ADR-0066's OpenBao custody service is deployed under EP-21
 (SPEC-0044 AC5), the Declare surface verifies its caller rather than inheriting SPEC-0002's limit (d)
@@ -109,6 +109,13 @@ to the browser, and the PR-7 read-only distinction surfaced. Epics **EP-19…EP-
 cloud or an honestly annotated subset — durable-store restart proofs, custody off-disk proofs,
 divergence gates shipped through webfrontend, the full gate matrix green at the final pin bump, and
 the runbook current.
+
+**Status (2026-08-19):** SPEC-0042, SPEC-0043, SPEC-0044 and SPEC-0046 are **Implemented**; eight of
+the phase's nine tasks are Done. **SPEC-0045 remains Approved** because **T-0042** — the real-cluster
+conformance proof on GKE, EKS and AKS — is blocked by the T-0003 cluster lane and is the one piece of
+this phase nobody can close from a laptop. EP-22 is therefore the only epic in the backlog still In
+progress. The phrasing matches Phase 3's: implementation complete, cluster proof pending, and neither
+half pretending to be the other.
 
 **Phase 3 carries, reclassified (history preserved above and in `../backlog/`):**
 
@@ -136,7 +143,7 @@ capture run earned its place on first use: it found that Astro renders style-obj
 so **197 unitless spacing values across nine files were being silently discarded** by the browser —
 a defect no DOM assertion could see.
 
-## Phase 4 — the full product surface · **Planned (2026-08-18)**
+## Phase 4 — the full product surface · **Complete (2026-08-19)**
 
 Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Accepted 2026-08-18). Closes the
 distance between what the platform can do and what a person can reach: eight BFF routes have no UI at
@@ -158,9 +165,16 @@ merge request references the tracker the customer already has (ADR-0074); and th
 owns one (ADR-0078, PRD §5.1). Each deferral is held by a contract gate or a policy pin rather than by
 a note, and T-0067 keeps the authenticated root from becoming the marketing page nobody built.
 
-**Exit:** every BFF route has a UI or a recorded reason it does not; no nav destination lacks a
-route; PR-9's loop is executable by a person in a browser; every new surface passes the ADR-0069
-gates; `usage-regression-pins` and `readonly-cause` unmodified throughout.
+**Exit — all six criteria met (2026-08-19).** Every BFF route has a UI or a recorded reason it does
+not; all eight nav destinations resolve to a page that exists (checked mechanically, not asserted);
+PR-9's loop is executable by a person in a browser since T-0049; every surface added passes the
+ADR-0069 gates, and since T-0077 the ADR-0079 dimension gate as well; `usage-regression-pins` and
+`readonly-cause` are unmodified throughout. **EP-25, EP-26, EP-27 and EP-28 are Done.**
+
+The phase's own summary is that it delivered less than the prototype drew and said so every time:
+PR-26's job logs, PR-27's policy authoring, PR-30's visibility and members, PR-31's audit browser and
+PR-28's tracker are all undelivered by decision, each held by a contract gate (checks 13–18) or a
+policy pin rather than by a note — and PR-32 was withdrawn outright.
 
 ## Architecture evolution (ADR-0025 → ADR-0026)
 

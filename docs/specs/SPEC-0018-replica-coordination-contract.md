@@ -1,6 +1,6 @@
 # SPEC-0018: Replica coordination and fencing contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git, Policy, Audit
 - **ADRs:** 0006, 0007, 0016, 0018, 0042

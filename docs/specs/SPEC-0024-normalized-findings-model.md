@@ -1,6 +1,6 @@
 # SPEC-0024: Normalized findings model & scanner ingestion
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Security/Findings (ADR-0022); Policy and Audit as provider/sink
 - **ADRs:** 0015, 0006, 0007, 0022, 0025, 0032

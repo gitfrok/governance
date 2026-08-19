@@ -1,6 +1,6 @@
 # SPEC-0038: Agent enrolment and data-plane self-registration
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-15) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Control plane (issues, registers, revokes) · Agent (dials out) — ADR-0022
 - **ADRs:** 0060 (decides identity), 0009, 0010, 0011, 0013, 0017

@@ -1,6 +1,6 @@
 # SPEC-0015: Git-RPC v1 contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-09) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git
 - **ADRs:** 0004, 0006, 0016, 0022, 0025, 0033

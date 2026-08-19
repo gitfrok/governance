@@ -1,6 +1,6 @@
 # SPEC-0033: Scoped, read-only, time-boxed auditor access
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Identity & Access, Policy (PDP), Audit
 - **ADRs:** 0006, 0007, 0003, 0022, 0032

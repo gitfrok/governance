@@ -1,6 +1,6 @@
 # SPEC-0011: Repository & review-history import (GitHub/GitLab)
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-11) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git + Code Review + Audit (+ Identity&Access for actor mapping)
 - **ADRs:** 0029 (Accepted — governing), 0007, 0006, 0004, 0016, 0003, 0022, 0015

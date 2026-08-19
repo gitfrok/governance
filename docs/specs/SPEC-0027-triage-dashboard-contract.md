@@ -1,6 +1,6 @@
 # SPEC-0027: Triage and dashboard-read contract
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Security/Findings, Identity & Access, Policy, Audit
 - **ADRs:** 0015, 0006, 0007, 0022, 0032

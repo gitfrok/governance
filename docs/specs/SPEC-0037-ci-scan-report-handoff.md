@@ -1,6 +1,6 @@
 # SPEC-0037: CI scan report handoff to the findings plane
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** CI/CD (writes the report), Security/Findings (consumes it) — ADR-0022
 - **ADRs:** 0059 (decides the path), 0022, 0025, 0050, 0055 (retention, and why it does not apply here)

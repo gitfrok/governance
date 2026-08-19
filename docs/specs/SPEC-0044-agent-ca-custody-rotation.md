@@ -1,6 +1,6 @@
 # SPEC-0044: Agent-CA custody and rotation operations
 
-- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — ADR-0066's custody service gains an owner here: AC5 deploys it, AC4 covers unseal and seal-outage; **amended again 2026-08-15** — the staged CA trust bundle gains its additive `agent/v1` field: `DesiredState.ca_trust_bundle` (`CATrustBundle`: bundle revision, dual-validate trusted roots, issuance root), named apart from SPEC-0045's release trust bundle)
+- **Status:** Implemented (2026-08-15) — every acceptance criterion is proven by its task(s); approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — ADR-0066's custody service gains an owner here: AC5 deploys it, AC4 covers unseal and seal-outage; **amended again 2026-08-15** — the staged CA trust bundle gains its additive `agent/v1` field: `DesiredState.ca_trust_bundle` (`CATrustBundle`: bundle revision, dual-validate trusted roots, issuance root), named apart from SPEC-0045's release trust bundle)
 - **Owner:** platform
 - **Context(s):** Control plane (CA signs through custody, OpenBao deployed beside it) · Agent (validates staged CA trust bundles) — ADR-0022
 - **ADRs:** 0064 (decides custody and rotation), 0066 (decides the provider, its deployment, unseal and availability contract), 0034/0035 (image pin form for the custody image), 0060 (enrolment and loss recovery — unchanged), 0056 (AISVS L3, C9.4.1), 0044 (cosign custody — the overlap shape, not the model), 0057 (decision 5 — inference credentials only, untouched)

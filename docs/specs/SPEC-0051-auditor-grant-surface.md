@@ -1,6 +1,6 @@
 # SPEC-0051: Auditor grants — issue, list and revoke scoped, time-boxed evidence access
 
-- **Status:** Approved (2026-08-18) — no new decision is required; PR-18 already binds, SPEC-0033
+- **Status:** Implemented (2026-08-18) — every acceptance criterion is proven by its task(s); approved (2026-08-18) — no new decision is required; PR-18 already binds, SPEC-0033
   already fixes the behaviour, and the BFF has served all three routes since T-0027. ADR-0070 places
   this in Tier A.
 - **Owner:** platform

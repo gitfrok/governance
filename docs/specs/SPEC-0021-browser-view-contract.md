@@ -1,6 +1,6 @@
 # SPEC-0021: Browser repository-view HTTP contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** BFF, webfrontend, Repository/Git
 - **ADRs:** 0015, 0020, 0022, 0023

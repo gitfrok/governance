@@ -1,6 +1,6 @@
 # SPEC-0054: Pipeline runs — what a job did, and the plain statement that its output is gone
 
-- **Status:** Approved (2026-08-19) — ADR-0072 Accepted; RED may begin
+- **Status:** Implemented (2026-08-19) — every acceptance criterion is proven by its task(s); approved (2026-08-19) — ADR-0072 Accepted; RED may begin
 - **Owner:** platform
 - **Context(s):** CI (owns the job history) · BFF (shapes) · Web frontend (renders)
 - **ADRs:** 0072 (decides this), 0071 (the durability precedent it follows), 0062, 0005, 0012,

@@ -1,6 +1,6 @@
 # SPEC-0008: Web repo browsing UX (browser + diff + palette)
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** webfrontend
 - **ADRs:** 0015, 0023

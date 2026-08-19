@@ -1,6 +1,6 @@
 # SPEC-0023: Git LFS transport and object store
 
-- **Status:** Approved (spec review 2026-08-10; **amended 2026-08-11 for ADR-0050** — the object tier
+- **Status:** Implemented (2026-08-11) — every acceptance criterion is proven by its task(s); approved (spec review 2026-08-10; **amended 2026-08-11 for ADR-0050** — the object tier
   is a SeaweedFS FUSE mount and transfers proxy, superseding the pre-signed decision below)
 - **Owner:** unassigned
 - **Context(s):** Repository/Git (git-storaged, transport), with objects on the SeaweedFS-S3 tier

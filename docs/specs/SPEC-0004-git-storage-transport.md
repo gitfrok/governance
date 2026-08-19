@@ -1,6 +1,6 @@
 # SPEC-0004: Git storage & transport (RPC + smart-HTTP + SSH)
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git
 - **ADRs:** 0004, 0003, 0016

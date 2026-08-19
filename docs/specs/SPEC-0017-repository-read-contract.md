@@ -1,6 +1,6 @@
 # SPEC-0017: Repository read RPC contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Repository/Git + BFF
 - **ADRs:** 0022, 0015, 0006, 0003

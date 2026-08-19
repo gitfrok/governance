@@ -1,6 +1,6 @@
 # SPEC-0022: SSH verifier-key routing
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Identity&Access + Repository/Git front doors
 - **ADRs:** 0003, 0006, 0022, 0041, 0043

@@ -1,6 +1,6 @@
 # SPEC-0002: Policy Decision Point (deny-by-default)
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-06) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Policy (PDP)
 - **ADRs:** 0006, 0022

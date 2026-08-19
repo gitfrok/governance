@@ -1,6 +1,6 @@
 # SPEC-0047: CVD-first design system for the web frontend
 
-- **Status:** Approved (2026-08-17) — ADR-0069 Accepted; RED may begin
+- **Status:** Implemented (2026-08-17) — every acceptance criterion is proven by its task(s); approved (2026-08-17) — ADR-0069 Accepted; RED may begin
 - **Owner:** platform
 - **Context(s):** Web frontend (renders) · BFF (serves the data these surfaces read) — ADR-0022
 - **ADRs:** 0069 (decides this), 0015 (UX principles, unchanged), 0019 (Astro + React SSR), 0049

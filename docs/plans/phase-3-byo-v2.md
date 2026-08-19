@@ -1,6 +1,6 @@
 # Plan — Phase 3.1: North Star (durability, custody, multi-cluster, commercial maturity)
 
-**Status:** **Planned (2026-08-15)** — plan accepted; **SPEC-0042…SPEC-0046 Approved** and
+**Status:** **Implementation complete (2026-08-16) — cluster-lane proof pending.** SPEC-0042, SPEC-0043, SPEC-0044 and SPEC-0046 are Implemented and eight of the phase's nine tasks are Done; **SPEC-0045 stays Approved** because T-0042, the real-cluster conformance proof, is blocked by the T-0003 cluster lane. Plan accepted 2026-08-15; ADR-0062…ADR-0067 Accepted.
 **ADR-0062…ADR-0067 Accepted** (2026-08-15); every epic may go RED.
 **Amended 2026-08-15** after the plan review (`phase-3.1-plan-review.md`): ADR-0066 folded in as the
 phase's fifth decision, the custody service's deployment given an owner, the Declare surface given a

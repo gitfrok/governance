@@ -1,6 +1,6 @@
 # SPEC-0035: Code search query and indexing contract
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-14) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Code Search, Repository/Git, Policy, Identity & Access
 - **ADRs:** 0014, 0006, 0022, 0032

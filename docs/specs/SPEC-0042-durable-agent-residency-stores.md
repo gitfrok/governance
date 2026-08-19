@@ -1,6 +1,6 @@
 # SPEC-0042: Durable agent and residency stores
 
-- **Status:** Approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — AC5 names the enrolment-token lookup exemption it previously forbade by accident, and AC6 fixes what a failed signature does to a spent token)
+- **Status:** Implemented (2026-08-15) — every acceptance criterion is proven by its task(s); approved (2026-08-15; **amended 2026-08-15 after the Phase 3.1 plan review** — AC5 names the enrolment-token lookup exemption it previously forbade by accident, and AC6 fixes what a failed signature does to a spent token)
 - **Owner:** platform
 - **Context(s):** Control plane — agent (tokens, registry) · residency (declarations) · audit (pack assembly reads) — ADR-0022
 - **ADRs:** 0062 (decides durability), 0003 (RLS tenant scoping), 0023 (PostgreSQL 18), 0025 (module-owned migrations), 0055 (growth metering stays a follow-up), 0060 (one token never mints two identities), 0066 (issuance becomes a remote call — AC6's reason)

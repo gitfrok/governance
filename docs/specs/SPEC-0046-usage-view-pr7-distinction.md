@@ -1,6 +1,6 @@
 # SPEC-0046: Usage view truth and the PR-7 read-only distinction
 
-- **Status:** Approved (2026-08-15)
+- **Status:** Implemented (2026-08-16) — every acceptance criterion is proven by its task(s); approved (2026-08-15)
 - **Owner:** platform
 - **Context(s):** Control plane (meters, derives the view) · BFF (aggregates for the browser) · Web frontend (renders) · Data plane (applies the throttle) — ADR-0022
 - **ADRs:** 0061 (metering authority — not revisited), 0018 (dual-loss fail-safe, the PR-7 read-only mode), 0008 (flat-rate + fair use)

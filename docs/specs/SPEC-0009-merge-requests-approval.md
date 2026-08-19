@@ -1,6 +1,6 @@
 # SPEC-0009: Merge requests, protected branches & approval policy
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Code Review + Policy
 - **ADRs:** 0004, 0006, 0007

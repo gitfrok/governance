@@ -1,6 +1,6 @@
 # SPEC-0016: Identity credential authentication contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-10) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Identity&Access
 - **ADRs:** 0003, 0006, 0022, 0041

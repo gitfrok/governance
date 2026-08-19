@@ -1,5 +1,7 @@
 # Phase 4 — the full product surface
 
+- **Status:** **Complete (2026-08-19)** — EP-25, EP-26, EP-27 and EP-28 Done; all six exit criteria met. Decided by ADR-0070 (Accepted 2026-08-18); the design layer that closed exit criterion 4 is ADR-0079 (Accepted 2026-08-19).
+
 **Intent.** Close the distance between what the platform can do and what a person can reach. Three
 inventories describe the web surface today and they disagree: the BFF serves eighteen routes, ten of
 which have a UI; the PRD requires twenty-three `PR-#` rows, several of which no surface renders; and

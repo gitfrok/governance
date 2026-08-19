@@ -1,6 +1,6 @@
 # SPEC-0053: Blame and history — and the difference between a git author and a platform actor
 
-- **Status:** Approved (2026-08-19), amended 2026-08-19 (AC4 — see *Amendments*) — no new decision is required; PR-8 has named blame and history
+- **Status:** Implemented (2026-08-19) — every acceptance criterion is proven by its task(s); approved (2026-08-19), amended 2026-08-19 (AC4 — see *Amendments*) — no new decision is required; PR-8 has named blame and history
   since Phase 1 and neither was ever built. ADR-0070 Tier B, PR-25.
 - **Owner:** platform
 - **Context(s):** Repository/Git (git-storaged serves it) · BFF (shapes) · Web frontend (renders)

@@ -1,6 +1,6 @@
 # SPEC-0019: Merge request, review, and branch-protection contract
 
-- **Status:** Approved
+- **Status:** Implemented (2026-08-11) — every acceptance criterion is proven by its task(s)
 - **Owner:** platform
 - **Context(s):** Code Review, Repository/Git, Policy, Audit
 - **ADRs:** 0004, 0006, 0007, 0022

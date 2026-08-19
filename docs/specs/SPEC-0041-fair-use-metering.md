@@ -1,6 +1,6 @@
 # SPEC-0041: Fair-use metering and envelope behaviour
 
-- **Status:** Approved (2026-08-14)
+- **Status:** Implemented (2026-08-15) — every acceptance criterion is proven by its task(s); approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** Control plane (counts, decides envelope state) · data plane (applies desired state)
 - **ADRs:** 0061 (decides authority), 0008 (flat-rate + fair use), 0011, 0017, 0018
