@@ -64,54 +64,54 @@ The Release context owns a tenant-scoped `release.releases` table: tenant, repos
 
 ### The backend (T-0064)
 
-- [ ] **AC1** `ListTags` returns a repository's tags with the commit each points at, newest-first by
+- [x] **AC1** `ListTags` returns a repository's tags with the commit each points at, newest-first by
       tag creation where git reports it, paged by an opaque cursor. It is a `repo.read` decision
       through the same `prepareRead` every other read on that surface uses.
-- [ ] **AC2** Publishing records the tag, **the commit that tag points at now**, the notes, the
+- [x] **AC2** Publishing records the tag, **the commit that tag points at now**, the notes, the
       publisher and the instant. The commit is resolved server-side at publish time; a caller cannot
       assert it, and there is no field for one.
-- [ ] **AC3** A release is unique per (tenant, repository, tag). Publishing the same tag twice is
+- [x] **AC3** A release is unique per (tenant, repository, tag). Publishing the same tag twice is
       refused rather than silently creating a second release — two releases of `v1.2.0` is not a
       state this product has an answer for.
-- [ ] **AC4** Notes can be updated, and the record carries when they last were. The tag and the
+- [x] **AC4** Notes can be updated, and the record carries when they last were. The tag and the
       published commit **cannot** be updated: correcting prose is editing documentation, changing
       what a release points at is publishing a different release.
-- [ ] **AC5** The release survives a process restart; the table is tenant-scoped with RLS and its
+- [x] **AC5** The release survives a process restart; the table is tenant-scoped with RLS and its
       migration passes T-0004's boundary linter; a cross-tenant release is absent rather than
       forbidden.
-- [ ] **AC6** **The store never resolves the tag on read.** `GetRelease` and `ListReleases` return
+- [x] **AC6** **The store never resolves the tag on read.** `GetRelease` and `ListReleases` return
       the commit recorded at publish time, and nothing in the Release context asks git what the tag
       means now. Comparing them is the reader's surface's job (AC11), and doing it here would make
       this context depend on Repository/Git, which ADR-0022 forbids.
-- [ ] **AC7** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
+- [x] **AC7** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
       the observed skip count (carried limit 5).
 
 ### The wire and the BFF (T-0065)
 
-- [ ] **AC8** Additive: `buf breaking` passes; `release/v1` is a new package and `ListTags` is a new
+- [x] **AC8** Additive: `buf breaking` passes; `release/v1` is a new package and `ListTags` is a new
       RPC, so nothing existing moves.
-- [ ] **AC9** **No message in `release/v1` carries an artifact.** A descriptor test asserts no field
+- [x] **AC9** **No message in `release/v1` carries an artifact.** A descriptor test asserts no field
       named `artifact`, `artifacts`, `asset`, `assets`, `download_url` or `attachment` — ADR-0075's
       accepted scope as a type property, so the increment cannot grow past its decision quietly.
-- [ ] **AC10** The BFF shapes and forwards under the session; every failure is one coarse refusal;
+- [x] **AC10** The BFF shapes and forwards under the session; every failure is one coarse refusal;
       the publisher's identity comes from the session and has no field on the request.
 
 ### The view (T-0066)
 
-- [ ] **AC11** **A release whose tag has moved says so.** The page compares the recorded commit with
+- [x] **AC11** **A release whose tag has moved says so.** The page compares the recorded commit with
       the tag's current target and renders three distinct states: the tag still points there; the
       tag now points elsewhere; the tag no longer exists. A test drives all three.
-- [ ] **AC12** **The absence of artifacts is stated, not implied.** The surface says releases here
+- [x] **AC12** **The absence of artifacts is stated, not implied.** The surface says releases here
       are a tag and notes and that no files are stored, and the copy enumeration forbids "coming
       soon", "no artifacts yet" and any phrasing implying an upload is pending or permitted.
-- [ ] **AC13** Publishing is a plain form against a tag chosen from the listed tags; editing notes
+- [x] **AC13** Publishing is a plain form against a tag chosen from the listed tags; editing notes
       is a plain form; both work with no client script.
-- [ ] **AC14** Notes render as text, not as HTML. A release note containing markup is displayed, not
+- [x] **AC14** Notes render as text, not as HTML. A release note containing markup is displayed, not
       executed — this is the product's first surface storing free-form prose, and it is not going to
       be the one that learns about injection.
-- [ ] **AC15** No hex literal; units on every length; a refusal names no cause; the two regression
+- [x] **AC15** No hex literal; units on every length; a refusal names no cause; the two regression
       pins unmodified.
-- [ ] **AC16** The stub serves tags and releases including a moved-tag and a missing-tag fixture;
+- [x] **AC16** The stub serves tags and releases including a moved-tag and a missing-tag fixture;
       captures regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)

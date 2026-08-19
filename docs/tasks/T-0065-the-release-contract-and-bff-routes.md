@@ -1,6 +1,6 @@
 # T-0065: The release contract and BFF routes
 
-- **Status:** Todo
+- **Status:** Done (2026-08-19) — governance@a213d28, bff@9a76f1b; SPEC-0056 AC8–AC10 proven
 - **Phase / Epic:** 4 / EP-27 (Tier C — first increment)
 - **Repo(s):** governance, bff
 - **Spec:** ../specs/SPEC-0056-releases-tags-and-notes.md (AC8–AC10)
@@ -13,7 +13,7 @@ One repository's share of SPEC-0056, split along the ADR-0027 boundary. The spec
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0056 AC8–AC10 — as written in the spec.
+- [x] SPEC-0056 AC8–AC10 — as written in the spec.
 
 ## Tests to write first
 

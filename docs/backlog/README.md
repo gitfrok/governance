@@ -347,7 +347,7 @@ Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Propo
 |---|---|---|---|---|
 | **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | **Done** — T-0049 (webfrontend@6d61827), T-0051 + T-0052 (@1141bc5), T-0050 (@a668de5). Every BFF route that had no UI now has one |
 | **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | T-0053…T-0063 | SPEC-0052…SPEC-0055 | **Done (2026-08-19)** — all four surfaces: repository list (PR-24), blame + history (PR-25/PR-8), pipeline runs (PR-26's runs half, ADR-0072), policy visibility (PR-16's read half, ADR-0073). **PR-26's logs and PR-27's authoring are NOT delivered** — each is a deferred decision with its own ADR, and each deferral is held by a contract gate rather than by intention |
-| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 | T-0064, T-0065, T-0066 | SPEC-0056 | In progress — five context ADRs written 2026-08-19 (ADR-0074…ADR-0078), **only ADR-0075 Accepted**, and with its recommended increment: releases as **tags and notes, no artifacts**. PR-28, PR-30, PR-31 and PR-32 remain blocked on their own ADRs |
+| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-32 | T-0064, T-0065, T-0066 | SPEC-0056 | In progress — five context ADRs written 2026-08-19 (ADR-0074…ADR-0078); **only ADR-0075 Accepted**, with its recommended increment. **Releases (PR-29's tags-and-notes half) Done end to end.** PR-28 issues, PR-30 settings, PR-31 admin and PR-32 marketing remain blocked on their own ADRs, and ADR-0074 recommends considering an external tracker over building PR-28 at all |
 
 One line each:
 

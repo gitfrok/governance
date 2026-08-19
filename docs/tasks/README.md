@@ -72,9 +72,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0062 | Bundle status on the wire, and the BFF route | 4 | Done — governance@4364870, backend@a09042f, bff@790e8d5; SPEC-0055 AC1–AC3; EP-26; check 14 keeps authoring deferred |
 | T-0063 | The policy visibility view | 4 | Done — webfrontend@c152501; SPEC-0055 AC4–AC10; EP-26; the absence is not a permission |
 
-| T-0064 | Releases context, durable store, and tag listing | 4 | Todo — SPEC-0056 AC1–AC7; EP-27; ADR-0075's accepted increment |
-| T-0065 | The release contract and BFF routes | 4 | Todo — SPEC-0056 AC8–AC10; EP-27; a descriptor gate keeps artifacts out |
-| T-0066 | The releases view | 4 | Todo — SPEC-0056 AC11–AC16; EP-27; a release whose tag moved says so |
+| T-0064 | Releases context, durable store, and tag listing | 4 | Done — backend@4668f75; SPEC-0056 AC1–AC7; EP-27; 8 real-Postgres proofs, **0 skips** |
+| T-0065 | The release contract and BFF routes | 4 | Done — governance@a213d28, bff@9a76f1b; SPEC-0056 AC8–AC10; EP-27; check 15 keeps artifacts out |
+| T-0066 | The releases view | 4 | Done — webfrontend@1f5fd65; SPEC-0056 AC11–AC16; EP-27; a release whose tag moved says so |
 
 ## Retired numbers (never reused)
 
