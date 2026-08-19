@@ -1,0 +1,73 @@
+syntax = "proto3";
+package gitsaas.release.v1;
+option go_package = "github.com/yourorg/gitsaas/gen/proto/release/v1;releasev1";
+
+// The Release context (SPEC-0056, ADR-0075). A release is a NAME FOR A COMMIT
+// plus prose about it — which is what a changelog is.
+//
+// ADR-0075 accepted the tags-and-notes increment only. There is deliberately no
+// artifact, asset, attachment or download field anywhere in this package, and
+// check-contracts.sh check 15 asserts the absence against the compiled
+// descriptor: the moment this platform serves a downloadable artifact it is in
+// a customer's supply chain, and signing, custody, retention and metering are a
+// larger decision than the feature looks.
+service ReleaseService {
+  rpc PublishRelease(PublishReleaseRequest) returns (PublishReleaseResponse);
+  rpc GetRelease(GetReleaseRequest) returns (GetReleaseResponse);
+  rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
+  rpc UpdateReleaseNotes(UpdateReleaseNotesRequest) returns (UpdateReleaseNotesResponse);
+}
+
+// ReleaseContext carries the verified caller. No publisher field: who published
+// is the session's identity, resolved server-side, and a request that could
+// name one would be an unauthenticated authorship claim.
+message ReleaseContext {
+  string tenant_id = 1;
+  string repository_id = 2;
+  string actor_id = 3;
+  string request_id = 4;
+  repeated string actor_roles = 5;
+}
+
+// Release is the record.
+//
+// published_commit is the commit the tag pointed at WHEN THIS WAS PUBLISHED. It
+// is the field that makes a release a record rather than a view: a tag is a
+// mutable pointer, and without this a moved tag would silently rewrite what a
+// published release describes (SPEC-0056 AC2, ADR-0075 open question 4).
+message Release {
+  string tag = 1;
+  string published_commit = 2;
+  string notes = 3;
+  string published_by = 4;
+  string published_at = 5;
+  // Empty until the notes are first edited. Notes are documentation and may be
+  // corrected; the tag and the commit may not (SPEC-0056 AC4).
+  string notes_updated_at = 6;
+}
+
+message PublishReleaseRequest {
+  ReleaseContext context = 1;
+  string tag = 2;
+  string notes = 3;
+}
+message PublishReleaseResponse { Release release = 1; }
+
+message GetReleaseRequest { ReleaseContext context = 1; string tag = 2; }
+message GetReleaseResponse { Release release = 1; }
+
+message ListReleasesRequest {
+  ReleaseContext context = 1;
+  string page_token = 2;
+  int32 page_size = 3;
+}
+// No total: no field may express how many releases a caller cannot see, the
+// same property every other list in this product has.
+message ListReleasesResponse { repeated Release releases = 1; string next_page_token = 2; }
+
+message UpdateReleaseNotesRequest {
+  ReleaseContext context = 1;
+  string tag = 2;
+  string notes = 3;
+}
+message UpdateReleaseNotesResponse { Release release = 1; }

@@ -32,6 +32,9 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  15. no gitsaas.release.v1 message carries an artifact (SPEC-0056 AC9, ADR-0075): the accepted
+#      increment is tags and notes. An artifact field would arrive as "just a download URL" and
+#      re-open signing, custody, retention and metering at once. Paired with a fixture.
 #  14. gitsaas.policy.v1 carries no policy-authoring verb (SPEC-0055 AC2, ADR-0073): policies live
 #      in governance/ and ADR-0001 makes governance the Source of Truth, so a write verb here is a
 #      second source of truth for the same decisions. Paired with a fixture.
@@ -220,6 +223,37 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 15. no release message carries an artifact (SPEC-0056 AC9, ADR-0075) ---------------------
+
+# ADR-0075 accepted the tags-and-notes increment ONLY. The moment this platform serves a
+# downloadable artifact it is in a customer's supply chain, and signing, custody, retention and
+# metering are a larger decision than the feature looks. An artifact field would arrive as an
+# obvious addition — "just a download URL" — which is exactly why the absence is asserted against
+# the compiled descriptor rather than left to memory.
+if image_out=$(buf build contracts --path contracts/proto/release/v1 \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qiE '"name": *"(artifact|artifacts|asset|assets|download_url|attachment|attachments|file|files)"' <<<"$image_out"; then
+    report "gitsaas.release.v1 carries an artifact field — artifacts are outside ADR-0075's accepted increment (SPEC-0056 AC9)"
+  else
+    echo "  ok    release/v1 carries no artifact (SPEC-0056 AC9, ADR-0075)"
+  fi
+else
+  report "could not compile gitsaas.release.v1 for the artifact check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/release-artifact-field
+if fixture_image=$(buf build "$fixture" --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qE '"name": *"download_url"' <<<"$fixture_image"; then
+    echo "  ok    release-artifact fixture caught (the artifact check can fail)"
+  else
+    report "the release-artifact fixture compiled with no download_url in its descriptor — the check is vacuous"
+  fi
+else
+  report "the release-artifact fixture did not compile:"
   indent "$fixture_image"
 fi
 

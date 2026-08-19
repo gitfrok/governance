@@ -18,6 +18,13 @@ service RepositoryReader {
   // are reads of one named repository, which is what this surface is.
   rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
   rpc GetBlame(GetBlameRequest) returns (GetBlameResponse);
+  // ListTags serves a repository's tags. Additive for SPEC-0056.
+  //
+  // It belongs here rather than in release/v1 because a tag is a git object in
+  // the bare repository, and this is the surface that reads those. The Release
+  // context never asks what a tag means — it records what one meant when a
+  // release was published (SPEC-0056 AC6).
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse);
 }
 
 // RepositoryRegistry answers which repositories exist for a caller (SPEC-0052,
@@ -136,6 +143,20 @@ message BlameRange {
 // ranges below cover the first lines only, and the consumer is told so rather
 // than left to infer it from a line count it has no reason to check.
 message GetBlameResponse { repeated BlameRange ranges = 1; bool capped = 2; }
+
+message ListTagsRequest {
+  ReadContext context = 1;
+  string page_token = 2;
+  int32 page_size = 3;
+}
+// A tag and the commit it points at RIGHT NOW. Both are facts at read time and
+// neither is stable: a tag is a mutable pointer, which is why a release records
+// the commit it saw rather than trusting this to stay the same.
+message Tag {
+  string name = 1;
+  string commit_id = 2;
+}
+message ListTagsResponse { repeated Tag tags = 1; string next_page_token = 2; }
 
 message GetMergeBaseRequest { ReadContext context = 1; string ref_a = 2; string ref_b = 3; }
 // GetMergeBaseResponse names the merge base. A pair with no common ancestor

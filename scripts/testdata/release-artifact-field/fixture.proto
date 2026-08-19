@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 15 (SPEC-0056 AC9, ADR-0075).
+//
+// It carries the one shape gitsaas.release.v1.Release must never grow while the
+// tags-and-notes increment stands: a downloadable artifact. The gate compiles this
+// module and asserts the descriptor DOES carry it, which is what proves the check
+// against the real contract can fail.
+package gitsaas.release.v1;
+
+message Release {
+  string tag = 1;
+  // The defect: an artifact, arriving as an obvious addition long before anyone
+  // decided signing, custody, retention or metering.
+  string download_url = 2;
+}
