@@ -86,9 +86,9 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0072 | The fleet route, and an unavailable door that is not an empty fleet | 4 | Done — bff@1b761f5; SPEC-0058 AC9–AC11; EP-27 |
 | T-0073 | The admin area view — a dated report, and a door instead of a trail | 4 | Done — webfrontend@1d1d815; SPEC-0058 AC12–AC19; EP-27; the Admin nav destination exists for the first time |
 
-| T-0074 | The external issue reference, its action, and the gate that keeps tracker content out | 4 | Not started — SPEC-0059 AC1–AC10; EP-27 |
-| T-0075 | The link and unlink routes | 4 | Not started — SPEC-0059 AC11–AC13; EP-27 |
-| T-0076 | External issues on the merge request, and a link a reader can see the end of | 4 | Not started — SPEC-0059 AC14–AC19; EP-27 |
+| T-0074 | The external issue reference, its action, and the gate that keeps tracker content out | 4 | Done — governance@04c0455, backend@15c5cc5; SPEC-0059 AC1–AC10; EP-27; check 18 mutation-tested against the real contract |
+| T-0075 | The link and unlink routes | 4 | Done — bff@a196d03; SPEC-0059 AC11–AC13; EP-27 |
+| T-0076 | External issues on the merge request, and a link a reader can see the end of | 4 | Done — webfrontend@c525b55; SPEC-0059 AC14–AC19; EP-27; also strengthened the T-0070 journeys, which were asserting the signed-out page |
 
 ## Retired numbers (never reused)
 

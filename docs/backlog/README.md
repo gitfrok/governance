@@ -341,13 +341,13 @@ Plan: `../plans/phase-3-5-design-system.md`.
 
 ## Phase 4 — the full product surface *(planned 2026-08-18)*
 
-Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Proposed).
+Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Accepted 2026-08-18).
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
 | **EP-25** Tier A — the routes that exist and have no UI | PR-9, PR-10, PR-17, PR-18, PR-19 | T-0049, T-0050, T-0051, T-0052 | SPEC-0048…SPEC-0051 | **Done** — T-0049 (webfrontend@6d61827), T-0051 + T-0052 (@1141bc5), T-0050 (@a668de5). Every BFF route that had no UI now has one |
 | **EP-26** Tier B — the PRD requires it, no route serves it | PR-8, PR-11, PR-16, PR-24…PR-27 | T-0053…T-0063 | SPEC-0052…SPEC-0055 | **Done (2026-08-19)** — all four surfaces: repository list (PR-24), blame + history (PR-25/PR-8), pipeline runs (PR-26's runs half, ADR-0072), policy visibility (PR-16's read half, ADR-0073). **PR-26's logs and PR-27's authoring are NOT delivered** — each is a deferred decision with its own ADR, and each deferral is held by a contract gate rather than by intention |
-| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-31, ~~PR-32~~ | T-0064…T-0076 | SPEC-0056…SPEC-0059 | In progress — **all five Tier C ADRs Accepted**. Releases (PR-29's tags-and-notes half) Done end to end; the authenticated root is guarded (T-0067). **PR-32 is withdrawn from the PRD (2026-08-19, PRD §5.1)** — a marketing surface needs its own repository and nobody owns one, so the requirement could not be started from here; ADR-0078's rule survives it and T-0067 enforces decision 3. **PR-30 settings Done end to end** — ADR-0076 Accepted with the name/description/archival increment, SPEC-0057 Implemented, T-0068…T-0070; check 16 keeps visibility, membership, policy and deletion off the surface. **PR-31 admin Done end to end** — ADR-0077 Accepted with the dated-fleet-report + grant-door increment, SPEC-0058 Implemented, T-0071…T-0073; members and roles deferred because no membership read exists, and the audit browser is refused by decision. **PR-28 is re-scoped, not built** — ADR-0074 Accepted with its recommended alternative: no tracker, a merge request references an external one by identifier and link (SPEC-0059, T-0074…T-0076) |
+| **EP-27** Tier C — the prototype shows it, nothing requires it | PR-28…PR-31, ~~PR-32~~ | T-0064…T-0076 | SPEC-0056…SPEC-0059 | **Done (2026-08-19)** — all five Tier C ADRs Accepted, and **not one of them adopted its surface as the prototype drew it**. Releases: tags and notes, no artifacts (ADR-0075). Settings: name, description, an archive label (ADR-0076). Admin: a dated fleet report and a door into the grant flow (ADR-0077). Issues: **no tracker** — a merge request references the customer's own (ADR-0074). Marketing: **withdrawn** (ADR-0078). Four deferrals are held by contract gates 15–18 and a rego pin on the role vocabulary, not by intention |
 
 One line each:
 
@@ -360,9 +360,12 @@ One line each:
   job logs, and the policy authoring surface PR-16 requires.
 - **EP-27** — adopted from a mockup rather than a customer, which ADR-0070 records as the risk it is
   most likely to be wrong about. The gate is deliberate: someone must defend PR-28…PR-32 on their
-  merits at ADR acceptance, not on the prototype's existence. **The gate worked once already:**
-  PR-32 failed it — ADR-0078 was Accepted and the requirement was withdrawn on 2026-08-19 rather
-  than scheduled.
+  merits at ADR acceptance, not on the prototype's existence.
+  **The gate did its job on every one of the five.** PR-32 was withdrawn outright. PR-28's tracker was
+  refused and re-scoped to a reference. PR-29, PR-30 and PR-31 each shipped a smaller increment than
+  the prototype drew, with what was left out held by a gate rather than by a note. Tier C's honest
+  summary is that a mockup asked for five surfaces and the product gained three plus a reference —
+  which is what the gate was for.
 
 ## Parked — needs a human decision first
 

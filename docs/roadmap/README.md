@@ -138,7 +138,7 @@ a defect no DOM assertion could see.
 
 ## Phase 4 — the full product surface · **Planned (2026-08-18)**
 
-Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Proposed). Closes the
+Plan: `../plans/phase-4-full-product-surface.md`. Decided by **ADR-0070** (Accepted 2026-08-18). Closes the
 distance between what the platform can do and what a person can reach: eight BFF routes have no UI at
 all, and PR-9's write half — open, review, merge — has been reachable by `curl` and by nothing else
 since T-0016.
@@ -147,10 +147,16 @@ Three waves under a **route-before-pixel** ordering law: **Tier A** (route exist
 merge-request actions, code search, evidence packs, auditor grants; `webfrontend` only, may begin
 now), **Tier B** (the PRD requires it, no route serves it — repository list, blame/history,
 pipelines, policy authoring; backend first), **Tier C** (the `./UI` prototype shows it, nothing
-requires it — issues, releases, settings, admin, ~~marketing page~~; blocked until ADR-0070 is
-Accepted and the PRD carries PR-24…PR-32). **The marketing page (PR-32) was withdrawn from the PRD on
-2026-08-19** — ADR-0078 is Accepted and requires a separate origin that no repository here can serve;
-PRD §5.1 records why, and T-0067 keeps the authenticated root from becoming one.
+requires it — issues, releases, settings, admin, ~~marketing page~~).
+
+**Tier C is Done (2026-08-19), and not one of its five surfaces was adopted as the prototype drew
+it.** Releases ship as tags and notes with no artifacts (ADR-0075); settings as a name, a description
+and an archive label that restricts nothing (ADR-0076); the admin area as a dated fleet report and a
+door into the existing grant flow, with no audit-log browser (ADR-0077); issues **not at all** — a
+merge request references the tracker the customer already has (ADR-0074); and the marketing page
+**withdrawn**, because a surface that must never receive a session needs its own repository and nobody
+owns one (ADR-0078, PRD §5.1). Each deferral is held by a contract gate or a policy pin rather than by
+a note, and T-0067 keeps the authenticated root from becoming the marketing page nobody built.
 
 **Exit:** every BFF route has a UI or a recorded reason it does not; no nav destination lacks a
 route; PR-9's loop is executable by a person in a browser; every new surface passes the ADR-0069

@@ -133,7 +133,7 @@ reads, and no route before the backend port it shapes.
 | PR-25 | A developer can read a file's blame and a ref's commit history in the web UI | — | 0070, 0015 | **New** (PR-8's unbuilt half) |
 | PR-26 | A developer can see pipeline runs and job logs for a repository, scoped by the same permissions as the repository read | G1 | 0070, 0005 | **New** (PR-11's browser half) |
 | PR-27 | A policy owner can author, version, dry-run and enforce a policy from the web UI, with the deciding version recorded | G4, G6 | 0070, 0006 | **New** (PR-16's authoring half) |
-| PR-28 | A team can open, assign, label, discuss and close issues, and link them to merge requests | G4 | 0070 | **New** — needs its own context ADR first |
+| PR-28 | ~~A team can open, assign, label, discuss and close issues, and link them to merge requests~~ · **Re-scoped 2026-08-19:** a merge request references an issue in the tenant's own tracker, by tracker label, issue key and https URL | G4 | 0070, 0074 | **Re-scoped and delivered (2026-08-19)** — ADR-0074 Accepted with its recommended alternative: this product builds no issue tracker. SPEC-0059, T-0074…T-0076. See §5.2 |
 | PR-29 | A team can cut and publish a release from a tag, with its artifacts and notes | — | 0070, 0075 | **Delivered in part (2026-08-19)** — SPEC-0056, T-0064…T-0066. Tags and notes ship; **artifacts are NOT delivered**, held by check 15 (§12.1) |
 | PR-30 | A repository owner can read and change repository settings — name, description, visibility, members and archival — each change audited | G2, G5 | 0070, 0076 | **Delivered in part (2026-08-19)** — SPEC-0057, T-0068…T-0070. Name, description and archival ship; **visibility and members are NOT delivered** and deletion is out of scope, each held by check 16 rather than by intention (§12.1) |
 | PR-31 | An org administrator can read the org's members, roles, runners and audit log from an admin area, without gaining repository read access | G2, G5, G6 | 0070, 0077 | **Delivered in part (2026-08-19)** — SPEC-0058, T-0071…T-0073. A dated fleet report and a door into the grant flow ship; **members and roles are NOT delivered** (no membership read exists) and there is no audit-log browser by decision, each held by check 17 and a rego pin (§12.1) |
@@ -175,6 +175,38 @@ it — it misrepresents the plan to everyone who reads it, including us.
 **What would reopen it:** a marketing surface with an owner and a repository. This is not a decision
 about whether the product should have a marketing page; it is a statement that this repository is
 not where one gets built, and that the PRD should stop implying otherwise.
+
+### 5.2 Re-scoped requirements
+
+A re-scoped requirement keeps its number, keeps its original text struck through beside the new one,
+and names the ADR that decided the change. It is not a withdrawal (§5.1) and not a partial delivery:
+the thing originally asked for is not being built, and something else is.
+
+**PR-28 — the issue tracker. Re-scoped 2026-08-19 to a reference.**
+
+ADR-0074 recorded what an issue tracker costs here: the first bounded context whose primary content
+is free-form user text, with its own storage, events, permissions, retention and search — and it
+recommended the alternative that was accepted. **This product does not build an issue tracker.** A
+merge request references an issue that lives in the customer's own tracker: a tracker label, an issue
+key, and an `https` URL.
+
+**The argument is the ADR's own.** Every customer already has a tracker, the switching cost is
+enormous, and a worse one bundled with a forge has repeatedly failed to move anyone. What a forge is
+actually asked for is the reference — "this change is for that issue" — and that is one decision
+rather than a context.
+
+**The reference is a pointer, not a mirror.** Nothing in this product fetches, polls, authenticates
+against, or receives a webhook from a tenant's tracker. There is therefore no issue title, state,
+assignee or body anywhere — not deferred, refused, because a field the platform can only fill by
+becoming a client of somebody else's system is a freshness promise nobody can keep. `check-contracts`
+check 18 asserts that absence against the contract.
+
+**Merging closes nothing.** "Closes issue" is prose, not automation: closing happens in the tracker,
+by whoever manages it. The surface says so, because it is the first assumption a reader makes.
+
+**What would reopen the original scope:** a customer who wants their issues *in* this product, and an
+owner willing to take on a context permanently. ADR-0074's cost section is what that conversation
+starts from.
 
 ## 6. Pricing & fair use (product behavior only)
 
@@ -289,7 +321,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
 | Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
 | Phase-4 requirements PR-24…PR-27 | full product surface | backend ports + BFF routes + web UI, in that order (ADR-0070's ordering law); specs and tasks under EP-26 |
-| Phase-4 requirement PR-28 | full product surface | **a Proposed ADR first** — ADR-0074 is written and does not adopt issues; it recommends considering an external tracker instead, and records that a bundled tracker may be parity work nobody uses. EP-27 |
+| ~~PR-28 an issue tracker~~ | issues | **Closed 2026-08-19**: ADR-0074 Accepted with its recommended alternative. The requirement is re-scoped to a reference (§5.2) and delivered; a tracker is not being built, and the ADR's cost section is what reopening it would start from |
 | PR-31 members, roles, audit browser | admin area | **Closed as deferred 2026-08-19**: ADR-0077 Accepted the fleet report and the grant door. Members and roles have no read behind them — roles are the identity provider's and no membership port exists — and the audit log is reached through a grant rather than a role, held by check 17 and by a rego pin on the role vocabulary |
 | PR-29 artifacts | releases | **Closed as deferred 2026-08-19**: ADR-0075 Accepted the tags-and-notes increment and check 15 holds the absence at the wire. Artifacts re-open signing, custody, retention and metering at once |
 | PR-30 visibility, members, deletion | repository settings | **Closed as deferred 2026-08-19**: ADR-0076 Accepted name, description and archival; check 16 holds the absence at the wire. Visibility and per-repository membership are authorization-model changes, not settings, and deletion is the one operation an operator cannot undo |

@@ -1,6 +1,6 @@
 # SPEC-0059: A merge request references an issue that lives somewhere else
 
-- **Status:** Approved (2026-08-19) — ADR-0074 Accepted with this alternative; RED may begin
+- **Status:** Implemented (2026-08-19) — AC1–AC19 green; governance@04c0455, backend@15c5cc5, bff@a196d03, webfrontend@c525b55
 - **Owner:** platform
 - **Context(s):** Code Review (owns the merge request the reference lives on) · BFF · Web frontend —
   ADR-0022
@@ -81,58 +81,58 @@ it.
 
 ### The contract, the policy and the backend (T-0074)
 
-- [ ] **AC1** `LinkExternalIssue` adds a reference to a merge request: tracker, issue key and URL,
+- [x] **AC1** `LinkExternalIssue` adds a reference to a merge request: tracker, issue key and URL,
       recorded with who added it and when. `UnlinkExternalIssue` removes one by tracker and issue key.
-- [ ] **AC2** **The same reference twice is one reference.** Linking `(tracker, issue_key)` that is
+- [x] **AC2** **The same reference twice is one reference.** Linking `(tracker, issue_key)` that is
       already present is accepted and changes nothing — no duplicate, no second audit record, and the
       original instant does not move.
-- [ ] **AC3** **The URL must be absolute and `https`.** A `http:`, `javascript:`, `data:` or relative
+- [x] **AC3** **The URL must be absolute and `https`.** A `http:`, `javascript:`, `data:` or relative
       URL is refused by the domain, with the field named. This is a link a person will click from
       inside the product, and the product is not going to be the thing that hands them a hostile one.
-- [ ] **AC4** Tracker, issue key and URL are each bounded, and the reference count per merge request is
+- [x] **AC4** Tracker, issue key and URL are each bounded, and the reference count per merge request is
       bounded. A reference list is a reference list, not a document.
-- [ ] **AC5** **Both acts are `merge_request.external_issue.link` PDP decisions**, and a refusal is
+- [x] **AC5** **Both acts are `merge_request.external_issue.link` PDP decisions**, and a refusal is
       coarse: a caller who may not link learns nothing about whether the merge request exists.
-- [ ] **AC6** Each accepted act publishes exactly one `MergeRequestUpdated`, the event this context
+- [x] **AC6** Each accepted act publishes exactly one `MergeRequestUpdated`, the event this context
       already emits for a change to a merge request — no new event, because nothing new happened to
       the world beyond the merge request changing.
-- [ ] **AC7** **Nothing in the backend reads the tracker.** There is no HTTP client, no URL fetch and
+- [x] **AC7** **Nothing in the backend reads the tracker.** There is no HTTP client, no URL fetch and
       no port that could acquire one on this path. A test asserts the reference is stored exactly as
       given and that the service makes no outbound call.
-- [ ] **AC8** **Additive:** `buf breaking` passes; `external_issues` is a new field and the two RPCs
+- [x] **AC8** **Additive:** `buf breaking` passes; `external_issues` is a new field and the two RPCs
       are new.
-- [ ] **AC9** **No external-issue message carries tracker content.** A descriptor check asserts no
+- [x] **AC9** **No external-issue message carries tracker content.** A descriptor check asserts no
       field named `title`, `body`, `text`, `summary`, `description`, `status`, `state`, `assignee`,
       `labels`, `comments` or `attachment` on the external-issue shape, with a fixture carrying `title`
       and `status` to prove the check can fail — ADR-0074's accepted scope as a type property.
-- [ ] **AC10** **The policy addition is exactly one action.** `role_actions` still has three keys
+- [x] **AC10** **The policy addition is exactly one action.** `role_actions` still has three keys
       (SPEC-0058 AC5's pin), `reader` is denied the new action in the denial matrix, and the action is
       pinned to the `merge_request` resource.
 
 ### The BFF (T-0075)
 
-- [ ] **AC11** The BFF shapes and forwards a link and an unlink under the session. The actor comes from
+- [x] **AC11** The BFF shapes and forwards a link and an unlink under the session. The actor comes from
       the session and has no field on the request.
-- [ ] **AC12** Every failure is one coarse refusal, except a bad URL, which is a 400 naming the field —
+- [x] **AC12** Every failure is one coarse refusal, except a bad URL, which is a 400 naming the field —
       the caller already knows what it sent.
-- [ ] **AC13** The response body carries no tracker content: a test asserts none of the AC9 vocabulary
+- [x] **AC13** The response body carries no tracker content: a test asserts none of the AC9 vocabulary
       appears, so the increment holds at the layer a browser reads.
 
 ### The view (T-0076)
 
-- [ ] **AC14** The merge request page lists its external issue references, each showing the tracker,
+- [x] **AC14** The merge request page lists its external issue references, each showing the tracker,
       the issue key, and **the host the link goes to**. A reader can see where a link leads before
       clicking it.
-- [ ] **AC15** **The page says what a reference is and is not**: it is a pointer to an issue in the
+- [x] **AC15** **The page says what a reference is and is not**: it is a pointer to an issue in the
       tracker, this product stores no issue and shows no issue state, and merging does not close
       anything. The copy enumeration forbids "closes", "will close", "auto-close", "synced", "coming
       soon" and any phrasing implying the platform reads or writes the tracker.
-- [ ] **AC16** Linking and unlinking are plain forms that work with no client script.
-- [ ] **AC17** **A hostile URL never becomes a link.** A reference whose URL is not `https` is rendered
+- [x] **AC16** Linking and unlinking are plain forms that work with no client script.
+- [x] **AC17** **A hostile URL never becomes a link.** A reference whose URL is not `https` is rendered
       as text, not as an `href`, and a test drives `javascript:`, `data:` and `http:`. External links
       carry `rel="noopener noreferrer"`.
-- [ ] **AC18** A merge request with no references says so plainly, and says how one is added.
-- [ ] **AC19** No hex literal; the two regression pins unmodified; captures regenerated per SPEC-0047
+- [x] **AC18** A merge request with no references says so plainly, and says how one is added.
+- [x] **AC19** No hex literal; the two regression pins unmodified; captures regenerated per SPEC-0047
       AC10 where the surface changed, and reviewed.
 
 ## Governance mapping (G1–G9)

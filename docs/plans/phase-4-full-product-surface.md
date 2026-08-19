@@ -107,6 +107,30 @@ someone puts a splash page at the authenticated root.
 
 **Tier C is therefore four contexts, not four contexts and a page.**
 
+## Wave 3, as it actually landed (2026-08-19)
+
+**All five ADRs are Accepted and EP-27 is Done. Not one surface was adopted as the prototype drew
+it**, which is the outcome the second gate existed to make possible:
+
+| Surface | What the prototype showed | What shipped | What holds the difference |
+|---|---|---|---|
+| Releases (PR-29) | Releases with artifacts and notes | A tag, notes, and an honest answer when the tag moves | check 15: no artifact field in `release/v1` |
+| Settings (PR-30) | Name, description, visibility, members, danger zone | Name, description, an archive label that restricts nothing | check 16: no visibility, membership or policy field, no delete verb |
+| Admin (PR-31) | Members, roles, runners, audit log | A dated fleet report, and a door into the grant flow | check 17 plus a rego pin holding the role vocabulary at three keys |
+| Issues (PR-28) | An issue tracker | **No tracker.** A merge request references the customer's own | check 18: no tracker content on the reference |
+| Marketing (PR-32) | A landing page | **Withdrawn** | T-0067: the authenticated root fails its test if it becomes one |
+
+**The pattern is worth naming.** Every one of these decisions was smaller than the mockup, and in
+every case the thing left out was left out with a gate rather than a note — because the phase's own
+risk register said Tier C's evidence was a drawing rather than a customer, and a note is what erodes
+when someone is under delivery pressure.
+
+**What Tier C did not fix, and said so.** Merge requests are still not durable — the Code Review
+context's store is in memory, which is the gap ADR-0071 closed for the repository registry. An
+external issue reference is exactly as durable as the merge request carrying it. SPEC-0059 records it
+as a follow-up needing its own ADR rather than adding a table to one adapter while the aggregate has
+none.
+
 ## Exit criteria
 
 1. Every BFF route has a UI, or a recorded reason it does not.
@@ -124,8 +148,9 @@ someone puts a splash page at the authenticated root.
 
 - **Tier C is adopted from a mockup, not a customer.** ADR-0070 says so in its own consequences.
   The mitigation is procedural: Tier C cannot start until someone defends PR-28…PR-32 on their
-  merits at ADR acceptance. **This has already removed one requirement** — PR-32 was withdrawn on
-  2026-08-19 instead of being scheduled.
+  merits at ADR acceptance. **Discharged 2026-08-19, and it changed four of the five surfaces:** PR-32
+  was withdrawn, PR-28's tracker was refused and re-scoped to a reference, and PR-29, PR-30 and PR-31
+  each shipped a smaller increment than the prototype drew.
 - **Phase 4 is the first phase to touch all four repositories in anger since Phase 3.** The
   one-commit-per-submodule rule (ADR-0027, invariant 25) is easiest to break on Tier B items, where
   a single feature genuinely spans backend, bff and webfrontend.
