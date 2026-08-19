@@ -1,7 +1,7 @@
 # ADR-0079: Spacing and type join the token layer, and one shell owns page geometry
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform
 - **Related:** ADR-0069 (the design system, and the colour-token law this extends), ADR-0015
   ("GitHub-clean" as an information-architecture principle; enforced, not aspirational), ADR-0070
@@ -81,6 +81,23 @@ first waivers: both are optical constants, not scale steps.
 **6. The radius drift is a compliance fix, not part of this decision.** Components stop hand-rolling
 card corners and use `.gf-card`, or the radius tokens directly. That was already SPEC-0047 AC1's
 requirement and needed no ADR — it is named here only because it is the same pass.
+
+## Accepted scope (2026-08-19)
+
+**Accepted as written, all six decisions.** Specified as SPEC-0060, delivered by T-0077 in
+`webfrontend` only — the gate lives beside `check-hex-literals.mjs`, so no other repository is
+touched.
+
+Two things the acceptance fixes that the decisions left open:
+
+- **The gate ships with no ratchet.** The hex gate needed one, because it landed on a codebase that
+  was entirely hex literals and converted over three tasks. This pass converts all 32 files in one
+  task, so a `LEGACY` list would be an exemption with nothing in it — and the hex gate's own comment
+  records why an empty-but-present list is worth keeping there: its stale-entry check makes the empty
+  list self-enforcing. This gate takes the same shape for the same reason.
+- **The waiver's reasons are the follow-up's evidence, so they are counted.** The gate reports how
+  many waivers it passed over. If that number is what decides whether decision 4 retreats to type and
+  content width, it has to be visible on every run rather than discovered by grep later.
 
 ## What this does not decide
 

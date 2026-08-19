@@ -98,7 +98,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0076](0076-repository-settings-context.md) | Repository settings is where policy quietly becomes a UI toggle, which PR-10 forbids; visibility and deletion deferred; Accepted with the name/description/archival increment | Accepted |
 | [ADR-0077](0077-admin-area-context.md) | The admin area reaches the audit log through a grant, not a role; `admin` is not a new authorization primitive; Accepted with the dated-fleet-report + grant-door increment, members deferred | Accepted |
 | [ADR-0078](0078-marketing-surface-separation.md) | The marketing page is served by a surface that never holds a session, on a different origin; Accepted — nothing to move, the root is guarded instead | Accepted |
-| [ADR-0079](0079-dimensional-tokens-and-one-page-shell.md) | Spacing and type join the token layer and one shell owns page geometry — extends ADR-0069's colour-only token law; 347 dimensional literals, 10 font sizes, 3 content widths measured | Proposed |
+| [ADR-0079](0079-dimensional-tokens-and-one-page-shell.md) | Spacing and type join the token layer and one shell owns page geometry — extends ADR-0069's colour-only token law; 347 dimensional literals, 10 font sizes, 3 content widths measured; Accepted as written | Accepted |
 
 ## Open follow-ups
 

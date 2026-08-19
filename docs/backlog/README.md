@@ -367,6 +367,22 @@ One line each:
   summary is that a mockup asked for five surfaces and the product gained three plus a reference —
   which is what the gate was for.
 
+## EP-28 — the design layer, after Tier C
+
+Plan: none of its own; it is the design half of `../plans/phase-4-full-product-surface.md`'s exit
+criterion 4. Decided by **ADR-0079** (Accepted 2026-08-19).
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-28** The design layer holds together | — (no PRD row: this is about how the surfaces the product already has hold together) | T-0077 | SPEC-0060 | In progress — ADR-0079 Accepted as written |
+
+One line: Phase 4 added ten surfaces over three waves and the geometry drifted while nobody was
+looking — 347 dimensional literals, 224 of them font sizes in ten sizes against a single type token,
+and three different content widths, so the column jumps as a reader navigates. ADR-0069 made tokens
+binding for colour and enforced it; this extends the same posture to spacing and type, gives page
+geometry one owner, and gates it. **No PRD requirement asks for it**, which is exactly why it needed
+an ADR rather than a ticket.
+
 ## Parked — needs a human decision first
 
 Force-promote tenant self-service (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017) ·

@@ -90,6 +90,8 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0075 | The link and unlink routes | 4 | Done — bff@a196d03; SPEC-0059 AC11–AC13; EP-27 |
 | T-0076 | External issues on the merge request, and a link a reader can see the end of | 4 | Done — webfrontend@c525b55; SPEC-0059 AC14–AC19; EP-27; also strengthened the T-0070 journeys, which were asserting the signed-out page |
 
+| T-0077 | One type scale, one page shell, and the gate that keeps geometry in the token layer | 4 | Not started — SPEC-0060 AC1–AC10; EP-28 |
+
 ## Retired numbers (never reused)
 
 - **T-0019** — review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review
