@@ -76,7 +76,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0065 | The release contract and BFF routes | 4 | Done — governance@a213d28, bff@9a76f1b; SPEC-0056 AC8–AC10; EP-27; check 15 keeps artifacts out |
 | T-0066 | The releases view | 4 | Done — webfrontend@1f5fd65; SPEC-0056 AC11–AC16; EP-27; a release whose tag moved says so |
 
-| T-0067 | Guard the authenticated root against becoming a marketing page | 4 | Todo — ADR-0078 decision 3; EP-27; nothing to move, so the rule is made enforceable instead |
+| T-0067 | Guard the authenticated root against becoming a marketing page | 4 | Done — webfrontend@ea0677f; ADR-0078 decision 3; EP-27; verified it fails on a splash page |
 
 ## Retired numbers (never reused)
 
