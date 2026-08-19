@@ -1,7 +1,7 @@
 # ADR-0076: Repository settings is where policy quietly becomes a UI toggle, and PR-10 forbids that
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (required by ADR-0070's follow-up before any PR-30 spec)
 - **Related:** ADR-0070, ADR-0006 (deny-by-default PDP), ADR-0003 (tenancy), ADR-0007 (audit),
   ADR-0022, ADR-0071, ADR-0073 (the sibling deferral for policy authoring), ADR-0049 (identity)
@@ -54,6 +54,34 @@ tells a reader they lack a permission, and they do not — the capability does n
 change with an audit record. Deletion is a data-lifecycle decision spanning audit, evidence,
 residency and retention, and it is the one operation in this product that cannot be undone by an
 operator.
+
+## Accepted scope (2026-08-19)
+
+**The owner accepted this ADR together with its middle path: name, description and archival, each
+change audited.** That is the first increment, specified as SPEC-0057. The three decisions above are
+what it is bounded by, and two of them change shape once something is actually being built:
+
+- **Archival is a recorded property, not an enforcement.** An archived repository is *labelled*
+  archived on every surface that shows it, and nothing else changes: pushes are not refused, reads
+  are not narrowed, and no PDP input gains a field. Making archival refuse writes would be a
+  read-only condition, and a read-only condition in this product must name its cause from a bounded
+  vocabulary (SPEC-0046 AC4) which has exactly two members — the PR-7 durability mode and an
+  envelope throttle. Adding `archived` to it is a decision about the git write path, not a setting,
+  and `readonly-cause` is a phase-wide regression pin precisely so that it cannot be widened as a
+  side effect of a feature. **Whoever wants an archive that refuses pushes must come back here.**
+- **Decision 2's absence is now a contract property.** Visibility, members, branch protection and
+  approval requirements are not fields that exist and are ignored: no message on the settings
+  surface carries one, asserted against the compiled descriptor by check-contracts' repository
+  settings gate — the fourth such gate in this phase after job logs (13), policy authoring (14) and
+  release artifacts (15). PR-10's erosion is the failure this ADR was written about, and a gate is
+  the only form of "we did not do that" that survives delivery pressure.
+- **Decision 3 stands as written.** Archival is the reachable half; deletion is out of scope, and
+  the registry's grants already say so — `0001_repository_registry.sql` revoked `DELETE` from the
+  application role and named PR-30 as the reason.
+
+**What this increment must not grow into without returning here:** a visibility control, a members
+list, any per-repository role, or a delete button. The first three are authorization-model changes
+wearing a form's clothing; the fourth is the one operation an operator cannot undo.
 
 ## Consequences
 
