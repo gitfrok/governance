@@ -64,3 +64,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0056 | Releases — a tag, some notes, and an honest answer when the tag moves | Implemented (2026-08-19) | T-0064, T-0065, T-0066 |
 | SPEC-0057 | Repository settings — a name, a description, an archive label, and a record of who changed it | Implemented (2026-08-19) | T-0068, T-0069, T-0070 |
 | SPEC-0058 | The admin area — a dated fleet report, and a door into the grant flow | Implemented (2026-08-19) | T-0071, T-0072, T-0073 |
+| SPEC-0059 | A merge request references an issue that lives somewhere else | Approved (2026-08-19) | T-0074, T-0075, T-0076 |

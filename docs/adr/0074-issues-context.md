@@ -1,7 +1,7 @@
 # ADR-0074: Issues is a bounded context, and the largest permanent widening this product has proposed
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (required by ADR-0070's follow-up before any PR-28 spec)
 - **Related:** ADR-0070 (Tier C, and the requirement for this ADR), ADR-0022 (bounded contexts),
   ADR-0029 (provenance and what may enter the audit record), ADR-0007 (audit), ADR-0009/0010
@@ -64,6 +64,60 @@ identifier from a control record; its text may not travel into one.
 **3. Attachments are out of scope for PR-28 and need their own decision.** An issue tracker without
 attachments is a coherent product. An issue tracker with attachments is a content platform, and the
 difference is storage, scanning, retention, residency and metering.
+
+## Accepted scope (2026-08-19)
+
+**The owner accepted this ADR together with its recommended alternative: link to an external tracker.
+This product does not build an issue tracker.** The first increment is specified as SPEC-0059, and it
+is one decision rather than a context — *how a merge request references an issue that lives somewhere
+else.*
+
+That decision, in full:
+
+**1. The reference is an identifier and a link, and nothing else.** A merge request may carry external
+issue references, each a tracker label, an issue key and an absolute `https` URL. There is no title,
+no state, no assignee, no labels and no body — **because the platform never asks the tracker
+anything.** Nothing here fetches, polls, authenticates against, or receives a webhook from a customer's
+tracker. A field for the issue's title would be a field the product could only fill by becoming a
+client of somebody else's system, and every such field is a promise about freshness nobody can keep.
+Check 18 asserts that absence against the compiled descriptor.
+
+**2. "Closes issue" is refused as automation and kept as prose.** The prototype's link implies the
+platform closes the issue on merge. It does not: closing an issue happens in the tracker, by whoever
+manages it. A reference is **inert** — merging a merge request performs no outbound act and infers no
+issue state. This is the assumption a reader will make first, so the surface says so rather than
+letting the absence be discovered.
+
+**3. Decision 2 above stands unchanged and is now cheap to keep.** With no issue text in the product
+at all, "issue content never enters an audit record or an evidence pack control section" is satisfied
+by there being no content. The audit record for a link names the identifier; the identifier is the
+only thing there is.
+
+**4. The reference lives on the Code Review side, as decision 1's shape required.** It is a field on
+the merge request aggregate — an identifier held by the context that owns the merge request — not a
+foreign key, not a join, and not a read into another context. There is no Issues context to collapse
+into, which is the cheapest possible way to satisfy that decision.
+
+**5. A link is a `merge_request.external_issue.link` decision**, a new action granted to `owner` and
+`member` and denied to `reader`. It is not folded into `merge_request.open`: a write authorized as
+something it is not is a lie in the vocabulary, and the role table is the one place this product's
+authorization is legible.
+
+**What this increment must not grow into without returning here:** a tracker client, a webhook
+receiver, a cached issue title or state, or a merge that closes something. The first two make this
+product a client of a system it does not control; the third is a freshness claim; the fourth is an
+outbound act on a customer's data.
+
+**What the original PR-28 asked for is not being built, and the PRD says so.** "Open, assign, label,
+discuss and close issues" is not partially delivered — it is replaced. The requirement keeps its
+number and is re-scoped to the reference, dated and citing this ADR.
+
+**One honest limitation, recorded rather than hidden.** The Code Review context's store is
+`NewMemoryStore` — merge requests are not durable today, which was survivable while a merge request
+was a short-lived object and is the same gap ADR-0071 closed for the repository registry. An external
+issue reference is exactly as durable as the merge request carrying it, which is to say: not, until
+that store has an ADR of its own. This increment does not fix it, does not pretend to, and does not
+quietly add a table to one context's adapter while the aggregate it belongs to has none.
 
 ## Consequences
 
