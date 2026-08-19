@@ -32,6 +32,12 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  16. gitsaas.repository.v1 carries no visibility, membership or policy field, and no delete verb
+#      (SPEC-0057 AC11/AC12, ADR-0076): the accepted settings increment is name, description and
+#      archival. Visibility and per-repository membership are authorization-model changes wearing a
+#      form's clothing, branch protection and approval requirements are policy by PR-10, and
+#      deletion is the one operation an operator cannot undo. A settings surface is where all four
+#      arrive as the obvious next thing, so the absence is a TYPE PROPERTY. Paired with a fixture.
 #  15. no gitsaas.release.v1 message carries an artifact (SPEC-0056 AC9, ADR-0075): the accepted
 #      increment is tags and notes. An artifact field would arrive as "just a download URL" and
 #      re-open signing, custody, retention and metering at once. Paired with a fixture.
@@ -223,6 +229,48 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 16. repository/v1 carries no policy field and no delete verb (SPEC-0057 AC11/AC12) -------
+
+# ADR-0076 accepted name, description and archival only. The other three settings the prototype
+# shows are not features that were skipped: "public" is a different authorization model, per-repository
+# membership is a new one the PDP would have to learn everywhere repo.read is asked, and branch
+# protection and approval requirements are policy by PR-10 — "enforced server-side and expressed as
+# policy, not UI toggles". A settings page is precisely where that sentence erodes, by a checkbox
+# appearing where a user would look for one rather than by anyone deciding to break it. Deletion is
+# ADR-0076 decision 3, and the registry's migration already revoked DELETE from the application role.
+if image_out=$(buf build contracts --path contracts/proto/repository/v1 \
+  --exclude-source-info -o -#format=json 2>&1); then
+  # Field names are matched EXACTLY. actor_roles is a verified principal attribute on every read
+  # context and must keep working; a bare "roles" match would have flagged it and the check would
+  # have been deleted rather than fixed.
+  if grep -qE '"name": *"(visibility|public|private|member|members|branch_protection|protected_branch|protected_branches|required_approvals|approval_rule|approval_rules|merge_rule|merge_rules|permissions)"' <<<"$image_out"; then
+    report "gitsaas.repository.v1 carries a visibility, membership or policy field — outside ADR-0076's accepted increment (SPEC-0057 AC11)"
+  else
+    echo "  ok    repository/v1 carries no visibility, membership or policy field (SPEC-0057 AC11, ADR-0076)"
+  fi
+  if grep -oE '"name": *"Delete[A-Za-z]*"' <<<"$image_out" | grep -q .; then
+    report "gitsaas.repository.v1 carries a delete verb — repository deletion is ADR-0076's deferred decision (SPEC-0057 AC12)"
+  else
+    echo "  ok    repository/v1 carries no delete verb (SPEC-0057 AC12, ADR-0076)"
+  fi
+else
+  report "could not compile gitsaas.repository.v1 for the settings check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/repository-settings-policy-field
+if fixture_image=$(buf build "$fixture" --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qE '"name": *"visibility"' <<<"$fixture_image" &&
+    grep -qE '"name": *"DeleteRepository"' <<<"$fixture_image"; then
+    echo "  ok    repository-settings fixture caught (the settings check can fail)"
+  else
+    report "the repository-settings fixture compiled without visibility and DeleteRepository in its descriptor — the check is vacuous"
+  fi
+else
+  report "the repository-settings fixture did not compile:"
   indent "$fixture_image"
 fi
 

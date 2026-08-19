@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 16 (SPEC-0057 AC11/AC12, ADR-0076).
+//
+// It carries the two shapes gitsaas.repository.v1 must never grow while
+// visibility, per-repository membership and tenant policy authoring are
+// undecided: a settings message with a visibility field, and a delete verb.
+//
+// Both would arrive as the obvious next thing a settings page needs. The gate
+// compiles this module and asserts the descriptor DOES carry them, which is what
+// proves the check against the real contract can fail.
+package gitsaas.repository.v1;
+
+message DefectSettings {
+  string repository_id = 1;
+  // The defect: an authorization model wearing a form's clothing. "Public" is not
+  // a setting in this product — it is a different authorization model with its own
+  // hole in invariant 1's shape (ADR-0076).
+  string visibility = 2;
+  // The defect PR-10 forbids by name: branch protection expressed as a toggle
+  // rather than as policy.
+  bool required_approvals = 3;
+}
+
+message DeleteRepositoryRequest { string repository_id = 1; }
+message DeleteRepositoryResponse { bool deleted = 1; }
+
+service RepositorySettings {
+  // The defect: the one operation in this product an operator cannot undo,
+  // arriving before anyone decided what survives it (ADR-0076 decision 3).
+  rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse);
+}

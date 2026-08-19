@@ -164,3 +164,83 @@ message GetMergeBaseRequest { ReadContext context = 1; string ref_a = 2; string 
 // empty, so the caller — Security/Findings, per SPEC-0028 — reports
 // attribution UNAVAILABLE rather than attributing everything.
 message GetMergeBaseResponse { bool found = 1; string merge_base = 2; }
+
+// RepositorySettings reads and changes the properties of one repository
+// (SPEC-0057, PR-30, ADR-0076). Additive, and a THIRD service in this package
+// for the same reason RepositoryRegistry is separate from RepositoryReader: a
+// service is the surface one process serves, and these are not the same
+// question.
+//
+// RepositoryRegistry answers which repositories exist for a caller and is
+// deliberately unwidenable — it has no field a caller could use to ask
+// differently (ADR-0071 decision 4). Settings name one repository and change
+// it. A write verb on the listing service would put a mutation behind the one
+// surface whose whole property is that it cannot be steered.
+//
+// WHAT IS ABSENT HERE IS THE DECISION. ADR-0076 accepted name, description and
+// archival only. There is no visibility field, no member or role field, no
+// branch-protection or approval field, and no Delete verb anywhere in this
+// package — asserted against the compiled descriptor by check-contracts' check
+// 16, with a fixture that proves the check can fail.
+//
+// PR-10 says branch protection and approval requirements are enforced
+// server-side and expressed as policy, not UI toggles. A settings surface is
+// exactly where that sentence erodes: not by anyone deciding to break it, but
+// by a "require approvals" checkbox appearing where a user would look for one.
+// The absence is a type property so that it cannot arrive quietly.
+service RepositorySettings {
+  rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
+  // UpdateSettings changes the name and the description. It cannot change
+  // anything else, because the request carries nothing else.
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  // SetArchived sets or clears the archived state. Archival is a LABEL: an
+  // archived repository still lists, still reads and is still writable
+  // (SPEC-0057's archival rule). Making it refuse writes would be a read-only
+  // condition, and one of those must name its cause from the two-member
+  // vocabulary in repository/api/readonly.go — a git-write-path decision, not
+  // a setting.
+  rpc SetArchived(SetArchivedRequest) returns (SetArchivedResponse);
+}
+
+// Settings is one repository's changeable properties, plus the record of who
+// last changed them.
+//
+// archived_at is empty when the repository is not archived; a boolean plus a
+// timestamp would let the two disagree, and a repository that is archived with
+// no instant is not a state anyone can act on.
+//
+// settings_updated_by is an actor ID and not a display name: resolving it to a
+// person is the Identity context's job and no field here asks this surface to
+// do it.
+message Settings {
+  string repository_id = 1;
+  string name = 2;
+  string description = 3;
+  string archived_at = 4;
+  string settings_updated_at = 5;
+  string settings_updated_by = 6;
+}
+
+message GetSettingsRequest { ReadContext context = 1; }
+message GetSettingsResponse { Settings settings = 1; }
+
+// UpdateSettingsRequest carries both fields on every call: this is a write of
+// the settings a repository has, not a patch. A partial update would need an
+// optional-field convention, and the first thing such a convention attracts is
+// a field that was not in the accepted increment.
+message UpdateSettingsRequest {
+  ReadContext context = 1;
+  string name = 2;
+  string description = 3;
+}
+message UpdateSettingsResponse { Settings settings = 1; }
+
+// SetArchivedRequest states the state wanted, not the transition. Archiving an
+// archived repository is the same fact stated twice, so a caller that repeats
+// itself is not an error and does not produce a second audit record
+// (SPEC-0057 AC3).
+message SetArchivedRequest {
+  ReadContext context = 1;
+  bool archived = 2;
+}
+message SetArchivedResponse { Settings settings = 1; }
