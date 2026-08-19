@@ -105,7 +105,17 @@ The ADR is Accepted and immutable (ADR-0001), so the correction is recorded here
 2. **Card corners were 6 px and 8 px in the components that hand-rolled them, and are now 10 px** — the
    control radius. That is decision 6's compliance half doing exactly what it said, and it is visible.
 
-Both were found by the capture review, which is what the review is for. Nothing else moved.
+Both were found by the capture review, which is what the review is for.
+
+**Addendum (webfrontend@5628286): a third change, and it was a defect.** The shell adoption on diff,
+tree and file wrapped everything inside `<Layout>` — so `CommandPalette` and `RepoHeader` ended up
+inside the padded content column, while on settings, releases and the merge request they sit outside
+it. A repository header's full-width rule stopped 16 px short of the viewport on three pages and
+spanned it on the others: a new inconsistency, introduced by the pass whose purpose was removing them.
+Chrome now sits above the shell everywhere. **It was found by opening the diff capture, not by a
+test** — the suites are functional and geometry is not something they assert — which is the honest
+limit of AC10: the review catches what the reviewer looks at, and "reviewed every capture" is a claim
+worth being precise about.
 
 **`ch` for form fields, and why it is not a way around the gate.** A number input for "days" is as wide
 as its digits, not as wide as a scale step, so the age filters and facet columns take `ch` rather than
