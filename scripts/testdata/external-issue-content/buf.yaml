@@ -1,0 +1,4 @@
+version: v2
+# Fixture module for scripts/check-contracts.sh check 18 — see the .proto.
+modules:
+  - path: .

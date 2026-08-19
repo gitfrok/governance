@@ -32,6 +32,10 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  18. gitsaas.codereview.v1.ExternalIssue carries no tracker content (SPEC-0059 AC9, ADR-0074):
+#      this product does not build an issue tracker and never asks one anything. A title or a status
+#      would have to be fetched — making the platform a client of a system it does not control — or
+#      typed, making it a copy that diverges from the truth it claims to show. Paired with a fixture.
 #  17. gitsaas.agent.v1 carries no audit-trail read and no per-person field (SPEC-0058 AC4/AC6,
 #      ADR-0077): the audit log is reached through a scoped, time-boxed, revocable grant
 #      (SPEC-0033), never through a role — a second, weaker path behind an "administrator" would
@@ -236,6 +240,52 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
 else
   report "the triage-field fixture did not compile:"
   indent "$fixture_image"
+fi
+
+# --- 18. ExternalIssue carries no tracker content (SPEC-0059 AC9, ADR-0074) -------------------
+
+# ADR-0074 accepted the alternative to building an issue tracker: a merge request references one that
+# lives elsewhere, by tracker label, issue key and URL. The reference's value is that the platform
+# never asks the tracker anything — no fetch, no poll, no webhook, no credential — and every field
+# beyond those three would break that. A title and a status are the two that would arrive first, as
+# an obvious convenience, and both would be stale from the moment they were stored.
+#
+# TWO ASSERTIONS, because the two halves are different questions. The descriptor answers "does this
+# message exist and compile" — a check over a message nobody declared is vacuous. The message BLOCK in
+# the source answers "what fields does it carry", scoped by name: a package-wide field search cannot
+# be used here, because a merge request legitimately has a title.
+if image_out=$(buf build contracts --path contracts/proto/codereview/v1 \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -q '"name": *"ExternalIssue"' <<<"$image_out"; then
+    echo "  ok    ExternalIssue is in the compiled descriptor (SPEC-0059)"
+  else
+    report "gitsaas.codereview.v1.ExternalIssue is not in the descriptor — SPEC-0059's reference shape is missing"
+  fi
+else
+  report "could not compile gitsaas.codereview.v1 for the external-issue check:"
+  indent "$image_out"
+fi
+
+# awk rather than a JSON reader: this repo's gates parse with bash 3.2 and a BSD userland
+# (check-shell-portability), and one message block is exactly what a range pattern reads well.
+external_issue_fields() {
+  awk '/^message ExternalIssue \{/,/^\}/' "$1" | sed -n 's/^ *[a-z0-9_]* \([a-z0-9_]*\) = [0-9]*;.*/\1/p'
+}
+
+fields=$(external_issue_fields contracts/proto/codereview/v1/codereview.proto)
+if [ -z "$fields" ]; then
+  report "could not read gitsaas.codereview.v1.ExternalIssue's fields — the check would be vacuous"
+elif grep -qxE "title|body|text|summary|description|status|state|assignee|labels|comments|attachment" <<<"$fields"; then
+  report "gitsaas.codereview.v1.ExternalIssue carries tracker content — this product never asks the tracker (SPEC-0059 AC9)"
+else
+  echo "  ok    ExternalIssue carries no tracker content (SPEC-0059 AC9, ADR-0074)"
+fi
+
+fixture_fields=$(external_issue_fields scripts/testdata/external-issue-content/fixture.proto)
+if grep -qx "title" <<<"$fixture_fields" && grep -qx "status" <<<"$fixture_fields"; then
+  echo "  ok    external-issue fixture caught (the tracker-content check can fail)"
+else
+  report "the external-issue fixture carries no title and status — the check is vacuous"
 fi
 
 # --- 17. agent/v1 carries no audit read and no person (SPEC-0058 AC4/AC6, ADR-0077) -----------

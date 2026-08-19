@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 18 (SPEC-0059 AC9, ADR-0074).
+//
+// It carries the shape gitsaas.codereview.v1.ExternalIssue must never grow:
+// content from the tracker. A title and a status are the two fields that would
+// arrive first, and both are the same mistake — the platform can only fill them
+// by asking a system it does not control, which turns a pointer into a mirror
+// with a freshness problem.
+//
+// The gate compiles this module and asserts the descriptor DOES carry them, which
+// is what proves the check against the real contract can fail.
+package gitsaas.codereview.v1;
+
+message ExternalIssue {
+  string tracker = 1;
+  string issue_key = 2;
+  string url = 3;
+  // The defect: what the issue says, which this product would have to fetch.
+  string title = 4;
+  // The defect: whether the issue is open, which is stale the moment it is stored.
+  string status = 5;
+}

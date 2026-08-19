@@ -153,6 +153,11 @@ role_actions := {
 		"identity.pat.issue", "identity.pat.list", "identity.pat.revoke",
 		"ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
+		# Referencing an issue in the customer's own tracker (SPEC-0059, ADR-0074).
+		# Its own action rather than a reuse of merge_request.open: a write
+		# authorized as something it is not is a lie in this table, which is the
+		# one place this product's authorization is legible.
+		"merge_request.external_issue.link",
 		"repository.branch_protection.manage",
 		"repository.import", "repository.import.read", "repository.import.revoke",
 		"repository.import.map_actor",
@@ -171,6 +176,10 @@ role_actions := {
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
+		# A member opens and reviews merge requests, so a member may reference the
+		# issue one is for (SPEC-0059). It writes nothing outside this product: the
+		# reference is inert, and nothing here reaches the tracker.
+		"merge_request.external_issue.link",
 		# A member may read imported history — it is repository content — but may
 		# neither start an import, revoke one, nor assert who a foreign handle is.
 		"repository.import.read",
@@ -258,6 +267,10 @@ action_resource := {
 	"ci.cancel": {"ci_job"},
 	"merge_request.open": {"repository"},
 	"merge_request.review": {"merge_request"},
+	# The reference is a property of one merge request, so that is what it is asked
+	# about — never a repository, which would authorize linking on a merge request
+	# the caller had not named.
+	"merge_request.external_issue.link": {"merge_request"},
 	"merge_request.merge": {"merge_request"},
 	"repository.branch_protection.manage": {"repository"},
 	"repository.import": {"repository"},

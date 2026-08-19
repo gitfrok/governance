@@ -21,6 +21,22 @@ service MergeRequestService {
   rpc SubmitReview(SubmitReviewRequest) returns (SubmitReviewResponse);
   rpc MergeMergeRequest(MergeMergeRequestRequest) returns (MergeMergeRequestResponse);
   rpc SetBranchProtection(SetBranchProtectionRequest) returns (SetBranchProtectionResponse);
+  // LinkExternalIssue and UnlinkExternalIssue reference an issue that lives in
+  // the customer's own tracker (SPEC-0059, PR-28's accepted scope, ADR-0074).
+  //
+  // This product does not build an issue tracker. It records a POINTER: a
+  // tracker label, an issue key and a URL. Nothing here fetches, polls,
+  // authenticates against, or receives a webhook from that tracker, which is
+  // why the reference carries no title and no state — a field the platform
+  // could only fill by becoming a client of somebody else's system is a
+  // freshness promise nobody can keep.
+  //
+  // Separate verbs rather than a field on CreateMergeRequest: opening a merge
+  // request and referencing an issue are separate acts with separate
+  // authorization, and a create that could carry references would make this
+  // path optional — which is how one of two paths stops being tested.
+  rpc LinkExternalIssue(LinkExternalIssueRequest) returns (LinkExternalIssueResponse);
+  rpc UnlinkExternalIssue(UnlinkExternalIssueRequest) returns (UnlinkExternalIssueResponse);
 }
 
 // ReviewCommandContext is derived from an authenticated principal by the PEP.
@@ -69,7 +85,54 @@ message MergeRequest {
   // Present only on imported MRs. An imported MR's approvals never satisfy a
   // merge policy and are never rendered as a platform approval (ADR-0029 §4).
   gitsaas.contracts.v1.Provenance provenance = 14;
+  // References to issues in the customer's own tracker (SPEC-0059). Additive,
+  // and inert: nothing here satisfies a merge policy, changes a review outcome,
+  // or closes anything.
+  repeated ExternalIssue external_issues = 15;
 }
+
+// ExternalIssue is a pointer to an issue this product does not store.
+//
+// THREE FIELDS, AND THE ABSENCES ARE THE DECISION (ADR-0074's accepted scope).
+// There is no title, body, status, state, assignee, label or comment field, and
+// check-contracts' check 18 asserts that against the compiled descriptor,
+// because the platform never asks the tracker anything. A title would have to be
+// fetched — making this a tracker client, with credentials, retries and an
+// outage story — or typed, making it a copy that silently diverges from the
+// truth it claims to show.
+//
+// tracker is a free string rather than an enum: a vocabulary of trackers would
+// need a decision every time a customer used a different one.
+//
+// url is absolute and https. It is the field a person clicks from inside this
+// product, so the domain refuses anything else and the frontend refuses again.
+message ExternalIssue {
+  string tracker = 1;
+  string issue_key = 2;
+  string url = 3;
+  string linked_by = 4;
+  string linked_at = 5;
+}
+
+message LinkExternalIssueRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+  string tracker = 3;
+  string issue_key = 4;
+  string url = 5;
+}
+message LinkExternalIssueResponse { MergeRequest merge_request = 1; }
+
+// UnlinkExternalIssueRequest names the reference by its identity — the tracker
+// and the key — not by a position in a list. A positional remove is a race
+// between two readers of the same merge request.
+message UnlinkExternalIssueRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+  string tracker = 3;
+  string issue_key = 4;
+}
+message UnlinkExternalIssueResponse { MergeRequest merge_request = 1; }
 
 // ImportedThread is one imported review thread (SPEC-0011 AC3). It is
 // display-only history: declared_actor stays an opaque foreign handle until a

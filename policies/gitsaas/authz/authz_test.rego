@@ -63,6 +63,9 @@ denied_pairs := [
 	{"role": "reader", "action": "repo.admin"},
 	{"role": "member", "action": "repo.admin"},
 	{"role": "reader", "action": "merge_request.open"},
+	# A reader reads. Referencing an issue changes a merge request, and a role that
+	# cannot open one has no business annotating it (SPEC-0059 AC10).
+	{"role": "reader", "action": "merge_request.external_issue.link"},
 	{"role": "reader", "action": "repository.branch_protection.manage"},
 	{"role": "member", "action": "repository.branch_protection.manage"},
 	# An import writes history the platform did not witness, and mapping a foreign
@@ -1891,4 +1894,40 @@ test_fleet_read_is_owner_only if {
 	authz.allow with input as fleet_request("owner")
 	not authz.allow with input as fleet_request("member")
 	not authz.allow with input as fleet_request("reader")
+}
+
+# ---------------------------------------------------------------------------
+# Referencing an external issue  (SPEC-0059 AC10, ADR-0074)
+# ---------------------------------------------------------------------------
+# The reference is a property of one merge request, so the action is asked about
+# that merge request — never about a repository, which would authorize linking on
+# a merge request the caller never named.
+external_issue_request(role) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-link", "roles": [role], "tenant_id": "acme"},
+	"action": "merge_request.external_issue.link",
+	"resource": {"type": "merge_request", "id": "mr-1"},
+	"context": {},
+}
+
+test_external_issue_link_is_owner_and_member if {
+	authz.allow with input as external_issue_request("owner")
+	authz.allow with input as external_issue_request("member")
+	not authz.allow with input as external_issue_request("reader")
+}
+
+# Asked about a repository it is refused, whoever asks: the action is pinned to the
+# merge_request resource, and the resource pin is what stops one grant standing in
+# for a broader one.
+test_external_issue_link_is_not_a_repository_action if {
+	not authz.allow with input as object.union(
+		external_issue_request("owner"),
+		{"resource": {"type": "repository", "id": "repo-1"}},
+	)
+}
+
+# The role vocabulary is still three keys. One more action is additive; a new role
+# is not (ADR-0077 decision 2, pinned above).
+test_the_link_action_added_no_role if {
+	object.keys(authz.role_actions) == {"owner", "member", "reader"}
 }
