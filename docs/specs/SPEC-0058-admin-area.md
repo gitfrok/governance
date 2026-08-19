@@ -1,6 +1,6 @@
 # SPEC-0058: The admin area — a dated fleet report, and a door into the grant flow
 
-- **Status:** Approved (2026-08-19) — ADR-0077 Accepted with this increment; RED may begin
+- **Status:** Implemented (2026-08-19) — AC1–AC19 green; governance@0d1b79c, backend@688ed6e, bff@1b761f5, webfrontend@1d1d815
 - **Owner:** platform
 - **Context(s):** Agent (owns the data-plane registry the fleet report reads) · Identity & Access
   (owns the auditor grants the audit door leads to) · BFF · Web frontend — ADR-0022
@@ -74,64 +74,64 @@ existing registry, and the audit door is a link.
 
 ### The contract and the backend (T-0071)
 
-- [ ] **AC1** `ListFleet` returns one tenant's data planes with, for each: the data-plane ID, cloud,
+- [x] **AC1** `ListFleet` returns one tenant's data planes with, for each: the data-plane ID, cloud,
       region, agent and Kubernetes versions, the derived status, the instant it was last seen, and its
       certificate expiry. Provisioned-but-never-connected rows carry the token ID and no plane.
-- [ ] **AC2** It is a `agent.dataplane.read` PDP decision — the action the Agent context's `Fleet`
+- [x] **AC2** It is a `agent.dataplane.read` PDP decision — the action the Agent context's `Fleet`
       already asks, granted to `owner` and to nobody else. **This surface adds no action to the
       vocabulary and no role to the model.**
-- [ ] **AC3** **Additive:** `buf breaking` passes; `FleetReader` is a new service and no existing
+- [x] **AC3** **Additive:** `buf breaking` passes; `FleetReader` is a new service and no existing
       message changes shape.
-- [ ] **AC4** **No message in `agent/v1` carries an audit-trail read.** A descriptor check asserts
+- [x] **AC4** **No message in `agent/v1` carries an audit-trail read.** A descriptor check asserts
       there is no RPC named for reading the trail (`*AuditLog*`, `*AuditTrail*`, `ListAuditRecords`)
       and no field named `audit_records`, `trail` or `audit_log`, with a fixture carrying one to prove
       the check can fail — ADR-0077 decision 1 as a type property, so a trail browser cannot arrive
       behind this surface.
-- [ ] **AC5** **`admin` is not a role.** A rego test pins `role_actions` to exactly `owner`, `member`
+- [x] **AC5** **`admin` is not a role.** A rego test pins `role_actions` to exactly `owner`, `member`
       and `reader`, and a mutation adding an `admin` key fails it — decision 2 made mechanical in the
       one place the role vocabulary exists.
-- [ ] **AC6** The response carries **no per-person field**: no member, no user, no `last_active`. A
+- [x] **AC6** The response carries **no per-person field**: no member, no user, no `last_active`. A
       test asserts the generated messages carry none.
-- [ ] **AC7** A refusal is coarse and uniform: unauthorized, unverified and unavailable are the same
+- [x] **AC7** A refusal is coarse and uniform: unauthorized, unverified and unavailable are the same
       answer, and a tenant with no data planes is a successful empty answer rather than a refusal.
-- [ ] **AC8** The door is composed on the control plane beside the usage door, and the BFF reaches it
+- [x] **AC8** The door is composed on the control plane beside the usage door, and the BFF reaches it
       by configuration — a plane without the door configured serves the admin area without the fleet
       report rather than failing (the usage surface's shape, SPEC-0046).
 
 ### The BFF (T-0072)
 
-- [ ] **AC9** The BFF shapes and forwards under the session: tenant, actor and roles come from the
+- [x] **AC9** The BFF shapes and forwards under the session: tenant, actor and roles come from the
       session and have no field on the browser's request.
-- [ ] **AC10** Every failure is one coarse refusal. An unconfigured fleet door is reported as
+- [x] **AC10** Every failure is one coarse refusal. An unconfigured fleet door is reported as
       unavailable, which is what it is — not as an empty fleet, which would say this tenant has no
       data planes.
-- [ ] **AC11** The response body carries no audit-record, member or activity vocabulary. A test
+- [x] **AC11** The response body carries no audit-record, member or activity vocabulary. A test
       asserts it, so decision 1's boundary holds at the layer a browser reads.
 
 ### The view (T-0073)
 
-- [ ] **AC12** The admin destination renders the fleet report: one row per data plane, each with its
+- [x] **AC12** The admin destination renders the fleet report: one row per data plane, each with its
       status as a glyph and a word, and **the instant it was last seen, shown as an age**.
-- [ ] **AC13** **The report says it is a report.** The page states that the control plane shows what
+- [x] **AC13** **The report says it is a report.** The page states that the control plane shows what
       each plane last reported, and that the data plane's connection is outbound-only — the same
       freshness honesty SPEC-0049 AC7's index reading takes. A stale plane is rendered as stale, never
       as healthy.
-- [ ] **AC14** **The page says what it cannot show**: the CI runners inside a customer's own cluster
+- [x] **AC14** **The page says what it cannot show**: the CI runners inside a customer's own cluster
       are not visible from the control plane, and there is no per-person activity here. The copy
       enumeration forbids "last active", "coming soon", "not yet available" and any phrasing implying
       a live console or a members list is pending.
-- [ ] **AC15** **The audit section is a door, not a browser.** It explains that audit access is issued
+- [x] **AC15** **The audit section is a door, not a browser.** It explains that audit access is issued
       as a scoped, time-boxed, revocable grant and links to the grant and evidence surfaces. A test
       asserts the page renders no audit record, no trail table, and no control that would read one.
-- [ ] **AC16** There is no members panel and no roles table, and **no disabled control anywhere** — the
+- [x] **AC16** There is no members panel and no roles table, and **no disabled control anywhere** — the
       capability does not exist, and a disabled control would tell a reader they lack a permission
       (SPEC-0055 AC7's rule).
-- [ ] **AC17** An unavailable fleet report says so and describes nothing. A tenant with no data planes
+- [x] **AC17** An unavailable fleet report says so and describes nothing. A tenant with no data planes
       says that plainly, and the two readings are different sentences.
-- [ ] **AC18** No hex literal; every status word in `src/lib/status.ts` with a glyph and a word; the
+- [x] **AC18** No hex literal; every status word in `src/lib/status.ts` with a glyph and a word; the
       plane statuses are separable in grayscale and under deuteranopia; the two regression pins
       unmodified.
-- [ ] **AC19** The stub serves a healthy plane, a stale one and a never-connected row; captures
+- [x] **AC19** The stub serves a healthy plane, a stale one and a never-connected row; captures
       regenerated per SPEC-0047 AC10 and reviewed in grayscale and deuteranopia.
 
 ## Governance mapping (G1–G9)
