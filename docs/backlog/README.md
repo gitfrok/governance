@@ -383,6 +383,23 @@ binding for colour and enforced it; this extends the same posture to spacing and
 geometry one owner, and gates it. **No PRD requirement asks for it**, which is exactly why it needed
 an ADR rather than a ticket.
 
+## EP-29 — durability debt, after Phase 4
+
+Decided by **ADR-0080** (Accepted 2026-08-20). Not a phase reopening: Phase 4 is Complete and its exit
+criteria are met. This is the class of debt a phase leaves behind rather than a surface it failed to
+deliver, so it gets its own epic instead of a retroactive edit to a closed one.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-29** Durability debt | — (no PRD row: PR-9 already asks for the behaviour; this is whether it survives a restart) | T-0078 | SPEC-0061 | In progress — ADR-0080 Accepted as written |
+
+One line: the Code Review context has never had a durable store — `cmd/dataplane-app` builds it on
+`NewMemoryStore` and the module has no Postgres adapter at all, so every merge request, review,
+branch-protection rule and external issue reference empties with the process. It is ADR-0071's gap in
+the same shape, and worse in consequence: a registry that emptied could be re-registered from
+repositories still on disk, while what empties here is who approved what, at which revision, against
+which rule.
+
 ## Parked — needs a human decision first
 
 Force-promote tenant self-service (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017) ·

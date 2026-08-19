@@ -1,7 +1,7 @@
 # ADR-0080: Merge requests are durable, and the aggregate that carries them is scoped by whoever has the tenant
 
-- **Status:** Proposed
-- **Date:** 2026-08-20
+- **Status:** Accepted
+- **Date:** 2026-08-20 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform
 - **Related:** ADR-0071 (the same gap, closed for the repository registry), ADR-0062 (durable
   control-plane stores), ADR-0003 (tenancy and RLS), ADR-0007 (append-only audit), ADR-0025
@@ -96,6 +96,19 @@ constructor keeps its honest comment about what it costs.
 **5. This does not reopen Phase 4.** Phase 4 is Complete, its exit criteria are met, and its plan
 records what it deliberately did not deliver. Durability debt of this kind is not a surface, so it
 gets its own epic rather than a retroactive edit to a closed phase.
+
+## Accepted scope (2026-08-20)
+
+**Accepted as written, all five decisions.** Specified as SPEC-0061, delivered by T-0078 in `backend`
+only — no contract, no policy, no BFF, no frontend, because nothing a caller sees changes except that
+it survives a restart.
+
+One thing the acceptance fixes that the decisions left implicit: **the tables are the port's shape,
+not the aggregate's.** Reviews, branch protections and ref revisions each have their own port methods
+and their own keys, so each gets a table; the idempotency key and the `seen` request ID are both
+"this was already applied" and share one. External issue references get neither — they are the JSONB
+column of decision 2. That mapping is stated here so the migration is reviewable against a decision
+rather than against whatever the adapter happened to need.
 
 ## What this does not decide
 

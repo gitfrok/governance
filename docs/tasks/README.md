@@ -92,6 +92,8 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 
 | T-0077 | One type scale, one page shell, and the gate that keeps geometry in the token layer | 4 | Done — webfrontend@5628286; SPEC-0060 AC1–AC10; EP-28; 461 literals to zero, **0 waivers**; the capture review caught two undercounted changes and one defect the shell adoption introduced |
 
+| T-0078 | The Code Review context keeps what it was told | 4 | Not started — SPEC-0061 AC1–AC16; EP-29 |
+
 ## Retired numbers (never reused)
 
 - **T-0019** — review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review

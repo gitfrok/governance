@@ -150,11 +150,11 @@ it.
 
 ## Open questions / assumptions
 
-1. **Merge requests are not durable today.** The Code Review context's store is `NewMemoryStore`, so a
-   reference is exactly as durable as the merge request carrying it — which is to say, not, across a
-   restart. That is the same gap ADR-0071 closed for the repository registry, it needs its own ADR, and
-   this spec does not quietly add a table to one context's adapter while the aggregate has none.
-   **Recorded as a follow-up rather than fixed here.**
+1. ~~**Merge requests are not durable today.**~~ **Taken 2026-08-20 by ADR-0080**, which decided the
+   durable store for the whole Code Review aggregate — merge requests, reviews, branch protections and
+   these references — rather than a table added to one adapter. SPEC-0061 and T-0078 build it. The
+   question stands recorded because the reasoning is still the reasoning: a reference is exactly as
+   durable as the merge request carrying it, and that was not a property this spec could fix alone.
 2. **The URL is trusted to be the tenant's own tracker, not validated against an allowlist.** A
    per-tenant allowed tracker origin is a settings decision, and ADR-0076 kept settings narrow. AC14's
    host rendering and AC17's `https`-only rule are what stand in for it: a reader sees where a link
