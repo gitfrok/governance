@@ -147,8 +147,10 @@ Three waves under a **route-before-pixel** ordering law: **Tier A** (route exist
 merge-request actions, code search, evidence packs, auditor grants; `webfrontend` only, may begin
 now), **Tier B** (the PRD requires it, no route serves it — repository list, blame/history,
 pipelines, policy authoring; backend first), **Tier C** (the `./UI` prototype shows it, nothing
-requires it — issues, releases, settings, admin, marketing page; blocked until ADR-0070 is Accepted
-and the PRD carries PR-24…PR-32).
+requires it — issues, releases, settings, admin, ~~marketing page~~; blocked until ADR-0070 is
+Accepted and the PRD carries PR-24…PR-32). **The marketing page (PR-32) was withdrawn from the PRD on
+2026-08-19** — ADR-0078 is Accepted and requires a separate origin that no repository here can serve;
+PRD §5.1 records why, and T-0067 keeps the authenticated root from becoming one.
 
 **Exit:** every BFF route has a UI or a recorded reason it does not; no nav destination lacks a
 route; PR-9's loop is executable by a person in a browser; every new surface passes the ADR-0069

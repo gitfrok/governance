@@ -71,14 +71,16 @@ the same move ADR-0062 made for the agent and residency stores.
 
 ## Wave 3 — Tier C: adopted from the prototype, and a context each
 
-**Unblocked 2026-08-18:** ADR-0070 is Accepted and the PRD carries PR-28…PR-32. The second gate
+**Unblocked 2026-08-18:** ADR-0070 is Accepted and the PRD carries PR-28…PR-32. **PR-32 was
+withdrawn from the PRD on 2026-08-19** — see PRD §5.1 and the note at the end of this wave. The
+second gate
 still stands and is the harder one — **each of issues, releases, repository settings and the admin
 area needs its own Proposed ADR before a spec**, because each is a bounded context under ADR-0022
 with its own storage, events, permissions and audit obligations. ADR-0070 sets that as its own
 follow-up, and it is not a formality: adopting a context adopts its maintenance permanently.
 
 Issues (PR-28), releases (PR-29), repository settings (PR-30), the admin area with its audit-log
-browser and runners view (PR-31), and the marketing landing page (PR-32).
+browser and runners view (PR-31), and ~~the marketing landing page (PR-32)~~ — withdrawn.
 
 **The five context ADRs were written 2026-08-19 and none of them adopts its surface.** Each fixes
 the boundaries most likely to be crossed under delivery pressure and records what adoption would
@@ -94,9 +96,16 @@ alternative over the thing PR-28…PR-32 describe.
 | 0077 | Admin | Audit reached through a grant, not a role; `admin` is not a new primitive; runner state is a dated report | Possibly no audit panel — point at the evidence pack |
 | 0078 | Marketing | Separate surface, separate origin, never receives a session | Possibly not this repository at all |
 
-PR-32 is the odd one and the cheapest: a landing page has no context behind it, and ADR-0070's open
-follow-up asks whether it belongs in `webfrontend` at all or in a surface that never holds a session
-cookie.
+**PR-32 is closed, not scheduled. Withdrawn 2026-08-19 (PRD §5.1).** It looked like the odd one and
+the cheapest — a landing page has no context behind it — and that is exactly what accepting ADR-0078
+disproved. There was nothing to move: `webfrontend`'s root has been the repository list since T-0055,
+and no marketing page has ever existed in the tree. What was left was a requirement this repository
+cannot start at all, because the super-repo stores pins only (invariant 25) and the separate origin
+ADR-0078 requires needs a repository nobody has created or offered to own. ADR-0078's rule stands for
+any future marketing surface, and its decision 3 is enforced here and now by T-0067, which fails if
+someone puts a splash page at the authenticated root.
+
+**Tier C is therefore four contexts, not four contexts and a page.**
 
 ## Exit criteria
 
@@ -115,7 +124,8 @@ cookie.
 
 - **Tier C is adopted from a mockup, not a customer.** ADR-0070 says so in its own consequences.
   The mitigation is procedural: Tier C cannot start until someone defends PR-28…PR-32 on their
-  merits at ADR acceptance.
+  merits at ADR acceptance. **This has already removed one requirement** — PR-32 was withdrawn on
+  2026-08-19 instead of being scheduled.
 - **Phase 4 is the first phase to touch all four repositories in anger since Phase 3.** The
   one-commit-per-submodule rule (ADR-0027, invariant 25) is easiest to break on Tier B items, where
   a single feature genuinely spans backend, bff and webfrontend.

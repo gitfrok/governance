@@ -121,7 +121,8 @@ disagreed: the BFF served eighteen routes and ten had a UI, several `PR-#` rows 
 nowhere, and the `./UI` prototype showed a larger product than either. PR-24…PR-27 name behaviour
 the platform already has and no person can reach. PR-28…PR-32 adopt surfaces the prototype shows;
 ADR-0070 records, in its own consequences, that their evidence is a mockup rather than a user, and
-that each of the first four is a bounded context under ADR-0022 rather than a screen.
+that each of the first four is a bounded context under ADR-0022 rather than a screen. **PR-32 was
+withdrawn on 2026-08-19** — see §5.1.
 
 **Every row here is bound by ADR-0070's route-before-pixel law:** no UI before the BFF route it
 reads, and no route before the backend port it shapes.
@@ -136,7 +137,44 @@ reads, and no route before the backend port it shapes.
 | PR-29 | A team can cut and publish a release from a tag, with its artifacts and notes | — | 0070 | **New** — needs its own context ADR first |
 | PR-30 | A repository owner can read and change repository settings — name, description, visibility, members and archival — each change audited | G2, G5 | 0070 | **New** — needs its own context ADR first |
 | PR-31 | An org administrator can read the org's members, roles, runners and audit log from an admin area, without gaining repository read access | G2, G5, G6 | 0070 | **New** — needs its own context ADR first |
-| PR-32 | An unauthenticated visitor is served a marketing landing page that never leaks tenant existence or content | G1 | 0070 | **New** |
+| ~~PR-32~~ | ~~An unauthenticated visitor is served a marketing landing page that never leaks tenant existence or content~~ | G1 | 0070, 0078 | **Withdrawn 2026-08-19** — see §5.1 |
+
+### 5.1 Withdrawn requirements
+
+A withdrawn requirement keeps its number. Numbers are never reused here — the same rule
+`../tasks/README.md` applies to retired task numbers — so that a citation in an ADR, a commit or a
+review still resolves to the thing it meant.
+
+**PR-32 — the marketing landing page. Withdrawn 2026-08-19.**
+
+It was adopted by ADR-0070 from the `./UI` prototype, which ADR-0070 itself recorded as evidence
+weaker than a customer. **ADR-0078** then decided how it would have to be built if it were built: a
+surface that never receives a session, on a different origin, because the `__Host-` cookie binds to
+an origin and that is what makes "never receives a session" a property rather than a promise.
+
+Accepting ADR-0078 established that **there was nothing to move** — `webfrontend`'s root has been
+the repository list since T-0055, and no marketing page has ever existed in this product. What
+remained was a requirement that could not be started from this repository at all: the super-repo
+stores pins only (invariant 25), so a marketing surface cannot live here as a directory, and making
+it a submodule needs a repository nobody has created or offered to own.
+
+**A requirement nobody can start reads as planned work.** Leaving PR-32 open would have kept a row
+in this table that no roadmap could schedule and no team could pick up, which is worse than closing
+it — it misrepresents the plan to everyone who reads it, including us.
+
+**What survives the withdrawal:**
+
+- **ADR-0078 stands and is not edited** (Accepted ADRs are immutable — ADR-0001). Its decisions 1
+  and 2 are the standing rule for *any* future marketing surface: separate surface, separate origin,
+  never a session. If this requirement returns, it returns under them.
+- **Decision 3 is live and enforced.** `webfrontend`'s root stays the repository list, guarded by
+  T-0067, which fails if someone puts a splash page there. Withdrawing the requirement removes the
+  work, not the risk — the reason someone would add a marketing page to the authenticated app is
+  unchanged.
+
+**What would reopen it:** a marketing surface with an owner and a repository. This is not a decision
+about whether the product should have a marketing page; it is a statement that this repository is
+not where one gets built, and that the PRD should stop implying otherwise.
 
 ## 6. Pricing & fair use (product behavior only)
 
@@ -252,7 +290,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
 | Phase-4 requirements PR-24…PR-27 | full product surface | backend ports + BFF routes + web UI, in that order (ADR-0070's ordering law); specs and tasks under EP-26 |
 | Phase-4 requirements PR-28…PR-31 | full product surface | **a Proposed ADR each, first** — issues, releases, repository settings and the admin area are bounded contexts under ADR-0022, with their own storage, events, permissions and audit obligations. A screen is not a context. EP-27 |
-| PR-32 marketing landing page | full product surface | open: whether it belongs in `webfrontend` at all, or in a surface that never holds a session cookie (ADR-0070 follow-up) |
+| ~~PR-32 marketing landing page~~ | — | **Closed 2026-08-19**: the requirement is withdrawn (§5.1). ADR-0078 settled *how* such a surface must be built; what it could not settle is *where*, and nobody owns one. The rule survives the requirement |
 
 ### 12.2 Drift to reconcile in governance
 
