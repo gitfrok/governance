@@ -1850,3 +1850,45 @@ test_deny_platform_operator_reasons_are_indistinguishable if {
 	)
 	member_set == cross_tenant
 }
+
+# ---------------------------------------------------------------------------
+# The role vocabulary is closed  (SPEC-0058 AC5, ADR-0077 decision 2)
+# ---------------------------------------------------------------------------
+# ADR-0077 exists because an admin area is where privilege accumulates. Its
+# second decision is that "admin" is not a new authorization primitive: an admin
+# area asks the PDP the same way every other surface does, and never acquires a
+# role that means "allowed everywhere".
+#
+# That decision is only expressible here. A UI cannot hold it, a contract cannot
+# hold it, and a review will not catch it — an `admin` key in the table below
+# would arrive looking like the obvious way to let the admin area work, and every
+# existing test would stay green, because each of them asserts what a role CAN
+# do. This is the same failure the denied_pairs matrix above was written for.
+#
+# So the vocabulary itself is pinned. Adding a role to authz.rego fails this
+# test, which forces the decision back to an ADR rather than a diff.
+test_role_vocabulary_is_exactly_the_three_tenant_roles if {
+	object.keys(authz.role_actions) == {"owner", "member", "reader"}
+}
+
+# The admin area's fleet read is an EXISTING action, and only the owner has it.
+# If a future surface needs a wider reader, that is a role decision, and this
+# test is where it becomes visible.
+#
+# The request names the `data_plane` resource rather than the repository one that
+# `as_role` builds: action_resource pins each action to the resource kind it may
+# be asked about, so asking `agent.dataplane.read` about a repository is refused
+# for that reason instead of the one under test.
+fleet_request(role) := {
+	"tenant_id": "acme",
+	"subject": {"id": "u-fleet", "roles": [role], "tenant_id": "acme"},
+	"action": "agent.dataplane.read",
+	"resource": {"type": "data_plane", "id": "dp-1"},
+	"context": {},
+}
+
+test_fleet_read_is_owner_only if {
+	authz.allow with input as fleet_request("owner")
+	not authz.allow with input as fleet_request("member")
+	not authz.allow with input as fleet_request("reader")
+}

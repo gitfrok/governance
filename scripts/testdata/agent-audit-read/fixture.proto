@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+// Fixture for scripts/check-contracts.sh check 17 (SPEC-0058 AC4, ADR-0077).
+//
+// It carries the shape gitsaas.agent.v1 must never grow: a way to read the audit
+// trail from the surface an "administrator" reaches. The audit log is reached
+// through a scoped, time-boxed, revocable grant (SPEC-0033) — a second, weaker
+// path behind a role would make that machinery decorative, and it would arrive
+// looking helpful: an admin area that already lists data planes listing records
+// too.
+//
+// The gate compiles this module and asserts the descriptor DOES carry it, which is
+// what proves the check against the real contract can fail.
+package gitsaas.agent.v1;
+
+message ListAuditLogRequest { string tenant_id = 1; }
+message ListAuditLogResponse { repeated string audit_records = 1; }
+
+service FleetReader {
+  // The defect: the trail, read by a role rather than through a grant.
+  rpc ListAuditLog(ListAuditLogRequest) returns (ListAuditLogResponse);
+}

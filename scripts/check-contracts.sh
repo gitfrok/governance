@@ -32,6 +32,12 @@
 #      absence is a TYPE PROPERTY of the package — asserted against the COMPILED descriptor, exactly
 #      as checks 5 and 6 do — so the field cannot reappear as a convenience later. The paired
 #      fixture carries the defect and must be caught.
+#  17. gitsaas.agent.v1 carries no audit-trail read and no per-person field (SPEC-0058 AC4/AC6,
+#      ADR-0077): the audit log is reached through a scoped, time-boxed, revocable grant
+#      (SPEC-0033), never through a role — a second, weaker path behind an "administrator" would
+#      make the grant machinery decorative. `Last active` is refused for its own reason: it is
+#      presence telemetry about people and nothing else in this product collects any. Paired with a
+#      fixture.
 #  16. gitsaas.repository.v1 carries no visibility, membership or policy field, and no delete verb
 #      (SPEC-0057 AC11/AC12, ADR-0076): the accepted settings increment is name, description and
 #      archival. Visibility and per-repository membership are authorization-model changes wearing a
@@ -229,6 +235,45 @@ if fixture_image=$(buf build "$fixture" --type gitsaas.security.v1.Finding --exc
   fi
 else
   report "the triage-field fixture did not compile:"
+  indent "$fixture_image"
+fi
+
+# --- 17. agent/v1 carries no audit read and no person (SPEC-0058 AC4/AC6, ADR-0077) -----------
+
+# The admin area reads a fleet report. It does not read the audit trail: that is reached through a
+# grant (SPEC-0033), and the existence of the bounded path is what makes an unbounded one
+# indefensible. An audit read would arrive here looking helpful — a surface that already lists data
+# planes listing records too — so the absence is asserted against the compiled descriptor.
+#
+# The per-person half is ADR-0077's own follow-up, answered no: `Last active` is presence telemetry
+# about people, and a field that exists gets used.
+if image_out=$(buf build contracts --path contracts/proto/agent/v1 \
+  --exclude-source-info -o -#format=json 2>&1); then
+  if grep -oE '"name": *"[A-Za-z]*Audit[A-Za-z]*"' <<<"$image_out" | grep -q .; then
+    report "gitsaas.agent.v1 carries an audit surface — the trail is reached through a grant, not a role (SPEC-0058 AC4)"
+  else
+    echo "  ok    agent/v1 carries no audit read (SPEC-0058 AC4, ADR-0077)"
+  fi
+  if grep -qE '"name": *"(audit_records|audit_log|trail|last_active|member|members|user_email)"' <<<"$image_out"; then
+    report "gitsaas.agent.v1 carries an audit-record or per-person field — outside ADR-0077's accepted increment (SPEC-0058 AC4/AC6)"
+  else
+    echo "  ok    agent/v1 carries no audit-record or per-person field (SPEC-0058 AC6, ADR-0077)"
+  fi
+else
+  report "could not compile gitsaas.agent.v1 for the admin-area check:"
+  indent "$image_out"
+fi
+
+fixture=scripts/testdata/agent-audit-read
+if fixture_image=$(buf build "$fixture" --exclude-source-info -o -#format=json 2>&1); then
+  if grep -qE '"name": *"ListAuditLog"' <<<"$fixture_image" &&
+    grep -qE '"name": *"audit_records"' <<<"$fixture_image"; then
+    echo "  ok    agent-audit-read fixture caught (the admin-area check can fail)"
+  else
+    report "the agent-audit-read fixture compiled without ListAuditLog and audit_records in its descriptor — the check is vacuous"
+  fi
+else
+  report "the agent-audit-read fixture did not compile:"
   indent "$fixture_image"
 fi
 

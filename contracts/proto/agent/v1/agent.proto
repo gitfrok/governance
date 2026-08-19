@@ -507,3 +507,80 @@ message CommandResult {
 message ConfigUpdate { map<string, string> values = 1; }
 message Diagnostics  { string bundle_ref = 1; string note = 2; } // reference/upload, not code
 message Ping         { google.protobuf.Timestamp at = 1; }
+
+// ---------------------------------------------------------------------------
+// Fleet visibility for an org administrator  (SPEC-0058 AC1, PR-31, ADR-0077)
+// ---------------------------------------------------------------------------
+// FleetReader serves the admin area's fleet report: which data planes a tenant
+// has, what each last said, and WHEN it last said it.
+//
+// It is a new service rather than an RPC on EnrolmentService because the callers
+// differ in kind. EnrolmentService is an operator door authenticated by a PAT,
+// and deliberately carries no tenant or actor field — both are properties of the
+// verified principal on the call. This read is made by an org administrator
+// through the BFF under a session, so it carries a context the way usage/v1
+// does. One service with two authentication stories is how a door ends up
+// trusting the wrong one.
+//
+// WHAT IS ABSENT HERE IS ADR-0077 DECISION 1. There is no audit-trail read on
+// this service and none anywhere in this package: the audit log is reached
+// through a scoped, time-boxed, revocable grant (SPEC-0033), never through a
+// role, and an unbounded trail browser behind an "administrator" would make that
+// grant machinery decorative. check-contracts' check 17 asserts the absence
+// against the compiled descriptor.
+//
+// There is also no per-person field. `Last active` on a member is presence
+// telemetry about people, nothing else in this product collects any, and this is
+// not the surface that starts.
+service FleetReader {
+  // ListFleet returns one tenant's data planes and its provisioned-but-never-
+  // connected rows. It is an `agent.dataplane.read` decision — the action the
+  // Agent context already asks, granted to `owner` and to nobody else. This
+  // surface adds no action and no role (ADR-0077 decision 2).
+  rpc ListFleet(ListFleetRequest) returns (ListFleetResponse);
+}
+
+// FleetContext carries the verified caller. Roles are verified principal
+// attributes supplied to the PDP input, never a caller-provided authorization
+// result — the same shape UsageContext has.
+message FleetContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+  repeated string actor_roles = 3;
+  string request_id = 4;
+}
+
+// DataPlaneReport is what the control plane last heard from one data plane.
+//
+// last_seen_at is the field this message exists for. The data plane's connection
+// is outbound-only (ADR-0011), so nothing here is live truth: it is a report
+// with an age, and a consumer that renders the status without the instant
+// misrepresents the architecture as a console (ADR-0077 decision 3).
+//
+// status is the vocabulary the Agent context derives, as a string for the reason
+// the audit action vocabulary is one: a new state is additive rather than a
+// coordinated deploy. STALE is never rendered as healthy (SPEC-0038 AC8).
+message DataPlaneReport {
+  string data_plane_id = 1;
+  string status = 2;
+  string cloud = 3;
+  string region = 4;
+  string agent_version = 5;
+  string k8s_version = 6;
+  // The instant the control plane last heard from this plane. Empty for a row
+  // that has never connected.
+  string last_seen_at = 7;
+  string enrolled_at = 8;
+  string certificate_expires_at = 9;
+  // Set for a provisioned-but-never-connected row: an enrolment token that has
+  // not been spent. A row like this is a data plane somebody meant to have, and
+  // omitting it would report a smaller fleet than the tenant provisioned.
+  string token_id = 10;
+}
+
+message ListFleetRequest { FleetContext context = 1; }
+
+// The response carries no total and no count of anything the caller may not see,
+// the same property every other list in this product has. It carries no audit
+// record and no person.
+message ListFleetResponse { repeated DataPlaneReport planes = 1; }
