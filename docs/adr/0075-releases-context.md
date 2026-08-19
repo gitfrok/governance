@@ -1,7 +1,7 @@
 # ADR-0075: Releases is a bounded context whose promises are supply-chain promises
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (required by ADR-0070's follow-up before any PR-29 spec)
 - **Related:** ADR-0070, ADR-0022, ADR-0033 (repo storage), ADR-0050/0051 (object storage),
   ADR-0044 and ADR-0065 (release trust and signing — for OUR releases), ADR-0071 (registry as the
@@ -56,6 +56,29 @@ ADR-0053's blame rule follows: name the thing the platform does not vouch for.
 attests *platform* releases to data planes. Reusing it to attest tenant artifacts would conflate two
 trust roots with different authorities, and the two-bundles lesson is already recorded in EP-21's
 carry: neither one's test may stand in for the other's.
+
+## Accepted scope (2026-08-19)
+
+**The owner accepted this ADR together with its recommended alternative: tags and notes, no
+artifacts.** That is the first increment, specified as SPEC-0056, and it changes what the open
+questions above mean rather than answering them:
+
+- **Signing (open question 1) does not arise.** With no artifact there is nothing to sign and
+  nothing served as trusted. Decision 1 stands unused rather than satisfied, and becomes live the
+  day an artifact does.
+- **Immutability (open question 2) is narrowed, not settled.** For a notes-only release, notes are
+  **editable and carry the instant they were last edited**: a release note is documentation, and
+  refusing to fix a typo in it helps nobody. The audit-grade immutability question is about
+  artifacts and returns with them.
+- **Storage and metering (open question 3) do not arise.** Notes are a bounded text field in the
+  context's own table, not an object in a store.
+- **Open question 4 is answered, and it is the interesting one.** A tag can move or be deleted after
+  a release is published. The release therefore records **the commit the tag pointed at when it was
+  published**, so the surface can say when the tag no longer points there — rather than silently
+  rendering whatever the tag means today. See SPEC-0056 AC6.
+
+**What this increment must not grow into without returning here:** an artifact field, an upload
+route, or a download link. Each re-opens questions 1 to 3 at once.
 
 ## Consequences
 

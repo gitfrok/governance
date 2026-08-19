@@ -61,3 +61,4 @@ below carry Open Questions that flag any still-parked human decision.
 | SPEC-0053 | Blame and history, and the git-author/platform-actor distinction | Implemented (2026-08-19) | T-0056, T-0057, T-0058 |
 | SPEC-0054 | Pipeline runs, and the plain statement that job output is gone | Implemented (2026-08-19) | T-0059, T-0060, T-0061 |
 | SPEC-0055 | Policy visibility — what is in force and what decided an outcome | Implemented (2026-08-19) | T-0062, T-0063 |
+| SPEC-0056 | Releases — a tag, some notes, and an honest answer when the tag moves | Approved (2026-08-19) | T-0064, T-0065, T-0066 |
