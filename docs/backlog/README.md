@@ -374,7 +374,7 @@ criterion 4. Decided by **ADR-0079** (Accepted 2026-08-19).
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-28** The design layer holds together | — (no PRD row: this is about how the surfaces the product already has hold together) | T-0077 | SPEC-0060 | In progress — ADR-0079 Accepted as written |
+| **EP-28** The design layer holds together | — (no PRD row: this is about how the surfaces the product already has hold together) | T-0077 | SPEC-0060 | **Done (2026-08-19)** — 461 dimensional literals to zero with 0 waivers; a seven-step type scale, one shell owning the content column, and a build-blocking gate beside the hex gate. Two visible changes the ADR's summary undercounted are recorded in SPEC-0060's exit record |
 
 One line: Phase 4 added ten surfaces over three waves and the geometry drifted while nobody was
 looking — 347 dimensional literals, 224 of them font sizes in ten sizes against a single type token,
