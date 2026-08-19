@@ -1,7 +1,7 @@
 # ADR-0077: The admin area is where privilege accumulates, and the audit log is not a page
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (required by ADR-0070's follow-up before any PR-31 spec)
 - **Related:** ADR-0070, ADR-0007 (append-only audit), ADR-0029, ADR-0006, ADR-0049, ADR-0009/0010
   (residency), SPEC-0033 (auditor grants), ADR-0022, ADR-0071
@@ -51,6 +51,54 @@ acquire a bypass, and it does not introduce a role that means "allowed everywher
 outbound-only. A panel that implies otherwise misrepresents the architecture, and the honest
 rendering names when the plane last said so — the same shape SPEC-0049's index-freshness reading
 takes.
+
+## Accepted scope (2026-08-19)
+
+**The owner accepted this ADR with the two panels that can be built honestly today: a dated fleet
+report, and a door into the grant flow.** That is the first increment, specified as SPEC-0058. The
+three decisions above are what bounds it, and scoping it answered a question the ADR left open —
+*what the four panels actually have behind them.*
+
+**Members is deferred, because nothing can answer it.** Roles are tenant-level and come from Zitadel
+(ADR-0049), and the Identity context has no member-listing port: it authenticates, it issues and
+revokes auditor grants, and that is all. A members panel therefore needs either an outbound read
+against the identity provider — its own decision, with its own failure mode when the provider is
+unreachable — or a projection nobody has built. Under ADR-0070's route-before-pixel law that is not a
+UI question yet. The panel is **absent rather than present-and-empty**, following ADR-0076 decision
+2's shape: an empty table would say this org has no members, which is false.
+
+**Roles is deferred with it, and for a related reason.** Without members, a roles panel is a table of
+three definitions — which is documentation, and belongs where the policy bundle is, not in a surface
+that implies it is reporting this org's state.
+
+**The audit answer is composition, not a new surface.** PR-31's clause is "read the org's … audit log
+**without gaining repository read access**", and that is exactly what SPEC-0033's scoped, time-boxed,
+revocable auditor grants already do — issued, listed, revoked, each act audited, with the evidence
+pack as the read surface. So the admin area **links into the existing grant and evidence flow** and
+contains no trail browser. Decision 1 is satisfied by there being nothing else to satisfy it with.
+
+**Decision 2 gets a mechanical gate.** The role vocabulary lives in `policies/gitsaas/authz` and a
+rego test now pins `role_actions` to exactly `owner`, `member` and `reader`. An `admin` role that
+means "allowed everywhere" cannot arrive as a convenience — it fails a test in the repository that is
+the Source of Truth. This is decision 2's equivalent of ADR-0076's check 16, in the place where this
+decision is actually expressible.
+
+**Decision 3 is the fleet panel, and it is the interesting half.** The Agent context already derives
+what this needs — `Fleet` returns each data plane with its status and the instant it was last seen,
+and its own comment says *stale reads stale, never healthy*. The panel renders that instant, and says
+plainly that the control plane reports what the plane last told it. It also says what it cannot show:
+the CI runners inside a customer's own cluster are not visible from here, because the data plane's
+connection is outbound-only and no surface should imply otherwise.
+
+**`Last active` on a member is refused, not deferred.** This ADR's own follow-up asked whether it is a
+fact this product should retain; the answer taken here is no. It is presence telemetry about people,
+nothing else in the product collects any, and a field that exists gets used. The copy enumeration on
+the view forbids it, so it cannot arrive as a column somebody thought was helpful.
+
+**What this increment must not grow into without returning here:** a trail browser reached by a role,
+an `admin` entry in `role_actions`, a live runner console, or per-person activity. The first two are
+the reason this ADR exists; the third misrepresents the architecture; the fourth is surveillance the
+product has so far declined to build.
 
 ## Consequences
 

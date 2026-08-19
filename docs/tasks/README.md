@@ -82,6 +82,10 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0069 | The settings contract, the gate that keeps policy off it, and the BFF routes | 4 | Done — governance@9122a0d, bff@f7d6067; SPEC-0057 AC10–AC14; EP-27; check 16 keeps visibility, membership, policy and deletion off the surface |
 | T-0070 | The settings view, and an absence that is not a permission | 4 | Done — webfrontend@dc8307e; SPEC-0057 AC15–AC20; EP-27; the capture review caught a doubled glyph |
 
+| T-0071 | The fleet contract, the door that serves it, and the gates that keep the trail out | 4 | Not started — SPEC-0058 AC1–AC8; EP-27 |
+| T-0072 | The fleet route, and an unavailable door that is not an empty fleet | 4 | Not started — SPEC-0058 AC9–AC11; EP-27 |
+| T-0073 | The admin area view — a dated report, and a door instead of a trail | 4 | Not started — SPEC-0058 AC12–AC19; EP-27 |
+
 ## Retired numbers (never reused)
 
 - **T-0019** — review-history import + attested provenance. Folded into T-0018 at SPEC-0011 review
