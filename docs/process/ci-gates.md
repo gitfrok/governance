@@ -1,5 +1,11 @@
 # CI gates (required checks)
 
+The docs row is easy to read as cosmetic and is not. `check-docs.sh` resolves every relative link,
+asserts every ADR, spec and task appears in its index, and since 2026-08-19 asserts that a status
+means the same thing in a document as in the index that lists it — and that a spec whose every task
+is Done has left `Approved`. Agents read this repo before they write code and follow its links; a
+document whose status is behind the work is a decision they will act on wrongly.
+
 Each repo's CI must pass these before merge; the super-repo gate protects the composition.
 `✓` = required, `–` = not applicable.
 
@@ -7,6 +13,7 @@ Each repo's CI must pass these before merge; the super-repo gate protects the co
 |---|:--:|:--:|:--:|:--:|:--:|
 | lint / format | ✓ | ✓ | ✓ | ✓ | ✓ |
 | ADR/spec present (AGDD) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| governance docs — links, indexes and **statuses** (`check-docs.sh`) | ✓ | – | – | – | – |
 | contract schema — lint + breaking (ADR-0032) | ✓ | – | – | – | – |
 | generated code matches the pinned contracts | – | – | – | – | ✓ |
 | unit (domain) | – | ✓ | ✓ | ✓ | – |

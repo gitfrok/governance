@@ -319,7 +319,7 @@ posture remains hosted** (§4). BYO is an option, not the onboarding path.
 | Phase-2 requirements PR-13…PR-19 | wedge | backlog epics + specs + tasks; backlog currently says Phase 2 "to be expanded" |
 | Phase-3 requirements PR-20…PR-23 | BYO/commercial | backlog epics + specs + tasks; backlog currently says Phase 3 "to be expanded" |
 | Fair-use metering & enforcement (§6) | PR-23 | spec + task; resolves the ADR-0008 unit-economics follow-up input side (dimensions + behavior fixed here, prices not) |
-| Phase 1/2/3 plan files | — | `../plans/` holds only `phase-0-foundations.md` (itself now current — §12.2 item 4 resolved) |
+| ~~Phase 1/2/3 plan files~~ | — | **Closed 2026-08-19**: `../plans/` carries a file per phase, each with a status line (§12.2 item 1) |
 | Phase-4 requirements PR-24…PR-27 | full product surface | backend ports + BFF routes + web UI, in that order (ADR-0070's ordering law); specs and tasks under EP-26 |
 | ~~PR-28 an issue tracker~~ | issues | **Closed 2026-08-19**: ADR-0074 Accepted with its recommended alternative. The requirement is re-scoped to a reference (§5.2) and delivered; a tracker is not being built, and the ADR's cost section is what reopening it would start from |
 | PR-31 members, roles, audit browser | admin area | **Closed as deferred 2026-08-19**: ADR-0077 Accepted the fleet report and the grant door. Members and roles have no read behind them — roles are the identity provider's and no membership port exists — and the audit log is reached through a grant rather than a role, held by check 17 and by a rego pin on the role vocabulary |
@@ -338,9 +338,20 @@ T-0009 both carry `Phase / Epic: 0 / EP-0` in their task files; the epic now lis
 §7 non-goal "service extraction without an ADR-0026 trigger" became mechanically observable with
 T-0009's trigger report, whose budgets are set by ADR-0030 (Accepted).
 
+Resolved (2026-08-19): the spec lifecycle in `../specs/README.md` and the phase statuses in
+`../roadmap/README.md` had both fallen behind the task table — 52 specs sat at `Approved` with every
+proving task Done, and two phases read `Planned` with all their epics closed. All are reconciled, and
+`check-docs.sh` checks 4 and 5 now assert that a spec's status agrees with its tasks and that every
+spec and ADR says the same thing in its file as in its index. The drift was invisible because nothing
+asked; it is now asked on every run. **The inconsistency became visible only because four new specs
+were written as `Implemented` beside 52 that were not** — an accident, not a check, which is why the
+check exists.
+
 Open:
-1. `../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and
-   all Phase-2/3 requirements are sequenced only by task-level `Depends on`.
+1. ~~`../plans/` holds only `phase-0-foundations.md` — no Phase-1/2/3 plan files, so EP-8 (T-0018) and
+   all Phase-2/3 requirements are sequenced only by task-level `Depends on`.~~ **Resolved 2026-08-19:**
+   `../plans/` carries a file per phase — 0, 1, 2, 3, 3 v2 (Phase 3.1), 3.5 and 4 — each with a status
+   line, and Phase 4's was the last one missing.
 2. Phase-0 requirements here are PR-1…PR-4, which map to T-0004…T-0007. The enablement tasks — the
    four EP-0 ones (T-0001, T-0002, T-0008, T-0009) and **T-0020** (EP-9, contract schema gate) —
    intentionally have no `PR-#`: they are internal with no customer-visible surface (§5). Noted so

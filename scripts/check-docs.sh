@@ -10,6 +10,10 @@
 #   1. every relative Markdown link resolves to a file that exists
 #   2. every ADR, spec and task file appears in its index, and every index row points at a file
 #   3. no ADR number is used twice
+#   4. every spec's status agrees with its own index row, and a spec whose every task is Done is not
+#      still `Approved` — the lifecycle is Draft → Approved → Implemented
+#      (docs/process/spec-driven-development.md)
+#   5. every ADR's status agrees with its own index row
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -103,6 +107,73 @@ if [ -n "$dupes" ]; then
     report "ADR number $n is used by more than one file"
   done <<< "$dupes"
 fi
+
+# --- 4. spec status agrees with the tasks that prove it ----------------------------------------
+
+# WHY THIS EXISTS. On 2026-08-19 fifty-two specs were still marked `Approved` while every task that
+# proved them was Done. Nothing was wrong with the work; the state had advanced in the task table and
+# never in the specs, so this index answered "what may go RED" while reading like "what is built".
+# The same session then wrote `Implemented` on four new specs, which made the inconsistency visible
+# by accident rather than by a check — and a reader had to notice it.
+#
+# The lifecycle is Draft → Approved → Implemented (docs/process/spec-driven-development.md), so this
+# gate is not a new rule. It is the existing one, asked mechanically, in the place where the answer
+# stops depending on whether anybody looked.
+#
+# It checks two things: that a spec's own file and its index row say the same word, and that a spec
+# whose every listed task is Done has left `Approved`. A spec with NO task is left alone — nothing in
+# the task table can advance it, and inferring a status from silence is how a gate starts lying.
+status_word() { sed -n 's/^- \*\*Status:\*\* *\**\([A-Za-z]*\).*/\1/p' "$1" | head -1; }
+
+for spec_file in docs/specs/SPEC-*.md; do
+  spec=$(basename "$spec_file" | cut -c1-9)
+  file_status=$(status_word "$spec_file")
+  row=$(grep -E "^\| $spec \|" docs/specs/README.md | head -1)
+  if [ -z "$row" ]; then
+    continue  # check 2 already reports a spec missing from its index
+  fi
+  index_status=$(printf '%s' "$row" | awk -F'|' '{print $4}' | sed 's/^ *//; s/[ (*].*//')
+  if [ "$file_status" != "$index_status" ]; then
+    report "$spec says '$file_status' in its own file and '$index_status' in docs/specs/README.md"
+  fi
+
+  tasks=$(printf '%s' "$row" | awk -F'|' '{print $5}' | grep -oE 'T-[0-9]+' || true)
+  if [ -n "$tasks" ] && [ "$file_status" = "Approved" ]; then
+    open=""
+    for task in $tasks; do
+      task_row=$(grep -E "^\| $task \|" docs/tasks/README.md | head -1)
+      case "$task_row" in
+        *"| Done"*) ;;
+        *) open="$open $task" ;;
+      esac
+    done
+    if [ -z "$open" ]; then
+      report "$spec is still Approved, but every task proving it is Done ($(printf '%s' "$tasks" | tr '\n' ' ')) — the lifecycle ends at Implemented"
+    fi
+  fi
+done
+
+# --- 5. ADR status agrees with its index row ---------------------------------------------------
+
+# Same class as check 4, for the documents ADR-0001 makes the Source of Truth. The index carries the
+# status a reader sees first; a file that disagrees with it means one of the two is describing a
+# decision nobody made. Superseded rows carry "Superseded by ADR-XXXX", so only the first word is
+# compared — the pointer is prose for a human, not a state.
+for adr_file in docs/adr/[0-9][0-9][0-9][0-9]-*.md; do
+  number=$(basename "$adr_file" | cut -c1-4)
+  case "$number" in
+    0000) continue ;;  # the template is not a decision
+  esac
+  file_status=$(status_word "$adr_file")
+  row=$(grep -E "^\| \[ADR-$number\]" docs/adr/README.md | head -1)
+  if [ -z "$row" ]; then
+    continue  # check 2 already reports an ADR missing from its index
+  fi
+  index_status=$(printf '%s' "$row" | awk -F'|' '{print $4}' | sed 's/^ *//; s/[ (*].*//')
+  if [ "$file_status" != "$index_status" ]; then
+    report "ADR-$number says '$file_status' in its own file and '$index_status' in docs/adr/README.md"
+  fi
+done
 
 if [ "$fail" -ne 0 ]; then echo "docs: FAIL"; exit 1; fi
 echo "docs: OK (${#docs[@]} files checked)"
