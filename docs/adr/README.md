@@ -97,7 +97,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0075](0075-releases-context.md) | Releases is a bounded context whose promises are supply-chain promises; tenant signing does not reuse the release trust bundle; Accepted with the tags+notes increment | Accepted |
 | [ADR-0076](0076-repository-settings-context.md) | Repository settings is where policy quietly becomes a UI toggle, which PR-10 forbids; visibility and deletion deferred | Proposed |
 | [ADR-0077](0077-admin-area-context.md) | The admin area reaches the audit log through a grant, not a role; `admin` is not a new authorization primitive | Proposed |
-| [ADR-0078](0078-marketing-surface-separation.md) | The marketing page is served by a surface that never holds a session, on a different origin | Proposed |
+| [ADR-0078](0078-marketing-surface-separation.md) | The marketing page is served by a surface that never holds a session, on a different origin; Accepted — nothing to move, the root is guarded instead | Accepted |
 
 ## Open follow-ups
 

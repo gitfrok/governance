@@ -1,7 +1,7 @@
 # ADR-0078: The marketing page is served by a surface that never holds a session
 
-- **Status:** Proposed
-- **Date:** 2026-08-19
+- **Status:** Accepted
+- **Date:** 2026-08-19 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (ADR-0070's open follow-up, and the smallest Tier C decision)
 - **Related:** ADR-0070, ADR-0049 (the BFF browser session), ADR-0019/0020 (Astro SSR),
   ADR-0003 (tenancy), SPEC-0001 (coarse refusal)
@@ -36,6 +36,25 @@ than a promise.
 repositories, and it is the right thing for a signed-in reader to land on. An unauthenticated
 visitor reaching it gets the coarse refusal the whole product gives — which reveals nothing, and is
 already the behaviour.
+
+## Accepted scope (2026-08-19)
+
+**There was nothing to move.** `webfrontend`'s root has been the repository list since T-0055, and
+no marketing page has ever existed in this tree — the `./UI` prototype shows one, and the prototype
+is not the product. So decision 3 was already true on acceptance, and the useful thing acceptance
+buys is not a migration but a **guard**: nothing previously stopped someone from replacing that root
+with an unauthenticated splash, and now something does (T-0067).
+
+**Decisions 1 and 2 are accepted and unbuilt, because the surface they govern does not exist.** They
+bind the day it does. This ADR's follow-up — *where the marketing surface actually lives* — is
+therefore the thing standing between PR-32 and delivery, and it is not a question this repository can
+answer alone: the super-repo stores pins only (invariant 25), so a marketing surface cannot be a
+directory here, and making it a submodule needs a repository that does not exist yet.
+
+**The honest reading of that, restated from the alternatives below:** if nobody is prepared to
+create and own a separate marketing repository, PR-32 should be **withdrawn from the PRD** rather
+than left open. An open requirement nobody can start is worse than a closed one, because it reads as
+planned work.
 
 ## Consequences
 
