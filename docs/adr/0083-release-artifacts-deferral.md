@@ -1,8 +1,9 @@
 # ADR-0083: Release artifacts stay deferred until a user asks — and the shape is fixed now so the reopen is one decision smaller
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-21, accepted as written by the deciding owner)
 - **Date:** 2026-08-20
-- **Deciders:** platform (disposition of ADR-0075's artifacts follow-up, per ADR-0070's Tier-C gate)
+- **Deciders:** platform (disposition of ADR-0075's artifacts follow-up, per ADR-0070's Tier-C gate;
+  accepted by the deciding owner 2026-08-21)
 - **Related:** ADR-0075 (this disposes its follow-up; it is Accepted and is not amended), ADR-0070
   (the Tier-C gate whose evidence standard this applies), ADR-0020/0033/0050 (blob storage),
   ADR-0044/0065 (the release trust bundle — platform releases only), ADR-0066 (custody service),

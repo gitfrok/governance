@@ -1,9 +1,9 @@
 # ADR-0081: CI job logs remain deferred — what reopens them is a user, an observed bypass, or an owned redaction capability, not the PRD row
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-21, accepted as written by the deciding owner)
 - **Date:** 2026-08-20
 - **Deciders:** platform (drafted under the standing instruction to give ADR-held deferrals their own
-  ADR; acceptance at PR review is the decision gate)
+  ADR; accepted by the deciding owner 2026-08-21)
 - **Related:** ADR-0072 (the deferral this disposes the first follow-up of; Accepted, not amended),
   ADR-0070 (the Tier-B gate whose philosophy this applies), ADR-0005/0012 (the sandbox PR-11
   destroys — invariant 3), ADR-0059 and SPEC-0037 (the runner-persists precedent), ADR-0009/0010

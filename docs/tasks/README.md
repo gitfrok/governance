@@ -92,7 +92,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 
 | T-0077 | One type scale, one page shell, and the gate that keeps geometry in the token layer | 4 | Done — webfrontend@5628286; SPEC-0060 AC1–AC10; EP-28; 461 literals to zero, **0 waivers**; the capture review caught two undercounted changes and one defect the shell adoption introduced |
 
-| T-0078 | The Code Review context keeps what it was told | 4 | Stopped 2026-08-21 at RED — Proposed ADR-0084 (the Save-shape conflict) awaits a decision; SPEC-0061 AC1–AC16; EP-29 |
+| T-0078 | The Code Review context keeps what it was told | 4 | In progress — RED resumed 2026-08-21 on the amended spec (ADR-0084 Accepted); SPEC-0061 AC1–AC18; EP-29 |
 
 ## Retired numbers (never reused)
 

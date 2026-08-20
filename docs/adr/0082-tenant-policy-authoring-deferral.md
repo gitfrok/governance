@@ -1,9 +1,9 @@
 # ADR-0082: Tenant policy authoring remains deferred — the reopen trigger is a tenant with a name, not a row in the PRD
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-21, accepted as written by the deciding owner)
 - **Date:** 2026-08-20
 - **Deciders:** platform (drafted under the standing instruction to give ADR-held deferrals their own
-  ADR; acceptance at PR review is the decision gate)
+  ADR; accepted by the deciding owner 2026-08-21)
 - **Related:** ADR-0001 (governance is the Source of Truth), ADR-0006 (deny-by-default PDP),
   ADR-0007, ADR-0070 (the tier gate whose philosophy this applies), ADR-0072 (the deferral pattern
   this follows), ADR-0073 (the deferral this revisits)

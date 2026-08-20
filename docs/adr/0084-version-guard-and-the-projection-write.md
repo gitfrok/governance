@@ -1,6 +1,6 @@
 # ADR-0084: Save has two shapes, and the version guard can only guard one of them
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-21, accepted as written by the deciding owner)
 - **Date:** 2026-08-21
 - **Deciders:** platform
 - **Related:** ADR-0080 (the durable store this surfaces in), ADR-0071, SPEC-0061, T-0078
@@ -63,7 +63,7 @@ How the durable write keeps AC9's guard for caller edits without breaking the ve
 projection write — without touching the wire, and without reopening ADR-0080's refusal to widen
 the port for tenancy.
 
-## Decision (proposed)
+## Decision
 
 **1. The write splits along the protocol line that already exists.** `Save` keeps AC9's shape —
 `UPDATE … WHERE version = mr.Version - 1`, zero rows a conflict — and serves the bumped writers

@@ -158,7 +158,7 @@ Three decisions were taken at approval and are recorded in the specs themselves:
 - **SPEC-0029's authoring fork — reading A.** Policy stays reviewed Rego in `governance/policies`;
   git is the version store and the recorded policy version is the bundle revision. Reading B
   (in-product per-tenant authoring) would be a second mutable policy source and requires a Proposed
-  ADR before any contract work. **That ADR now exists: ADR-0082 (Proposed)** decides reading B
+  ADR before any contract work. **That ADR now exists: ADR-0082 (Accepted)** decides reading B
   stays deferred with an explicit reopen trigger; reading A remains the approved reading.
 - **Proto package paths** — `contracts/proto/security/v1` for findings (ADR-0022's context name),
   `search/v1` for code search, and a new `audit/v1` for Audit's first RPC surface.
@@ -359,7 +359,7 @@ One line each:
 - **EP-26** — repository list first, because without it there is no honest landing page and
   `index.astro` stays the T-0001 stub; then blame and history (PR-8's unbuilt half), pipelines and
   job logs, and the policy authoring surface PR-16 requires.
-- **PR-26's logs — the deferral now has a trigger.** ADR-0081 (Proposed) keeps job logs out per
+- **PR-26's logs — the deferral now has a trigger.** ADR-0081 (Accepted) keeps job logs out per
   ADR-0072 and names what reopens them — a user asks, a bypass is observed, or redaction becomes an
   owned capability; check 13 holds the absence until then.
 - **EP-27** — adopted from a mockup rather than a customer, which ADR-0070 records as the risk it is
@@ -370,7 +370,7 @@ One line each:
   the prototype drew, with what was left out held by a gate rather than by a note. Tier C's honest
   summary is that a mockup asked for five surfaces and the product gained three plus a reference —
   which is what the gate was for.
-- **PR-29's artifacts — the deferral now has a trigger and a shape.** ADR-0083 (Proposed) keeps
+- **PR-29's artifacts — the deferral now has a trigger and a shape.** ADR-0083 (Accepted) keeps
   release artifacts out per ADR-0075's accepted increment, names what reopens the decision (a user
   asks, tenant custody gains a signing consumer, or import parity names release assets), and fixes
   the shape for that day — tenant-scoped SeaweedFS blob storage with its own retention class — so
@@ -400,7 +400,7 @@ deliver, so it gets its own epic instead of a retroactive edit to a closed one.
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-29** Durability debt | — (no PRD row: PR-9 already asks for the behaviour; this is whether it survives a restart) | T-0078 | SPEC-0061 | In progress — ADR-0080 Accepted as written; T-0078 stopped at RED 2026-08-21 on Proposed ADR-0084 (the Save-shape conflict the pre-commit review found) |
+| **EP-29** Durability debt | — (no PRD row: PR-9 already asks for the behaviour; this is whether it survives a restart) | T-0078 | SPEC-0061 | In progress — ADR-0080 Accepted as written; T-0078 stopped at RED 2026-08-21 on the Save-shape conflict the pre-commit review found, and resumed the same day when ADR-0084 was accepted as written (SPEC-0061 amended to AC1–AC18) |
 
 One line: the Code Review context has never had a durable store — `cmd/dataplane-app` builds it on
 `NewMemoryStore` and the module has no Postgres adapter at all, so every merge request, review,
