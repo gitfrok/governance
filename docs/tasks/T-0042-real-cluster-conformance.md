@@ -65,3 +65,8 @@ surface) and the rendered no-inbound assertions — were honestly NOT RUN on T-0
 absent; `check-byo-chart.sh` says so on its own output line). Their landing place is this task:
 **re-run `check-byo-chart.sh`'s helm-rendered halves on a helm-equipped lane** before the matrix's
 real-cluster rows are recorded, and record that run's evidence alongside the matrix rows.
+
+**Progress 2026-08-21:** the board #23 landing item is DONE — helm v4.2.4 installed on the dev lane
+and `check-byo-chart.sh`'s helm-rendered halves (lint, default render with the token sentinel, and
+the `operator.enabled=true` render with zero image values) ran green; evidence recorded on matrix
+rows 11 and 14. The real-cluster rows still wait on the lane.

@@ -1,6 +1,8 @@
 # SPEC-0061: The Code Review context keeps what it was told
 
-- **Status:** Approved (2026-08-20) — ADR-0080 Accepted as written; RED may begin
+- **Status:** Approved (2026-08-20) — ADR-0080 Accepted as written; **RED stopped 2026-08-21** on
+  Proposed ADR-0084 (the Save-shape conflict): AC9/AC10 are amended and a projection-write
+  criterion added if it is Accepted, before RED resumes
 - **Owner:** platform
 - **Context(s):** Code Review only. No contract, no policy, no other module.
 - **ADRs:** 0080 (decides this), 0071 (the same gap closed for the registry, and the adapter shape
