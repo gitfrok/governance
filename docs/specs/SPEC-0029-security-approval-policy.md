@@ -34,7 +34,9 @@ PR-16's persona is a tenant security lead, but Phase 1's policy source is Rego i
 Phase-0/1 invariant already covers it; the acceptance criteria below are written against it. Reading
 B is a materially larger contract surface and, per ADR-0001, a **new decision — a Proposed ADR, not a
 spec choice**. Should a tenant later require in-product authoring, that ADR precedes any contract
-work and supersedes this section.
+work and supersedes this section. **That ADR is now written: ADR-0082 (Accepted) keeps reading B
+deferred** — the reopen trigger is a named tenant need, not the PRD row — with check 14 holding the
+absence at the wire; reading A remains the approved reading.
 
 ## In scope
 
@@ -110,7 +112,7 @@ server-derived context on the decision request, not as a table read.
 
 - ~~**The authoring fork above.**~~ **Settled 2026-08-14: reading A** — governance-PR authoring,
   bundle revision as the recorded policy version. Reading B would require a Proposed ADR (ADR-0001)
-  before any contract work.
+  before any contract work — **ADR-0082 (Accepted) is that ADR** and keeps reading B deferred.
 - **Retention of decision records** is unspecified here and gates SPEC-0031/0032: the audit retention
   policy is an open ADR-0007 follow-up (PRD §12.3). A Proposed ADR settles it; this spec stops.
 - **SPEC-0002's AC4 fitness function is a tripwire, not a proof** — authorization logic has no import

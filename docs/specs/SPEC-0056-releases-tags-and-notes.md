@@ -14,6 +14,10 @@ PR-29 asks that a team can cut and publish a release from a tag, with its artifa
 ADR-0075 accepted the **first increment only: tags and notes, no artifacts** — because the moment a
 customer's users download an artifact from this platform it is in their supply chain, and the
 signing, custody, retention and metering that implies is a larger decision than the feature looks.
+**ADR-0083 (Accepted) disposes the artifacts follow-up**: the reopen triggers are named (a user
+asks, tenant custody gains a signing consumer, or import parity names release assets) and the shape
+for that day is fixed — tenant-scoped SeaweedFS blob storage with its own retention class — so the
+reopen starts one decision smaller. Check 15 holds the absence until then.
 
 So this spec builds a release as **a name for a commit, plus prose about it**. That is a coherent
 and genuinely useful product: it is what a changelog is.

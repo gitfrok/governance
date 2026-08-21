@@ -11,7 +11,10 @@
 
 PR-26 asks for pipeline runs and job logs. ADR-0072 delivers the runs and defers the logs to their
 own decision, because job output does not exist anywhere — PR-11 destroys the sandbox at job end and
-`api.Job`'s own comment records raw output as deliberately withheld.
+`api.Job`'s own comment records raw output as deliberately withheld. **That decision is now taken:
+ADR-0081 (Accepted) keeps the logs deferred** — what reopens them is a user asking, an observed
+bypass, or redaction becoming an owned capability, never the PRD row's silence — and check 13
+continues to hold the absence at the wire until then.
 
 The CI context also has no durable job store (`memoryStore` is the only implementation) and no
 `List`, so "what has run" is unanswerable twice over. This spec fixes both, following ADR-0071
@@ -35,7 +38,8 @@ so in words, once, where a reader looking for them will be.
 
 ## Out of scope
 
-- **Job logs**, by ADR-0072. Not as a field, not as a link, not as a "coming soon".
+- **Job logs**, by ADR-0072, dispositioned by ADR-0081. Not as a field, not as a link, not as a
+  "coming soon".
 - Re-running, cancelling or triggering a job from this surface. Cancel exists on the port; exposing
   a write here is its own spec.
 - Pod names, node details, attempt capabilities and source bytes — `api.Job` withholds them and this

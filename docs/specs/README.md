@@ -79,4 +79,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0058 | The admin area — a dated fleet report, and a door into the grant flow | Implemented (2026-08-19) | T-0071, T-0072, T-0073 |
 | SPEC-0059 | A merge request references an issue that lives somewhere else | Implemented (2026-08-19) | T-0074, T-0075, T-0076 |
 | SPEC-0060 | One type scale, one page shell, and a gate that keeps geometry in the token layer | Implemented (2026-08-19) | T-0077 |
-| SPEC-0061 | The Code Review context keeps what it was told | Approved (2026-08-20) | T-0078 |
+| SPEC-0061 | The Code Review context keeps what it was told | Implemented (2026-08-21) | T-0078 |
