@@ -200,6 +200,15 @@ service RepositorySettings {
   // vocabulary in repository/api/readonly.go — a git-write-path decision, not
   // a setting.
   rpc SetArchived(SetArchivedRequest) returns (SetArchivedResponse);
+
+  // SetLandingPolicy states the landing policy whole (SPEC-0065, ADR-0088):
+  // the strategy and whether trunk-based mode constrains it, together on
+  // every call, for the same reason UpdateSettings is a write of the settings
+  // a repository has rather than a patch. It changes what a REVIEWED merge
+  // produces; it can never change who may land or whether (ADR-0088 decision
+  // 3), which is why it is a setting at all. Administrator-gated and audited
+  // exactly like every other write here.
+  rpc SetLandingPolicy(SetLandingPolicyRequest) returns (SetLandingPolicyResponse);
 }
 
 // Settings is one repository's changeable properties, plus the record of who
@@ -219,6 +228,32 @@ message Settings {
   string archived_at = 4;
   string settings_updated_at = 5;
   string settings_updated_by = 6;
+  // The landing policy (SPEC-0065, ADR-0088), read server-side at merge time
+  // and never carried on a merge command: no caller field can choose the
+  // history shape per request. UNSPECIFIED is the absence of an explicit
+  // choice and lands exactly as merges always did — fast-forward when
+  // possible (SPEC-0065 AC1).
+  MergeStrategy merge_strategy = 7;
+  // Trunk-based landing is a MODE that constrains history shape, never
+  // review: merge commits are refused, fast-forward is preferred, rebase is
+  // the fallback, and every landing still passes the same gate (ADR-0085).
+  bool trunk_based = 8;
+}
+
+// MergeStrategy is the per-repository history shape merges produce. It lives
+// beside name and archival as a property of the record, changed through the
+// same administrator gate, audited like every settings act.
+//
+// This is NOT a visibility, membership or approval field: it decides what a
+// reviewed landing looks like after the gate has said yes — never who may
+// land or whether (ADR-0088 decision 3, check-contracts' settings check).
+enum MergeStrategy {
+  // No explicit choice: merges land exactly as they always did (SPEC-0065
+  // AC1) — fast-forward when possible, refused otherwise.
+  MERGE_STRATEGY_UNSPECIFIED = 0;
+  MERGE_STRATEGY_MERGE_COMMIT = 1;
+  MERGE_STRATEGY_SQUASH = 2;
+  MERGE_STRATEGY_REBASE = 3;
 }
 
 message GetSettingsRequest { ReadContext context = 1; }
@@ -244,3 +279,13 @@ message SetArchivedRequest {
   bool archived = 2;
 }
 message SetArchivedResponse { Settings settings = 1; }
+
+// SetLandingPolicyRequest states the landing policy wanted, whole. Strategy
+// and trunk mode travel together because they are one answer to one question:
+// what does a reviewed landing look like here (SPEC-0065, ADR-0088).
+message SetLandingPolicyRequest {
+  ReadContext context = 1;
+  MergeStrategy strategy = 2;
+  bool trunk_based = 3;
+}
+message SetLandingPolicyResponse { Settings settings = 1; }

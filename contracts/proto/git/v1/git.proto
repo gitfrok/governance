@@ -147,13 +147,64 @@ message MergeRefRequest {
   // An existing revision in this repository; storage refuses an unknown one.
   string revision = 3;
   string expected_current_revision = 4;
+  // The landing plan (SPEC-0065, ADR-0088), additive. Absent (default) means
+  // the legacy landing: move the ref to revision, byte-for-byte as before.
+  // When present, storage may PRODUCE commits — the strategy and trunk mode
+  // are facts Code Review read from the repository record, never caller
+  // choices; the message inputs title the produced commit only, and the
+  // committer identity is always storage's own service identity.
+  LandingPlan landing = 5;
+}
+
+// LandingPlan states the policy to execute, not a shape assertion: under
+// trunk_based mode storage resolves the effective landing itself — prefer
+// fast-forward, fall back to rebase, never produce a merge commit — because
+// the object graph is a server fact (SPEC-0065 AC5, AC7).
+message LandingPlan {
+  // The repository's strategy as its record holds it. UNSET is the absence of
+  // an explicit choice.
+  LandingStrategy strategy = 1;
+  bool trunk_based = 2;
+  // The merge request's title, used to default a produced commit's message
+  // (squash). Prose from the record the gate decided about, not free input.
+  string message_title = 3;
+  // The merge request's opaque reference, recorded in a produced commit's
+  // message trailer so history answers "which review landed this".
+  string merge_request_reference = 4;
+}
+
+// LandingStrategy mirrors gitsaas.repository.v1.MergeStrategy: the per-
+// repository choice. Kept a separate vocabulary here so the two services stay
+// decoupled; the values map one-to-one and grow together additively.
+enum LandingStrategy {
+  LANDING_STRATEGY_UNSPECIFIED = 0;
+  LANDING_STRATEGY_MERGE_COMMIT = 1;
+  LANDING_STRATEGY_SQUASH = 2;
+  LANDING_STRATEGY_REBASE = 3;
+}
+
+// LandingShape reports what physically landed. It differs from the requested
+// strategy whenever trunk mode resolved the landing differently — a merge
+// commit request landing as a fast-forward or a rebase, for instance.
+enum LandingShape {
+  LANDING_SHAPE_UNSPECIFIED = 0;
+  LANDING_SHAPE_FAST_FORWARD = 1;
+  LANDING_SHAPE_MERGE_COMMIT = 2;
+  LANDING_SHAPE_SQUASH = 3;
+  LANDING_SHAPE_REBASE = 4;
 }
 
 // MergeRefResponse reports the ref's new revision. A refused move returns a coarse
 // error and no partial state, in the same shape as any other storage refusal.
+// A conflicting landing refuses BEFORE anything moves, carrying a machine-
+// readable reason beside the coarse denial (SPEC-0065 AC4).
 message MergeRefResponse {
   string target_ref = 1;
   string revision = 2;
+  // What the ref points at now: the requested revision when the landing was a
+  // fast-forward (or legacy), the produced commit otherwise.
+  string landed_revision = 3;
+  LandingShape landed_shape = 4;
 }
 
 // ImportRefsRequest carries the import's git phase to storage. The source URL is
