@@ -153,6 +153,7 @@ role_actions := {
 		"identity.pat.issue", "identity.pat.list", "identity.pat.revoke",
 		"ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
+		"merge_request.ready",
 		# Referencing an issue in the customer's own tracker (SPEC-0059, ADR-0074).
 		# Its own action rather than a reuse of merge_request.open: a write
 		# authorized as something it is not is a lie in this table, which is the
@@ -176,6 +177,7 @@ role_actions := {
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
 		"merge_request.open", "merge_request.review", "merge_request.merge",
+		"merge_request.ready",
 		# A member opens and reviews merge requests, so a member may reference the
 		# issue one is for (SPEC-0059). It writes nothing outside this product: the
 		# reference is inert, and nothing here reaches the tracker.
@@ -271,6 +273,7 @@ action_resource := {
 	# about — never a repository, which would authorize linking on a merge request
 	# the caller had not named.
 	"merge_request.external_issue.link": {"merge_request"},
+	"merge_request.ready": {"merge_request"},
 	"merge_request.merge": {"merge_request"},
 	"repository.branch_protection.manage": {"repository"},
 	"repository.import": {"repository"},

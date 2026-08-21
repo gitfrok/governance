@@ -1964,3 +1964,28 @@ test_external_issue_link_is_not_a_repository_action if {
 test_the_link_action_added_no_role if {
 	object.keys(authz.role_actions) == {"owner", "member", "reader"}
 }
+
+# --- ADR-0087 / SPEC-0064: marking a draft ready ---------------------------------
+
+# Owners and members may mark a draft ready; a reader may not.
+test_allow_owner_and_member_mark_ready if {
+	every role in ["owner", "member"] {
+		authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": mr_subject(role),
+			"action": "merge_request.ready",
+			"resource": {"type": "merge_request", "id": "mr-1"},
+			"context": {},
+		}
+	}
+}
+
+test_deny_reader_marks_ready if {
+	not authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("reader"),
+		"action": "merge_request.ready",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {},
+	}
+}
