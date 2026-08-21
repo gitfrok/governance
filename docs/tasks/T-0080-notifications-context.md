@@ -1,6 +1,6 @@
 # T-0080: The Notifications context — bell, list, mark-read
 
-- **Status:** In progress (2026-08-21)
+- **Status:** Done (2026-08-21)
 - **Phase / Epic:** EP-31 (notifications)
 - **Repo(s):** backend, bff, webfrontend
 - **Spec:** ../specs/SPEC-0063-notifications.md (AC1–AC7)
@@ -27,6 +27,23 @@ event), read in the app.
 ## Definition of Done
 
 See ../process/definition-of-done.md. `full` ceremony.
+
+## Exit record (2026-08-21)
+
+The idempotency proof landed first, as planned: one row per
+(tenant, recipient, event), `ON CONFLICT DO NOTHING`, replayed three times
+against real Postgres with `-race` — exactly-once rows (AC4). The coverage
+table is a test surface in the subscriber's package: every known producer
+event type must appear with either a recipient rule or a recorded reason it
+notifies nobody, and Subscribe must register a handler for every rule that
+notifies (AC1–AC3 ride the same table). Recipient derivation reads only what
+the platform already holds: reviewers-to-be from Identity's membership view
+through its api surface (protection rules carry counts, not holders), the
+author from the event or the context's own creator projection, counted
+approvers from the merge-gate snapshot published on MergeRequestMerged.
+RLS-forced schema, boundary linter green; four real-Postgres proofs, zero
+skips (AC4–AC6); bell and list page render honestly, zero is no badge (AC7).
+Backend 99 packages green, bff 17, webfrontend 601 unit tests + build.
 
 ## Notes / open questions
 

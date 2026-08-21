@@ -1,6 +1,7 @@
 # SPEC-0063: The Notifications context
 
-- **Status:** In progress (2026-08-21) — Accepted ADR-0086; T-0080 implementing.
+- **Status:** Implemented (2026-08-21) — T-0080; contract, backend, bff and webfrontend proven.
+  Approved (2026-08-21) under Accepted ADR-0086.
 - **Owner:** platform
 - **Context(s):** Notifications (new). Producers unchanged; BFF and webfrontend gain routes and
   a bell.
@@ -46,19 +47,19 @@ happened that they did not see.
 
 ## Acceptance criteria (test-first)
 
-- [ ] **AC1** A merge request opened for review produces one notification for the target's
+- [x] **AC1** A merge request opened for review produces one notification for the target's
       reviewers-to-be (protection rule holders) minus the actor; durable across a restart.
-- [ ] **AC2** A review submitted notifies the author (never the reviewer); a merge notifies the
+- [x] **AC2** A review submitted notifies the author (never the reviewer); a merge notifies the
       author and every reviewer whose approval counted at the gate.
-- [ ] **AC3** Findings ingested onto a merge request notify its author once per ingest batch,
+- [x] **AC3** Findings ingested onto a merge request notify its author once per ingest batch,
       not once per finding.
-- [ ] **AC4** Replaying any event makes no second row (idempotency keyed on the event ID),
+- [x] **AC4** Replaying any event makes no second row (idempotency keyed on the event ID),
       proven against real Postgres with `-race` and zero skips.
-- [ ] **AC5** Another tenant's notifications are absent, not forbidden; RLS forced; the
+- [x] **AC5** Another tenant's notifications are absent, not forbidden; RLS forced; the
       migration passes T-0004's boundary linter.
-- [ ] **AC6** Unread count and mark-read are exact: marking one marks one; the count never
+- [x] **AC6** Unread count and mark-read are exact: marking one marks one; the count never
       counts another tenant's rows.
-- [ ] **AC7** The bell renders the count honestly — zero is zero, not "no badge"; the list says
+- [x] **AC7** The bell renders the count honestly — zero is zero, not "no badge"; the list says
       what happened, where, and when, and links to the thing.
 
 ## Governance mapping
