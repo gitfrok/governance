@@ -40,6 +40,10 @@ message ReviewSubmitted {
   ReviewSubmittedDisposition disposition = 6;
   string head_revision = 7;
   google.protobuf.Timestamp occurred_at = 8;
+  // The MR's author, announced so a recipient-deriving consumer (Notifications,
+  // SPEC-0063) can notify "the author, never the reviewer" from the event alone.
+  // Additive for SPEC-0063; the producer already holds it when publishing.
+  string creator_id = 9;
 }
 
 message MergeRequestMerged {
@@ -51,6 +55,14 @@ message MergeRequestMerged {
   string target_ref = 6;
   string head_revision = 7;
   google.protobuf.Timestamp occurred_at = 8;
+  // The MR's author. Additive for SPEC-0063 (Notifications recipient
+  // derivation); the producer already holds it when publishing.
+  string creator_id = 9;
+  // The actors whose approvals counted at the gate for this merge — APPROVE
+  // dispositions at the head revision, the author excluded (ADR-0085). Names,
+  // never a count or an outcome: a consumer still derives whatever it needs
+  // from who they are. Additive for SPEC-0063.
+  repeated string counted_approval_actors = 10;
 }
 
 // MergeRequestUpdated records that an open merge request moved: a push to
