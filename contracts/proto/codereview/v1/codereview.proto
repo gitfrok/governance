@@ -20,6 +20,11 @@ service MergeRequestService {
   rpc GetMergeRequest(GetMergeRequestRequest) returns (GetMergeRequestResponse);
   rpc SubmitReview(SubmitReviewRequest) returns (SubmitReviewResponse);
   rpc MergeMergeRequest(MergeMergeRequestRequest) returns (MergeMergeRequestResponse);
+  // MarkMergeRequestReady moves a DRAFT merge request to OPEN (ADR-0087,
+  // SPEC-0064). It is the draft's one transition; a merge request that is not
+  // in DRAFT is refused, and the refusal is the same coarse denial as the rest
+  // of this surface.
+  rpc MarkMergeRequestReady(MarkMergeRequestReadyRequest) returns (MarkMergeRequestReadyResponse);
   rpc SetBranchProtection(SetBranchProtectionRequest) returns (SetBranchProtectionResponse);
   // LinkExternalIssue and UnlinkExternalIssue reference an issue that lives in
   // the customer's own tracker (SPEC-0059, PR-28's accepted scope, ADR-0074).
@@ -55,6 +60,9 @@ enum MergeRequestState {
   MERGE_REQUEST_STATE_OPEN = 1;
   MERGE_REQUEST_STATE_CLOSED = 2;
   MERGE_REQUEST_STATE_MERGED = 3;
+  // A draft is being prepared and cannot merge until it is marked ready
+  // (ADR-0087, SPEC-0064). Additive within v1: never renumber, never reuse.
+  MERGE_REQUEST_STATE_DRAFT = 4;
 }
 
 enum ReviewDisposition {
@@ -185,6 +193,10 @@ message CreateMergeRequestRequest {
   string target_ref = 3;
   string title = 4;
   string description = 5;
+  // Open as a draft (ADR-0087, SPEC-0064): a draft cannot merge and is not
+  // announced to attribution consumers until it is marked ready. Absent/false
+  // keeps the pre-draft behaviour byte-for-byte.
+  bool draft = 6;
 }
 
 message CreateMergeRequestResponse {
@@ -228,6 +240,19 @@ message MergeMergeRequestRequest {
 }
 
 message MergeMergeRequestResponse {
+  MergeRequest merge_request = 1;
+}
+
+// MarkMergeRequestReady carries the same shape as the merge command: the opaque
+// ID, the caller's version for the optimistic-concurrency pre-check, and
+// nothing a server could not derive.
+message MarkMergeRequestReadyRequest {
+  ReviewCommandContext context = 1;
+  string merge_request_id = 2;
+  int64 expected_version = 3;
+}
+
+message MarkMergeRequestReadyResponse {
   MergeRequest merge_request = 1;
 }
 

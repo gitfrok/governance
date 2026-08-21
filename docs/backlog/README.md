@@ -409,6 +409,36 @@ the same shape, and worse in consequence: a registry that emptied could be re-re
 repositories still on disk, while what empties here is who approved what, at which revision, against
 which rule.
 
+## EP-30 — the review loop, completed · *(planned 2026-08-21)*
+
+Decided by **ADR-0085, ADR-0087 and ADR-0088** (all Accepted 2026-08-21). The product's control
+story is that changes land through review; these close the gaps between that story and the door.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-30** The review loop, completed | — (no PRD row: PR-9 asks for the behaviour; this is the floor, the draft, and the history shape) | T-0079, T-0081, T-0082 | SPEC-0062, SPEC-0064, SPEC-0065 | In progress — T-0079 Done (floor in the bundle + author exclusion, 187/187 rego tests); T-0081 Done (draft end to end); T-0082 Not started (SPEC-0065 Approved) |
+
+One line each:
+
+- **T-0079 / ADR-0085** — two non-author approvals on every merge, decided in the bundle where no
+  caller reaches; the author's own review never counts. Behaviour change: single-approval merges
+  are gone, by decision.
+- **T-0081 / ADR-0087** — DRAFT as an additive state with one door out (`MarkMergeRequestReady`);
+  while draft, projections and announcements stay quiet and merge refuses.
+- **T-0082 / ADR-0088** — per-repository merge_commit/squash/rebase, trunk-based landing as a
+  mode that constrains history shape only. git-storaged starts producing commits; rebase ships
+  refused rather than unsafe if its concurrency proof fails.
+
+## EP-31 — notifications · *(planned 2026-08-21)*
+
+Decided by **ADR-0086** (Accepted 2026-08-21). Nothing tells anyone anything happened; a new
+bounded context subscribes to the bus events every producer already publishes and writes one
+durable row per recipient.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-31** Notifications | — (no PRD row yet: a requirement this implies is §12.1's to record) | T-0080 | SPEC-0063 | Not started — spec Approved; email/webhooks are named follow-ups |
+
 ## Parked — needs a human decision first
 
 Force-promote tenant self-service (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017) ·

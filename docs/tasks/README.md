@@ -93,6 +93,10 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0077 | One type scale, one page shell, and the gate that keeps geometry in the token layer | 4 | Done — webfrontend@5628286; SPEC-0060 AC1–AC10; EP-28; 461 literals to zero, **0 waivers**; the capture review caught two undercounted changes and one defect the shell adoption introduced |
 
 | T-0078 | The Code Review context keeps what it was told | 4 | Done — backend@06e14da; SPEC-0061 AC1–AC18; EP-29; 16 real-Postgres proofs, **0 skips**; the write split ADR-0084 decided is the shape that landed |
+| T-0079 | The four-eyes floor | EP-30 | Done — governance + backend; SPEC-0062 AC1–AC5; 187/187 rego tests; the author's review never counts |
+| T-0080 | The Notifications context — bell, list, mark-read | EP-31 | Not started — SPEC-0063 Approved under ADR-0086 |
+| T-0081 | Draft merge requests | EP-30 | Done — contract additive (DRAFT=4, draft=6, MarkMergeRequestReady) + backend/bff/webfrontend; SPEC-0064 AC1–AC7 |
+| T-0082 | Merge strategies, and trunk-based landing | EP-30 | Not started — SPEC-0065 Approved under ADR-0088 |
 
 ## Retired numbers (never reused)
 

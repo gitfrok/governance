@@ -343,13 +343,26 @@ deny if {
 # into the first-party approval count, so a merge whose only approval is imported
 # presents valid_approvals=0 and is denied here. This is structural: there is no
 # fact a caller can supply that makes an imported approval count.
+#
+# THE PLATFORM'S FOUR-EYES FLOOR (ADR-0085, SPEC-0062). Every merge — protected
+# target or not — needs at least two approvals from people who are not the
+# author; the author's own review never counts toward the floor because the
+# server excludes it before the fact is assembled. required_approvals can raise
+# this per ref and nothing can lower it: the floor lives here, in the bundle,
+# where every decision passes and no caller reaches, not in a service constant
+# a refactor could silently drop (the M11 lesson). Landing changes through the
+# MR door with four eyes is the product's control story; a tenant that wants
+# MR-only landing protects its refs, which already denies direct pushes.
 deny if {
 	input.action == "merge_request.merge"
 	not sufficient_approvals
 }
 
+approval_floor := 2
+
 sufficient_approvals if {
 	to_number(input.context.valid_approvals) >= to_number(input.context.required_approvals)
+	to_number(input.context.valid_approvals) >= approval_floor
 }
 
 # --- T-0025 / SPEC-0029 / SPEC-0030: the security merge gate on attributed findings ---

@@ -377,6 +377,37 @@ test_deny_merge_with_no_approval_context if {
 	}
 }
 
+# --- ADR-0085 / SPEC-0062: the platform's four-eyes floor ----------------------------------
+#
+# The floor is a second inequality beside required_approvals, so a tenant cannot
+# lower a merge below two non-author approvals by setting required_approvals=0.
+# The author's own review never reaches this rule: the server excludes it before
+# assembling valid_approvals, so no input can express "the author approved".
+
+# Exactly the floor passes, even on an unprotected target (required = 0).
+test_allow_merge_at_the_four_eyes_floor if {
+	authz.allow with input as {
+		"tenant_id": "acme",
+		"subject": mr_subject("member"),
+		"action": "merge_request.merge",
+		"resource": {"type": "merge_request", "id": "mr-1"},
+		"context": {"valid_approvals": "2", "required_approvals": "0"},
+	}
+}
+
+# One approval is not four eyes, whatever the ref's own requirement says.
+test_deny_merge_below_the_four_eyes_floor if {
+	every req in ["0", "1", "2"] {
+		not authz.allow with input as {
+			"tenant_id": "acme",
+			"subject": mr_subject("member"),
+			"action": "merge_request.merge",
+			"resource": {"type": "merge_request", "id": "mr-1"},
+			"context": {"valid_approvals": "1", "required_approvals": req},
+		}
+	}
+}
+
 # --- T-0016: Protected branches ---------------------------------------------------
 
 # A direct push to a protected branch is denied regardless of role (SPEC-0019 AC2).
@@ -1015,15 +1046,17 @@ test_deny_merge_whose_only_approval_is_imported if {
 	}
 }
 
-# No findings gate engaged: the SPEC-0019 approval behaviour is unchanged
-# (backward compatibility — the security gate only applies when engaged).
+# No findings gate engaged: the security gate changes nothing about approvals
+# (backward compatibility — the security gate only applies when engaged). The
+# count satisfies the four-eyes floor ADR-0085 added beside required_approvals;
+# a single approval is denied by the floor above, not by anything here.
 test_allow_merge_without_findings_gate_unchanged if {
 	authz.allow with input as {
 		"tenant_id": "acme",
 		"subject": {"id": "u-sec", "roles": ["member"], "tenant_id": "acme"},
 		"action": "merge_request.merge",
 		"resource": {"type": "merge_request", "id": "mr-1"},
-		"context": {"valid_approvals": "1", "required_approvals": "1"},
+		"context": {"valid_approvals": "2", "required_approvals": "1"},
 	}
 }
 
