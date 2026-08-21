@@ -81,6 +81,6 @@ one, which is worse than a status that is merely behind.
 | SPEC-0060 | One type scale, one page shell, and a gate that keeps geometry in the token layer | Implemented (2026-08-19) | T-0077 |
 | SPEC-0061 | The Code Review context keeps what it was told | Implemented (2026-08-21) | T-0078 |
 | SPEC-0062 | The four-eyes floor | Implemented (2026-08-21) | T-0079 |
-| SPEC-0063 | The Notifications context | Approved (2026-08-21) | T-0080 |
+| SPEC-0063 | The Notifications context | In progress (2026-08-21) | T-0080 |
 | SPEC-0064 | Draft merge requests | Implemented (2026-08-21) | T-0081 |
 | SPEC-0065 | Merge strategies, and trunk-based landing as a mode | Approved (2026-08-21) | T-0082 |
