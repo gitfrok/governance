@@ -37,6 +37,18 @@ service NotificationService {
   rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
 }
 
+// NotificationContext carries the verified principal the call is made as —
+// the same shape every command surface uses (codereview.v1's
+// ReviewCommandContext): the session-verified tenant and actor, forwarded by
+// the BFF after its session layer verified them. It names WHO THE CALLER IS,
+// and because the recipient IS the caller, it is not a recipient selector:
+// there is no field anywhere on this surface that could name somebody else's
+// rows.
+message NotificationContext {
+  string tenant_id = 1;
+  string actor_id = 2;
+}
+
 // The kind vocabulary mirrors the subscribed event set. It exists so a reader
 // can render "what happened" without parsing event names, and it grows
 // additively as ADR-0086's coverage table grows.
@@ -49,9 +61,11 @@ enum NotificationKind {
 }
 
 message ListNotificationsRequest {
+  // The verified principal the call is made as; the recipient IS this caller.
+  NotificationContext context = 1;
   // Page size bounds; zero means the server default, above the max clamps.
-  int32 page_size = 1;
-  string page_token = 2;
+  int32 page_size = 2;
+  string page_token = 3;
 }
 
 message ListNotificationsResponse {
@@ -76,14 +90,19 @@ message Notification {
   bool read = 8;
 }
 
-message UnreadCountRequest {}
+message UnreadCountRequest {
+  // The verified principal the call is made as; the recipient IS this caller.
+  NotificationContext context = 1;
+}
 
 message UnreadCountResponse {
   int64 unread = 1;
 }
 
 message MarkReadRequest {
-  string notification_id = 1;
+  // The verified principal the call is made as; the recipient IS this caller.
+  NotificationContext context = 1;
+  string notification_id = 2;
 }
 
 message MarkReadResponse {
