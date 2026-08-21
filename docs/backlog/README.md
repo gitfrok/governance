@@ -400,7 +400,7 @@ deliver, so it gets its own epic instead of a retroactive edit to a closed one.
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-29** Durability debt | — (no PRD row: PR-9 already asks for the behaviour; this is whether it survives a restart) | T-0078 | SPEC-0061 | In progress — ADR-0080 Accepted as written; T-0078 stopped at RED 2026-08-21 on the Save-shape conflict the pre-commit review found, and resumed the same day when ADR-0084 was accepted as written (SPEC-0061 amended to AC1–AC18) |
+| **EP-29** Durability debt | — (no PRD row: PR-9 already asks for the behaviour; this is whether it survives a restart) | T-0078 | SPEC-0061 | **Done (2026-08-21)** — ADR-0080 + ADR-0084 Accepted as written; T-0078 Done at backend@06e14da: SPEC-0061 AC1–AC18 proven, 16 real-Postgres proofs green with `-race` and 0 skips. The Code Review context survives a restart |
 
 One line: the Code Review context has never had a durable store — `cmd/dataplane-app` builds it on
 `NewMemoryStore` and the module has no Postgres adapter at all, so every merge request, review,

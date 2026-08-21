@@ -1,9 +1,10 @@
 # SPEC-0061: The Code Review context keeps what it was told
 
-- **Status:** Approved (2026-08-20) — ADR-0080 Accepted as written; **amended 2026-08-21** by
-  Accepted ADR-0084 (the Save-shape conflict): the write splits along its protocol line, the
-  conflict's error and `Merge`'s ordering get their criteria, and the AC7 test's shape is
-  restated. RED resumes on the amended spec.
+- **Status:** Implemented (2026-08-21) — T-0078 Done at backend@06e14da; AC1–AC18 proven, 16
+  real-Postgres proofs green with `-race` and 0 skips. Approved (2026-08-20) — ADR-0080 Accepted as
+  written; **amended 2026-08-21** by Accepted ADR-0084 (the Save-shape conflict): the write splits
+  along its protocol line, the conflict's error and `Merge`'s ordering get their criteria, and the
+  AC7 test's shape is restated. RED resumed on the amended spec.
 - **Owner:** platform
 - **Context(s):** Code Review only. No contract, no policy, no other module.
 - **ADRs:** 0080 (decides this), 0084 (amends it — the write split), 0071 (the same gap closed for
@@ -57,55 +58,55 @@ Schema `codereview`, all tenant-scoped with RLS enabled and forced:
 
 ### Durability
 
-- [ ] **AC1** A merge request opened through the service is readable by a **new** store over the same
+- [x] **AC1** A merge request opened through the service is readable by a **new** store over the same
       database — the restart, expressed as the only thing a test can express it as.
-- [ ] **AC2** Reviews, branch protections and ref revisions survive the same way, and a merge
+- [x] **AC2** Reviews, branch protections and ref revisions survive the same way, and a merge
       request's external issue references come back in the order they were linked, with their
       tracker, key, URL, linker and instant intact.
-- [ ] **AC3** `CreateOrGet` is idempotent across store instances: the same idempotency key returns the
+- [x] **AC3** `CreateOrGet` is idempotent across store instances: the same idempotency key returns the
       first merge request and reports that it created nothing, after a rebuild. It also converges
       under a concurrent double-submit: the idempotency insert is `ON CONFLICT DO NOTHING` followed
       by a read-back (ADR-0084 decision 4), so the loser returns the winner's merge request exactly
       as the mutex-serialised memory store did, instead of surfacing a unique violation.
-- [ ] **AC4** `Seen` reports a request ID as unseen exactly once, and that survives a rebuild too.
+- [x] **AC4** `Seen` reports a request ID as unseen exactly once, and that survives a rebuild too.
       This is the guard that stops a replayed write from applying twice, so a store that forgot it
       would replay every write a client retried across a restart.
 
 ### Scoping — ADR-0080 decision 1
 
-- [ ] **AC5** Where the port carries a tenant, that is the scope, and a **context naming a different
+- [x] **AC5** Where the port carries a tenant, that is the scope, and a **context naming a different
       tenant is refused before any statement runs** — the SPEC-0042 AC5 posture, which RLS cannot
       provide because the transaction would be scoped to the tenant that was asked for.
-- [ ] **AC6** Where the port carries no tenant — `Get`, `PutReview`, `Reviews`, `Seen` — the scope
+- [x] **AC6** Where the port carries no tenant — `Get`, `PutReview`, `Reviews`, `Seen` — the scope
       comes from `tenancy.FromContext`, and **its absence is a refusal, not an unscoped query**.
-- [ ] **AC7** **The call-site pairing is asserted, not assumed.** A test walks the service's own call
+- [x] **AC7** **The call-site pairing is asserted, not assumed.** A test walks the service's own call
       sites and fails if a tenant-less store method is reachable from the event path, or if the event
       path calls one. Its event entry points are derived from the bus subscription call sites rather
       than a hardcoded name list, and its store-call selector is qualified by receiver type, so an
       identically-shaped field on another service does not match (ADR-0084 decision 5). ADR-0080
       records this as the risk it is most likely to be wrong about; this is the test that makes being
       wrong visible.
-- [ ] **AC8** A merge request, review, protection or ref revision belonging to another tenant is
+- [x] **AC8** A merge request, review, protection or ref revision belonging to another tenant is
       **absent**, not forbidden: no method returns it, and none reports that it exists.
 
 ### The version guard — ADR-0080 decision 3, split by ADR-0084
 
-- [ ] **AC9** `Save` serves the **bumped writers only** — `SubmitReview`, `Merge` and every other
+- [x] **AC9** `Save` serves the **bumped writers only** — `SubmitReview`, `Merge` and every other
       caller-editing path that reads version N and sets `Version = N+1` before saving — and writes
       `UPDATE … WHERE version = $expected`, `$expected = N`, reporting a zero-row update as a
       conflict rather than as success. Two writers reading the same version and both saving: one
       wins, one is told.
-- [ ] **AC10** **The projection write is its own port method**, version-preserving by construction
+- [x] **AC10** **The projection write is its own port method**, version-preserving by construction
       (ADR-0084 decision 1). It writes the projected fields (`TargetRevision`, `HeadRevision`)
       where the stored row is at the version the event path read, advances nothing, and a zero-row
       update re-reads and re-applies rather than surfacing a conflict a caller would have to
       interpret. Every push to a ref with an open merge request lands its projection and publishes
       `MergeRequestUpdated`, exactly as before the durable store.
-- [ ] **AC11** The conflict is reported as `api.ErrVersionConflict`: wherever the guarded `Save`
+- [x] **AC11** The conflict is reported as `api.ErrVersionConflict`: wherever the guarded `Save`
       fails on a zero-row update, the service maps the adapter's conflict onto it (ADR-0084
       decision 2) — the wire shape the `ExpectedVersion` pre-check already produces, so a caller
       sees one conflict error whether the race was caught by the pre-check or by the write.
-- [ ] **AC12** **`Merge`'s ordering, and its compensation** (ADR-0084 decision 3). The guarded
+- [x] **AC12** **`Merge`'s ordering, and its compensation** (ADR-0084 decision 3). The guarded
       `Save` runs before `MoveRef`, so a conflict refuses the merge while nothing has moved. A
       `MoveRef` failure after a successful `Save` is compensated by a re-open — the merge request
       returns to OPEN under its own version bump — and the compensation is a named audit record,
@@ -113,23 +114,23 @@ Schema `codereview`, all tenant-scoped with RLS enabled and forced:
 
 ### The schema
 
-- [ ] **AC13** Every table carries `tenant_id`, RLS **enabled and forced**, and one `tenant_isolation`
+- [x] **AC13** Every table carries `tenant_id`, RLS **enabled and forced**, and one `tenant_isolation`
       policy keyed on `tenant_id`; the migration passes T-0004's boundary linter and carries the
       `-- rls: tenant-key=tenant_id` marker the lint reads.
-- [ ] **AC14** Grants are minimal: the application role gets `SELECT, INSERT, UPDATE` and **no
+- [x] **AC14** Grants are minimal: the application role gets `SELECT, INSERT, UPDATE` and **no
       `DELETE`** on any table — nothing in the port deletes, and a grant that exists is a capability
       somebody eventually uses.
-- [ ] **AC15** `external_issues` is JSONB with `CHECK (jsonb_array_length(external_issues) <= 25)`,
+- [x] **AC15** `external_issues` is JSONB with `CHECK (jsonb_array_length(external_issues) <= 25)`,
       repeating the domain's bound at the column, and defaults to an empty array so a merge request
       with no references is not a null.
-- [ ] **AC16** A migration test asserts the above as text, so the privilege surface is reviewed where
+- [x] **AC16** A migration test asserts the above as text, so the privilege surface is reviewed where
       it is declared rather than remembered.
 
 ### Composition
 
-- [ ] **AC17** The plane wires the durable store when it has a pool and the memory store when it does
+- [x] **AC17** The plane wires the durable store when it has a pool and the memory store when it does
       not, and the memory constructor keeps its comment about what that costs (ADR-0080 decision 4).
-- [ ] **AC18** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
+- [x] **AC18** **The isolation proofs ran.** Zero skips for the tenancy cases; the exit record states
       the observed skip count (carried limit 5).
 
 ## Governance mapping (G1–G9)

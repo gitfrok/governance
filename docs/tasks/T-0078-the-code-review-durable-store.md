@@ -1,7 +1,7 @@
 # T-0078: The Code Review context keeps what it was told
 
-- **Status:** In progress — RED resumed 2026-08-21 on the amended spec (ADR-0084 Accepted the same
-  day)
+- **Status:** Done (2026-08-21) — backend@06e14da; SPEC-0061 AC1–AC18 proven, 16 real-Postgres
+  proofs green with `-race` and **0 skips**
 - **Phase / Epic:** 4 / EP-29 (durability debt, after Phase 4)
 - **Repo(s):** backend
 - **Spec:** ../specs/SPEC-0061-code-review-durable-store.md (AC1–AC18)
@@ -14,7 +14,7 @@ SPEC-0061 in one task, in one repository. The spec is the authority.
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0061 AC1–AC18 — as written in the spec.
+- [x] SPEC-0061 AC1–AC18 — as written in the spec.
 
 ## Tests to write first
 
@@ -51,3 +51,41 @@ SPEC-0061 in one task, in one repository. The spec is the authority.
 ## Definition of Done
 
 See ../process/definition-of-done.md. `full` ceremony.
+
+## Exit record (2026-08-21)
+
+**AC1–AC18 green.** backend **06e14da** — the adapter, migration, service split, wiring and tests
+in one commit on `main`. The proofs: **16 real-Postgres tests green with `-race`, 0 skips**
+(`TEST_DATABASE_URL` + `TEST_SUPERUSER_DATABASE_URL` against the dev cluster's Postgres,
+port-forwarded :15432), plus the migration text tests, the service-edge guard tests over the
+memory store with an injected conflict, and the derived call-site pairing test. Full backend suite
+(97 packages) and the arch/boundary gates green at the same pin.
+
+**The stop did its job.** The pre-commit adversarial review caught what the green proofs could not:
+one `Save` cannot serve both write protocols, because the two disagree about what the version column
+means — bumped writers arrive at N+1, the projection arrives at N. `WHERE version = v-1` conflicts
+every push; `WHERE version IN (v-1, v)` silently kills AC9 by letting a losing bumped writer match
+the winner's just-bumped row. ADR-0084 split the write along the protocol line that already existed,
+and the resumed RED landed it: `Save` guards (`WHERE version = mr.Version - 1`, zero rows a
+conflict), `SaveProjection` preserves the version and re-reads-and-re-applies when the row moved
+under it — proven live by bumping the row between the read and the projection and asserting the
+caller's edit survives beside the re-applied revisions.
+
+**The pairing is asserted, not trusted.** The AC7 test parses this package's own source, derives its
+event entry points from the `bus.Subscribe*` call sites rather than a name list, qualifies store-call
+selectors by receiver type so the ImportService's identically-shaped field does not match, and fails
+if the event path can reach `Get`/`PutReview`/`Reviews`/`Seen`.
+
+**Merge now refuses before anything moves, and pays for moving anyway.** The guarded `Save` runs
+before `MoveRef` (a conflict leaves the record OPEN and the ref untouched — asserted), and a move
+that fails after the save is compensated: a re-open under its own version bump and a named audit
+record (`codereview.merge.compensated`, denied outcome, correlated to the policy decision and the
+move's refusal reason), after which a fresh request ID merges cleanly. The retry test asserts both
+bumps.
+
+**Observed, not opened:** the dev cluster's `codereview` tables exist because the proof harness
+self-applies the migration under `TEST_SUPERUSER_DATABASE_URL` — the same posture as the repository,
+CI and release stores since T-0053/T-0059/T-0064, whose migrations are likewise not in
+`scripts/dev-provision.sh`'s list. A fresh provision wires the durable store against a database
+without these tables. That is a provisioning gap shared by all four Phase-4-era stores, pre-existing
+this task, and recorded here rather than silently widened into scope.

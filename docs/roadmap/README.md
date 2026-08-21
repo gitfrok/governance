@@ -176,6 +176,22 @@ PR-26's job logs, PR-27's policy authoring, PR-30's visibility and members, PR-3
 PR-28's tracker are all undelivered by decision, each held by a contract gate (checks 13–18) or a
 policy pin rather than by a note — and PR-32 was withdrawn outright.
 
+## EP-29 — durability debt · **Complete (2026-08-21)**
+
+Not a phase reopening: Phase 4 is Complete and its exit criteria are met. This is the class of debt a
+phase leaves behind rather than a surface it failed to deliver, so it got its own epic (ADR-0080)
+instead of a retroactive edit to a closed one. The Code Review context had never had a durable store —
+`cmd/dataplane-app` built it on `NewMemoryStore`, so every merge request, review, branch-protection
+rule and external issue reference emptied with the process. ADR-0084 (Accepted) split the write along
+its protocol line after the pre-commit review found the version guard and the version-preserving
+projection write cannot share one method.
+
+**Exit (met):** T-0078 Done at backend@06e14da against SPEC-0061 AC1–AC18 — the `codereview` schema
+(RLS forced on all five tables), the Postgres adapter with ADR-0080's hybrid scoping and its asserted
+call-site pairing, the guarded `Save` / version-preserving `SaveProjection` split, `Merge` saving
+before it moves the ref with a named compensation, and the plane wiring the durable store whenever it
+has a pool. Sixteen real-Postgres proofs green with `-race` and zero skips.
+
 ## Architecture evolution (ADR-0025 → ADR-0026)
 
 Phases 0–3 ship as a **modular monolith per plane** (ADR-0025). A module becomes its own **coarse
