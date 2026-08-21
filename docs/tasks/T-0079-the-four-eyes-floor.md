@@ -1,7 +1,7 @@
 # T-0079: The four-eyes floor
 
-- **Status:** Done (2026-08-21) — governance@this-commit + backend@this-pin; SPEC-0062 AC1–AC5
-  proven
+- **Status:** Done (2026-08-21) — governance@39a2f1e+594aa40, backend@bed1194; SPEC-0062 AC1–AC5
+  proven; 189/189 rego tests
 - **Phase / Epic:** EP-30 (the review loop, completed)
 - **Repo(s):** governance, backend
 - **Spec:** ../specs/SPEC-0062-four-eyes-floor.md (AC1–AC5)
