@@ -1,6 +1,6 @@
 # T-0080: The Notifications context — bell, list, mark-read
 
-- **Status:** Not started
+- **Status:** In progress (2026-08-21)
 - **Phase / Epic:** EP-31 (notifications)
 - **Repo(s):** backend, bff, webfrontend
 - **Spec:** ../specs/SPEC-0063-notifications.md (AC1–AC7)

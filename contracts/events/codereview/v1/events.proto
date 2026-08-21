@@ -96,3 +96,23 @@ message BranchProtectionChanged {
   // events/ci). Never a policy outcome: the consumer still decides for itself.
   repeated string actor_roles = 8;
 }
+
+// MergeRequestReady records that a DRAFT merge request was marked ready for
+// review (ADR-0087, SPEC-0064). It is the draft's announcement: everything
+// between open and ready announced nothing, and this event is what ends the
+// quiet. Additive for SPEC-0063, whose Notifications consumer treats opened
+// and ready as the same review-requested fact — the recipients are the
+// target's reviewers-to-be either way — without conflating the two states in
+// Code Review's own record.
+message MergeRequestReady {
+  string event_id = 1;
+  string merge_request_id = 2;
+  string tenant_id = 3;
+  string repository_id = 4;
+  // The verified actor who marked it ready.
+  string actor_id = 5;
+  // The head revision re-read from the source ref at the ready transition.
+  string head_revision = 6;
+  string target_ref = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}

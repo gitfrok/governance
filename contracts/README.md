@@ -135,7 +135,16 @@ needs a direct response.
 - `events/codereview/v1/events.proto` — Code Review opened/updated/reviewed/merged/
   protection-changed events (SPEC-0019, SPEC-0028); Repository/Git consumes only
   `BranchProtectionChanged`, and Security/Findings consumes `MergeRequestOpened` and
-  `MergeRequestUpdated` (head moves and retargets) into its attribution projection
+  `MergeRequestUpdated` (head moves and retargets) into its attribution projection.
+  SPEC-0063 (ADR-0087) additively adds `MergeRequestReady`: the draft's one announcement,
+  carrying the actor, the re-read head revision and target ref — everything before it announced
+  nothing by decision
+- `proto/notifications/v1/notifications.proto` — the Notifications read surface (SPEC-0063,
+  ADR-0086): list / unread-count / mark-read over rows derived server-side from bus events.
+  There is no create RPC and no recipient field anywhere: the recipient IS the verified caller,
+  every query is tenant-scoped AND recipient-scoped behind forced RLS, and PDP actions are asked
+  per call (`notification.read`, `notification.mark_read`). The kind vocabulary mirrors the
+  subscribed event set and grows additively with ADR-0086's coverage table
 - `events/repository/v1/events.proto` — Repository context domain events (consumed by
   CI, Search, Audit — no synchronous dependency on Repository)
 - `events/ci/v1/events.proto` — CI job queued/started/finished lifecycle events (SPEC-0020)

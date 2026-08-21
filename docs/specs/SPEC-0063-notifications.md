@@ -1,11 +1,25 @@
 # SPEC-0063: The Notifications context
 
-- **Status:** Approved (2026-08-21) — Accepted ADR-0086. Implementation not started.
+- **Status:** In progress (2026-08-21) — Accepted ADR-0086; T-0080 implementing.
 - **Owner:** platform
 - **Context(s):** Notifications (new). Producers unchanged; BFF and webfrontend gain routes and
   a bell.
 - **ADRs:** 0086 (decides this), 0022, 0025, 0003, 0062
 - **Task(s):** T-0080 (backend + bff + webfrontend)
+
+## Implementation notes
+
+1. **"Reviewers-to-be" (AC1) resolved against platform facts.** A protection rule carries a
+   required-approval *count*, never holder identities, and the platform keeps no reviewer
+   assignment. The server-side derivation is therefore: the tenant's principals holding a role
+   that grants `merge_request.review` (owner, member), read through Identity&Access's in-process
+   surface — the sanctioned cross-context path (invariant 14) — minus the acting actor.
+2. **The "ready" event.** `MarkReady` published nothing before this spec; the subscribed event set
+   gained an additive `MergeRequestReady` in `events/codereview/v1` so opened/ready/merged are all
+   real events rather than inferred states.
+3. **Approvals that counted (AC2)** are read at consumption time from Code Review's in-process
+   surface (current APPROVE dispositions at head, author excluded), exactly as attribution reads
+   the diff — no recipient travels on any wire.
 
 ## Problem / context
 

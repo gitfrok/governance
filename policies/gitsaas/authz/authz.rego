@@ -173,6 +173,11 @@ role_actions := {
 		"agent.dataplane.revoke", "agent.dataplane.read",
 		"residency.declaration.set",
 		"usage.view.read",
+		# Reading and acknowledging one's own notifications (SPEC-0063). Granted to
+		# every role below for the same reason it is safe: a notification row is
+		# recipient-scoped server-side to the caller, so the grant confers nothing
+		# another principal's rows.
+		"notification.read", "notification.mark_read",
 	},
 	"member": {
 		"repo.read", "repo.write", "ci.run", "ci.cancel",
@@ -193,12 +198,14 @@ role_actions := {
 		"findings.triage", "findings.summary.read",
 		"search.query", "search.read", "search.index.status.read",
 		"usage.view.read",
+		"notification.read", "notification.mark_read",
 	},
 	# A reader reads the repository. LFS is deliberately not included: pulling every
 	# large object in a repository is a different cost from reading its text, and a
 	# tenant that wants to grant one without the other has to be able to.
 	# Search is included: it surfaces nothing repo.read does not (SPEC-0034/0035).
-	"reader": {"repo.read", "search.query", "search.read", "search.index.status.read"},
+	"reader": {"repo.read", "search.query", "search.read", "search.index.status.read",
+		"notification.read", "notification.mark_read"},
 }
 
 # action_resource pins each action to the resource kind(s) it may be asked about.
@@ -275,6 +282,11 @@ action_resource := {
 	"merge_request.external_issue.link": {"merge_request"},
 	"merge_request.ready": {"merge_request"},
 	"merge_request.merge": {"merge_request"},
+	# A notification is asked about itself: the question names the row, and the
+	# recipient scoping to the caller is a store fact behind RLS, not a role
+	# distinction (SPEC-0063).
+	"notification.read": {"notification"},
+	"notification.mark_read": {"notification"},
 	"repository.branch_protection.manage": {"repository"},
 	"repository.import": {"repository"},
 	"repository.import.read": {"import"},

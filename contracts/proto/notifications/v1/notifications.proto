@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+// The Notifications read surface (SPEC-0063, ADR-0086).
+//
+// Notifications are derived server-side from bus events — one durable row per
+// (recipient, event) in the Notifications context's own store — and this
+// surface is only how their recipient reads them: the list, the unread count,
+// and mark-read. There is no create, no subscribe, and no recipient field on
+// any message: WHO a notification belongs to is a server fact derived from the
+// verified principal (the recipient IS the caller), never a wire claim, and
+// the rows a call can touch are the caller's own because every query is
+// tenant-scoped AND recipient-scoped behind forced RLS (invariant 1). Not
+// found, cross-tenant and unauthorized are one coarse refusal (SPEC-0001).
+//
+// The PDP actions are notification.read and notification.mark_read; both are
+// asked per call like every surface (invariant 2), even though recipient
+// scoping already confines each call to the caller's own rows.
+package gitsaas.notifications.v1;
+
+option go_package = "github.com/yourorg/gitsaas/gen/proto/notifications/v1;notificationsv1";
+
+import "google/protobuf/timestamp.proto";
+
+service NotificationService {
+  // List returns the caller's notifications, newest first. Read and unread
+  // both appear; read_state carries which. Paging is opaque-token as
+  // everywhere else.
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+
+  // UnreadCount returns exactly that — a count of the caller's unread rows.
+  // Zero is zero: the bell renders absence honestly (SPEC-0063 AC7).
+  rpc UnreadCount(UnreadCountRequest) returns (UnreadCountResponse);
+
+  // MarkRead marks ONE notification read, by its opaque ID, for the caller.
+  // Marking one marks one (SPEC-0063 AC6); an unknown or foreign ID is the
+  // same coarse refusal as anything else not the caller's own.
+  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+}
+
+// The kind vocabulary mirrors the subscribed event set. It exists so a reader
+// can render "what happened" without parsing event names, and it grows
+// additively as ADR-0086's coverage table grows.
+enum NotificationKind {
+  NOTIFICATION_KIND_UNSPECIFIED = 0;
+  NOTIFICATION_KIND_MERGE_REQUEST_READY_FOR_REVIEW = 1;
+  NOTIFICATION_KIND_REVIEW_SUBMITTED = 2;
+  NOTIFICATION_KIND_MERGE_REQUEST_MERGED = 3;
+  NOTIFICATION_KIND_FINDINGS_ATTRIBUTED = 4;
+}
+
+message ListNotificationsRequest {
+  // Page size bounds; zero means the server default, above the max clamps.
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  // Empty when this is the last page.
+  string next_page_token = 2;
+}
+
+message Notification {
+  // Opaque identity of this notification row, stable across replays of the
+  // event that produced it.
+  string notification_id = 1;
+  NotificationKind kind = 2;
+  string repository_id = 3;
+  string merge_request_id = 4;
+  // The actor whose act produced it — who reviewed, merged, opened. May be
+  // empty for events with no actor (findings attribution).
+  string actor_id = 5;
+  // The head revision at the act, when the event carried one.
+  string head_revision = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  bool read = 8;
+}
+
+message UnreadCountRequest {}
+
+message UnreadCountResponse {
+  int64 unread = 1;
+}
+
+message MarkReadRequest {
+  string notification_id = 1;
+}
+
+message MarkReadResponse {
+  Notification notification = 1;
+}
