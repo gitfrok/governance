@@ -91,7 +91,14 @@ none of which is in scope here (see Out of scope).
 
 ## Binding tokens
 
-These are the values ADR-0069 decision 6 moves into governance. Frost is the default render.
+> **Amended 2026-08-23 (ADR-0091, SPEC-0066).** ADR-0069 decision 6 put these values here to hold
+> them; ADR-0091 supersedes that and makes `webfrontend/design/tokens.json` the source. This table
+> stops being the source and becomes a **constraint**: the source must satisfy it, and where the two
+> disagree the disagreement is a defect to be reconciled, not a value this table concedes. Nothing
+> else in this spec changes — the three CVD laws, the light-by-default posture and AC2's hex-literal
+> gate all still apply, and under SPEC-0066 AC3 they now apply to the source as well as the render.
+
+Frost is the default render.
 
 | Token | Frost (light) | Deepfreeze (dark) |
 |---|---|---|

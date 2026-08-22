@@ -1,14 +1,13 @@
 # SPEC-0066: `tokens.json` as the design system's source, and the derivation that proves it
 
-- **Status:** Draft (2026-08-23) — awaiting owner approval; ADR-0091 is Accepted, so RED may begin
-  once this is Approved.
+- **Status:** Approved (2026-08-23) — ADR-0091 Accepted; RED may begin.
 - **Owner:** platform
 - **Context(s):** webfrontend (the token layer and its consumers); governance (the CVD laws and the
   constraints the source must satisfy)
 - **ADRs:** ADR-0091 (Accepted — the kit becomes the source of truth; supersedes ADR-0069),
   ADR-0032 (generated artifacts are gated for freshness), ADR-0027 (one submodule per commit)
 - **Amends:** SPEC-0047 — from *holding* the binding token values to *constraining* them
-- **Task(s):** — (to be filed once Approved)
+- **Task(s):** ../tasks/T-0083-token-source-of-truth.md
 
 ## Problem / context
 

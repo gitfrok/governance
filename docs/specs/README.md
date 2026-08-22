@@ -84,4 +84,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0063 | The Notifications context | Implemented (2026-08-21) | T-0080 |
 | SPEC-0064 | Draft merge requests | Implemented (2026-08-21) | T-0081 |
 | SPEC-0065 | Merge strategies, and trunk-based landing as a mode | Implemented (2026-08-21) | T-0082 |
-| SPEC-0066 | tokens.json as the design system's source, and the derivation that proves it | Draft (2026-08-23) | — |
+| SPEC-0066 | tokens.json as the design system's source, and the derivation that proves it | Approved (2026-08-23) | T-0083 |
