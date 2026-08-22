@@ -32,21 +32,39 @@ including the parts that are more expensive than they look.
 
 The token comparison is the part that decides how much work this is:
 
+> **Correction, 2026-08-23, same day as acceptance.** The figures first recorded here (17 declared,
+> 9 overlapping, 78 without a counterpart) were wrong. They came from a line-anchored pattern that
+> only saw declarations starting a line and missed every one sharing a line with another. The
+> corrected measurement is below. The conclusion it supports is unchanged — the kit is a minority of
+> the system and a partly-overlapping vocabulary — but the numbers the cost was argued from were
+> understated, and a decision recorded from a bad measurement should say so rather than be quietly
+> rewritten.
+
 | | count |
 |---|---|
 | Tokens in the governed layer (`webfrontend/src/styles/tokens.css`) | **87** |
-| CSS custom properties declared anywhere in `gitfrok.dc.html` | **17** |
-| Names present in both | **9** |
-| Names only in the prototype | **8** |
+| Custom properties declared in `gitfrok.dc.html` | **47** |
+| Names present in both | **22** |
+| Names only in the kit | **25** |
+| Governed names with no counterpart in the kit | **65** |
 
-The eight are `--color-cream`, `--color-ember`, `--color-indigo`, `--color-ink`, `--font-sans`,
-`--gf-add-bg`, `--gf-sh-sm`, `--radius-card`.
+So the kit is **not a smaller version of the system**, but it is closer to one than first recorded:
+it covers 22 of the 87 governed tokens by name and adds 25 of its own, leaving 65 governed tokens
+with no counterpart. There is still no `tokens-v2.json`. Promoting the kit to source therefore does
+not move a source of truth — it requires **authoring** one, and the majority of the material to
+author it from is in SPEC-0047, not in the kit.
 
-So the kit is **not a smaller version of the system**. It is an older, partly-translated naming
-vocabulary that overlaps the governed one in nine names, and it contains no counterpart for 78 of
-the 87 tokens the product actually uses. There is still no `tokens-v2.json`. Promoting the kit to
-source therefore does not move a source of truth — it requires **authoring** one, and the material
-to author it from is mostly in SPEC-0047, not in the kit.
+Two structural facts about the kit matter more than the counts, and both were missed by the first
+reading:
+
+- **The kit's own `--color-*` names are largely aliases onto `--gf-*`** — `--color-ink: var(--gf-ink)`,
+  `--color-line: var(--gf-line)`, `--color-cream: var(--gf-surface)`. The kit is therefore not a
+  competing vocabulary so much as a thin compatibility layer over the same `gf-` one the governed
+  tokens use, which makes the naming question below much cheaper than it looked.
+- **Several names are declared twice with different values** — `--gf-add-bg` as `#E3F0FB` and
+  `#1C3A52`, `--gf-action-hover` as `#005E94` and `#1F86C9`. Those are the comp's light and dark
+  variants sharing a name across scopes. A flat `tokens.json` cannot hold them; the schema has to
+  carry theme as a dimension, which is a requirement this ADR did not previously state.
 
 `gitfrok.dc.html` also carries three external references, including
 `fonts.googleapis.com/css2?family=Baloo+2…&family=Inter…&family=JetBrains+Mono…`. ADR-0069
@@ -98,14 +116,19 @@ changes become reviewable diffs on a small JSON file instead of prose edits to a
 
 **Negative / costs, stated plainly.**
 
-- **This is not a promotion, it is an authoring task.** 78 of 87 tokens have no counterpart in the
+- **This is not a promotion, it is an authoring task.** 65 of 87 tokens have no counterpart in the
   kit. The work is writing `tokens.json` from the governed values and then declaring the kit
   authoritative over them — which means the first version of the "source of truth" is largely
   transcribed *from* the artifact it is replacing.
-- **A naming reconciliation nobody has scoped.** Nine names overlap and eight are kit-only. Either
-  the kit's vocabulary wins and 78 governed names change (touching every consumer and the gate's
-  expectations), or the governed vocabulary wins and the kit is renamed — in which case the kit is
-  no longer the thing that was adopted. The implementing spec must pick one and say so.
+- **A naming reconciliation, now scoped.** 22 names overlap and 25 are kit-only, and because the
+  kit's `--color-*` names mostly alias `--gf-*`, the two vocabularies are the same one wearing two
+  labels. The implementing spec must still pick, and the cost of each choice is measured: the
+  governed names are consumed by **1,030 `var(--…)` references across 46 files**, 57 distinct names,
+  while the 22 shared names account for a small fraction of that. Governed names winning is
+  therefore near-zero churn; kit names winning rewrites up to 1,030 references and invents names for
+  65 tokens the kit never had.
+- **The schema must carry theme.** The kit declares some names twice for light and dark. A flat
+  key-value `tokens.json` would silently drop one of each pair.
 - **SPEC-0047 is Implemented.** Amending an Implemented spec is a governance action with its own
   review, not a side effect of this ADR.
 - **The direction of authority inverts.** Today a designer's working file cannot silently change
