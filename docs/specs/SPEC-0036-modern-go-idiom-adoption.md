@@ -3,12 +3,14 @@
 - **Status:** Approved (2026-08-14)
 - **Owner:** platform
 - **Context(s):** cross-cutting (backend modules + bff internals; no bounded-context behavior change)
-- **ADRs:** none new — behavior-preserving refactor; no architectural decision required
+- **ADRs:** none new — behavior-preserving refactor; no architectural decision required.
+  Cites ADR-0089 for the toolchain floor the ALLOWED set is resolved against.
 - **Task(s):** — (approved plan; per-module PRs declare `Ceremony: full` citing this spec)
 
 ## Problem / context
 
-Both `backend/` and `bff/` are on Go 1.26, but much of the handwritten code predates idioms the
+Both `backend/` and `bff/` are on Go 1.27 (Go 1.26 when this spec was approved; ADR-0089 raised
+the floor), but much of the handwritten code predates idioms the
 Modern Go Guidelines prescribe (standard-library `slices`/`maps`/`cmp` helpers, `any`,
 `errors.Is`, `time.Since`, iterator-friendly loops, `sync.OnceFunc`, and friends). Adopting them
 is mechanical and behavior-preserving, but the change touches security-sensitive modules, so the
@@ -110,8 +112,13 @@ clarification allowed, no behavior change.
 
 ## Open questions / assumptions
 
-- **Assumption:** both repos remain on Go 1.26 for the duration of the refactor; a toolchain
-  downgrade would invalidate the ALLOWED set.
+- **Assumption:** the floor never moves *down* under this spec; a toolchain downgrade would
+  invalidate the ALLOWED set. It moved *up* on 2026-08-22 — ADR-0089 raised the floor from Go
+  1.26 to 1.27 — which widens what is available without invalidating anything already allowed.
+  Per the closing note below, the five idioms 1.27 adds (generic methods, promoted field names in
+  embedded-struct literals, `strings`/`bytes.CutLast`, the standard-library `uuid` package,
+  `url.URL.Clone` and `Values.Clone`) are a **new spec**, not this one's remit. The `uuid` one is
+  a dependency removal, not a rewrite, so it needs its own justification either way.
 - **Assumption:** the `full` ceremony tier verdict from `scripts/check-ceremony-tier.sh` holds
   for every consumer PR; if a module PR is re-tiered, this spec still binds via AC4.
 - No parked human decisions: the triage is closed for this round; future guideline adoption is a
