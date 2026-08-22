@@ -192,7 +192,7 @@ call-site pairing, the guarded `Save` / version-preserving `SaveProjection` spli
 before it moves the ref with a named compensation, and the plane wiring the durable store whenever it
 has a pool. Sixteen real-Postgres proofs green with `-race` and zero skips.
 
-## EP-30 / EP-31 — the review loop, completed; notifications · **In progress (2026-08-21)**
+## EP-30 / EP-31 — the review loop, completed; notifications · **Complete (2026-08-21)**
 
 Four owner decisions (ADR-0085…0088, all Accepted 2026-08-21) close the distance between "changes
 land through review" and what the door actually did: merges needed only what a ref's rule asked —
@@ -203,8 +203,9 @@ merge_commit/squash/rebase per repository, trunk-based landing as a mode that co
 never review); and nothing told anyone anything happened (**ADR-0086**: a Notifications context fed
 by the bus, in-app first).
 
-**Exit:** SPEC-0062 and SPEC-0064 Implemented (T-0079, T-0081 — both Done 2026-08-21), T-0082 and
-T-0080 Done against their Approved specs, every gate green at the final pin bump.
+**Exit:** met. SPEC-0062, SPEC-0064 and SPEC-0065 Implemented (T-0079, T-0081, T-0082), SPEC-0063
+Implemented (T-0080) — all four Done 2026-08-21 against their Approved specs, every gate green at
+the final pin bump.
 
 ## Architecture evolution (ADR-0025 → ADR-0026)
 

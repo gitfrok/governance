@@ -83,4 +83,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0062 | The four-eyes floor | Implemented (2026-08-21) | T-0079 |
 | SPEC-0063 | The Notifications context | Implemented (2026-08-21) | T-0080 |
 | SPEC-0064 | Draft merge requests | Implemented (2026-08-21) | T-0081 |
-| SPEC-0065 | Merge strategies, and trunk-based landing as a mode | Approved (2026-08-21) | T-0082 |
+| SPEC-0065 | Merge strategies, and trunk-based landing as a mode | Implemented (2026-08-21) | T-0082 |

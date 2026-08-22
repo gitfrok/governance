@@ -96,7 +96,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0079 | The four-eyes floor | EP-30 | Done — governance@39a2f1e+594aa40, backend@bed1194; SPEC-0062 AC1–AC5; 189/189 rego tests; the author's review never counts |
 | T-0080 | The Notifications context — bell, list, mark-read | EP-31 | Done — gov@this-commit, backend@0f021b6, bff@9e7443d, webfrontend@b0f60ee; SPEC-0063 AC1–AC7 |
 | T-0081 | Draft merge requests | EP-30 | Done — gov@39a2f1e+594aa40, backend@bed1194, bff@0d16824, webfrontend@71675e1; SPEC-0064 AC1–AC7 |
-| T-0082 | Merge strategies, and trunk-based landing | EP-30 | Not started — SPEC-0065 Approved under ADR-0088 |
+| T-0082 | Merge strategies, and trunk-based landing | EP-30 | Done — gov@this-commit + backend@its pin; SPEC-0065 AC1–AC7; rebase refused rather than unsafe below git 2.44 |
 
 ## Retired numbers (never reused)
 
