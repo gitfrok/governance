@@ -1,6 +1,6 @@
 # SPEC-0066: `tokens.json` as the design system's source, and the derivation that proves it
 
-- **Status:** Approved (2026-08-23) — ADR-0091 Accepted; RED may begin.
+- **Status:** Implemented (2026-08-23) — AC1–AC7 proven by T-0083 (webfrontend 23a76d8, super-repo 390ffda). Approved (2026-08-23) under Accepted ADR-0091.
 - **Owner:** platform
 - **Context(s):** webfrontend (the token layer and its consumers); governance (the CVD laws and the
   constraints the source must satisfy)

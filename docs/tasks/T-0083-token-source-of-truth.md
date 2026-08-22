@@ -1,6 +1,6 @@
 # T-0083: `tokens.json` becomes the source, and `tokens.css` becomes output
 
-- **Status:** In progress (2026-08-23)
+- **Status:** Done (2026-08-23) — AC1–AC7 proven; webfrontend 23a76d8, super-repo 390ffda
 - **Phase / Epic:** design system (ADR-0091)
 - **Repo(s):** governance, webfrontend, super-repo
 - **Spec:** ../specs/SPEC-0066-token-source-of-truth.md (AC1–AC7)
@@ -32,16 +32,24 @@ authoring defect, not a design change.
 
 Tracked in SPEC-0066. Recorded here as they are proven, with the evidence.
 
-- [ ] **AC1** generated `tokens.css` is equivalent to the pre-change file, name for name and theme
-      for theme; diff attached
-- [ ] **AC2** all 57 consumed names resolve; 0 unresolved `var(--…)` over `webfrontend/src`
-- [ ] **AC3** a CVD-law violation in `tokens.json` fails a check
-- [ ] **AC4** drifted `tokens.css` fails `make verify`; in-step passes
-- [ ] **AC5** SPEC-0047 AC2's hex-literal gate still passes, and still fails on a raw hex
-- [ ] **AC6** no tracked file under `webfrontend/design/` references `fonts.googleapis.com` or
-      `fonts.gstatic.com`
-- [ ] **AC7** `--gf-muted`, `--gf-slice`, `--gf-sh-sm`, `--gf-sh-md` each matched to an existing
-      governed token or added with a purpose and a CVD verdict
+- [x] **AC1** all three token scopes reproduce identically from `tokens.json` — `:root` 87/87,
+      `[data-theme='deepfreeze']` 25/25, the `prefers-color-scheme` block 25/25, value for value.
+      Plus a no-loss check: **0** substantive lines of the 590-line original are absent from the
+      three files it became.
+- [x] **AC2** 53 distinct names consumed, **0** unresolved against the generated layer. (The one
+      apparent miss was `var(--gf-*)` inside a prose comment.)
+- [x] **AC3** `scripts/check-token-cvd.mjs` fails when a status colour has no glyph — proven by
+      adding `--gf-stale` and watching it fail, then removing it.
+- [x] **AC4** `scripts/check-tokens-fresh.mjs` passes in step and fails naming both sides on a hand
+      edit; wired into webfrontend's `prebuild`, `make tokens-check`, and CI beside `codegen-check`.
+- [x] **AC5** hex-literal gate: `OK — every colour in src/ resolves from a token`. `components.css`
+      took no exemption and needs none.
+- [x] **AC6** 0 references to `fonts.googleapis.com` or `fonts.gstatic.com` under `design/` or
+      `src/styles/`; the comp's three were stripped when it moved in.
+- [x] **AC7** all four resolved as **renames, not additions**: `--gf-muted`, `--gf-slice`,
+      `--gf-sh-sm` and `--gf-sh-md` already exist in the governed layer by those exact names — they
+      were only ever "kit-only" relative to the mistaken 17-token count that ADR-0091's correction
+      fixed. Nothing was added, so no new CVD verdict was owed.
 
 ## Notes
 
@@ -49,3 +57,32 @@ Tracked in SPEC-0066. Recorded here as they are proven, with the evidence.
   version measured 2026-08-23. Re-measure before starting if it has changed.
 - `--gf-font-display` (`'Baloo 2'`) is deliberately out of scope: whether to vendor the WOFF2 or
   retire the token is a font-hosting decision, and AC6 only forbids the CDN reference.
+
+## What went wrong, and what caught it
+
+Two defects in the implementation, both found by something other than review:
+
+1. **The first split silently dropped content.** Its boundary began at the
+   `prefers-reduced-motion` block, but `.gf-code`, `.gf-sha` and the
+   `:focus-visible` ring sit *between* the dark `@media` block and that one, so
+   they vanished. AC1 could not see it — it compares token scopes, and these are
+   not tokens. `tests/design-tokens.test.ts` failed on the missing focus ring.
+   The boundary is now the end of the last token scope, and a no-loss check
+   guards it.
+2. **The round-trip dropped 19 trailing comments.** A single regex cannot tell a
+   comment that opens a group from one annotating a declaration on the same line.
+   The parser is line-based now; notes survive and are emitted only in the
+   defining scope.
+
+`tests/design-tokens.test.ts` was updated to read the three stylesheets as one
+text, which is what it always was reading — otherwise the split would have
+quietly narrowed its font and focus assertions to a file that no longer holds
+them.
+
+## Deliberate limit
+
+AC3 gates CVD **law 2** (no hue-only encoding) and not law 1's "≥ 25 L\*". That
+figure is the brand kit's, quoted in a `tokens.css` comment; SPEC-0047 states no
+threshold and proves law 1 through AC10's grayscale and deuteranopia captures.
+Enforcing a number governance does not state would be inventing governance in a
+script, so law 1 stays where its evidence is. Recorded so the gap is a decision.
