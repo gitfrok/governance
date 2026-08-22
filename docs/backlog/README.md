@@ -416,7 +416,7 @@ story is that changes land through review; these close the gaps between that sto
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-30** The review loop, completed | — (no PRD row: PR-9 asks for the behaviour; this is the floor, the draft, and the history shape) | T-0079, T-0081, T-0082 | SPEC-0062, SPEC-0064, SPEC-0065 | In progress — T-0079 Done (floor in the bundle + author exclusion, 187/187 rego tests); T-0081 Done (draft end to end); T-0082 Not started (SPEC-0065 Approved) |
+| **EP-30** The review loop, completed | — (no PRD row: PR-9 asks for the behaviour; this is the floor, the draft, and the history shape) | T-0079, T-0081, T-0082 | SPEC-0062, SPEC-0064, SPEC-0065 | Done — all three tasks landed 2026-08-21 (floor, draft end to end, strategies + trunk mode); SPEC-0062/64/65 Implemented |
 
 One line each:
 
@@ -437,7 +437,7 @@ durable row per recipient.
 
 | Epic | Requirement | Tasks | Specs | State |
 |---|---|---|---|---|
-| **EP-31** Notifications | — (no PRD row yet: a requirement this implies is §12.1's to record) | T-0080 | SPEC-0063 | Not started — spec Approved; email/webhooks are named follow-ups |
+| **EP-31** Notifications | — (no PRD row yet: a requirement this implies is §12.1's to record) | T-0080 | SPEC-0063 | Done — T-0080 landed 2026-08-21, bell + list + mark-read end to end; email/webhooks remain named follow-ups needing their own decisions |
 
 ## Parked — needs a human decision first
 
