@@ -1,6 +1,6 @@
 # ADR-0091: The `./UI` kit becomes the design system's source of truth (rev. 2 of ADR-0069)
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-23
 - **Deciders:** platform (requested by the deciding owner)
 - **Supersedes:** ADR-0069

@@ -1,6 +1,6 @@
 # ADR-0069: The product design system is CVD-first, token-only, and light by default
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0091
 - **Date:** 2026-08-17 (Proposed and Accepted the same day, by the deciding owner)
 - **Deciders:** platform (drafted from the `gitfrok-brand-identity-v2` kit and the `./UI` prototype)
 - **Supersedes / superseded by:** — (supersedes nothing; see *Relationship to ADR-0015*)
