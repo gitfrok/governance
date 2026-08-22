@@ -1,6 +1,6 @@
 # ADR-0090: `git-storaged`'s runtime base moves to Alpine 3.24 so the rebase landing works
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-23
 - **Deciders:** platform
 - **Refines:** ADR-0048 (the base-with-git exception), ADR-0034 (third-party pin form)
