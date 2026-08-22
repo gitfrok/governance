@@ -79,10 +79,35 @@ pair. Shape:
 `type` and `role` are required: they are what the CVD gate in AC3 reads to know which tokens it must
 judge, and a colour token with no role cannot be judged.
 
-**4. `tokens.css` becomes generated output.** It is emitted from `tokens.json` by a generator in
-`webfrontend`, is not hand-edited, and carries the same "do not edit" header as every other
-generated artifact. A freshness gate fails when it drifts from its source, in the shape
-`codegen-check` already uses for contracts (ADR-0032), wired into `make verify`.
+**4. The token half of `tokens.css` becomes generated output — and it is only a half.**
+
+> **Amended 2026-08-23, during RED.** This item first said "`tokens.css` becomes generated output",
+> which is not possible as written and would have destroyed hand-authored work. The file is 590
+> lines: token declarations through line ~299, then **53 component selectors** (`.gf-code`,
+> `.gf-page`, `.gf-brand`, …) that are hand-written CSS no token source can emit. Generating the
+> whole file would have deleted them. Found by reading the file the generator was meant to produce,
+> which is the cheapest possible place to find it.
+
+The split, chosen so nothing downstream moves:
+
+- `src/styles/tokens.css` stays that name and becomes **generated, tokens only**. Its two importers
+  (`src/layouts/Layout.astro` and the raw-file page) are untouched, and the hex-literal gate's
+  existing exemption for `styles/tokens.css` stays correct — it is still the one file holding colour
+  literals.
+- The 53 component rules move to `src/styles/components.css`, **hand-written**, imported beside the
+  tokens. It contains 0 raw hex today (measured), so it needs no exemption — and must not acquire
+  one, because SPEC-0047 AC2's gate fails a *stale* exemption as well as a missing one.
+
+The generated file carries a "do not edit" header. A freshness gate fails when it drifts from
+`tokens.json`, in the shape `codegen-check` already uses for contracts (ADR-0032), wired into
+`make verify`.
+
+**4b. The generated file keeps its reasoning.** `tokens.css` carries 125 comment lines of governance
+prose — contrast ratios, the three CVD laws, ADR references, why `#0072B2` is the action colour. A
+generator that drops them would make the artifact worse to read even while making it correct.
+`tokens.json` therefore carries the structure that prose belongs to: ordered groups with their own
+comment, and an optional per-token note. The generator emits them. AC1's round-trip is what proves
+nothing was lost.
 
 **5. Placement, and what does not come across.** The kit lands in `webfrontend/design/` — source
 lives in submodules (invariants 21–25), never at the super-repo root. `gitfrok.dc.html` may be
@@ -98,12 +123,12 @@ product continues to hold.
 
 ## Acceptance criteria
 
-- **AC1 — the first landing is provably a visual no-op.** Generating `tokens.css` from the authored
-  `tokens.json` produces a file whose token set and values are identical to today's, name for name
-  and theme for theme. Any difference at all is a defect in the authoring, not an accepted change:
-  0 of the 22 shared names differ today, and every kit-only name maps to a governed value, so there
-  is nothing that legitimately changes. Proven by a diff against the pre-change file, attached to
-  the task.
+- **AC1 — the first landing is provably a visual no-op.** Generating from the authored
+  `tokens.json` reproduces every token declaration in today's `tokens.css` — name for name, theme
+  for theme, value for value — and the 53 component rules survive verbatim in `components.css`. Any
+  difference at all is a defect in the authoring, not an accepted change: 0 of the 22 shared names
+  differ today, and every kit-only name maps to a governed value, so there is nothing that
+  legitimately changes. Proven by a diff of the concatenated before/after, attached to the task.
 - **AC2 — nothing in the product changes name.** The 57 consumed names still resolve; the count of
   `var(--…)` references that fail to resolve against the generated layer is 0. Proven by a resolver
   check over `webfrontend/src`, not by inspection.
