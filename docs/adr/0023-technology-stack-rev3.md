@@ -1,6 +1,6 @@
 # ADR-0023: Technology stack (rev. 3) — version floors + Valkey
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0089
 - **Date:** 2026-07-19
 - **Supersedes:** ADR-0020
 - **Governs:** operability, security, developer experience

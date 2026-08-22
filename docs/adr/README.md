@@ -42,7 +42,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0020](0020-technology-stack-rev2.md) | Technology stack rev.2 (Astro SSR, Redpanda, SeaweedFS) | Superseded by ADR-0023 |
 | [ADR-0021](0021-local-dev-orbstack.md) | Local/dev: OrbStack + *.orb.local | Superseded by ADR-0024 |
 | [ADR-0022](0022-high-cohesion-low-coupling.md) | Modular architecture: high cohesion, low coupling | Accepted |
-| [ADR-0023](0023-technology-stack-rev3.md) | Technology stack rev.3 (version floors + Valkey) | Accepted |
+| [ADR-0023](0023-technology-stack-rev3.md) | Technology stack rev.3 (version floors + Valkey) | Superseded by ADR-0089 |
 | [ADR-0024](0024-local-dev-minikube.md) | Local/dev: Minikube only + *.gitsaas.test | Accepted |
 | [ADR-0025](0025-modular-monolith.md) | Modular monolith (one app binary per plane) | Accepted |
 | [ADR-0026](0026-service-based-target.md) | Target architecture: service-based (coarse services) | Accepted |
@@ -108,6 +108,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0086](0086-notifications-context.md) | Notifications are their own context fed by the bus — in-app list + unread count first, recipients derived server-side from the events' own aggregates, idempotent on event ID; email and webhooks are named follow-ups, not silent gaps | Accepted |
 | [ADR-0087](0087-draft-merge-requests.md) | A merge request can be a draft — DRAFT joins the state machine additively, MarkMergeRequestReady is its one door out, and while DRAFT the machinery stays quiet: no projections, no announcements, no merges | Accepted |
 | [ADR-0088](0088-merge-strategies.md) | Merges are feature-based by default — per-repository merge_commit/squash/rebase chosen server-side; trunk-based landing is a mode that constrains history shape (linear only) and never widens who may land what; commit-producing work lives in git-storaged | Accepted |
+| [ADR-0089](0089-technology-stack-rev4.md) | Technology stack rev.4 — the Go floor moves 1.26 → 1.27; one floor changes, every other ADR-0023 floor and stack choice carries forward; the Go builder base moves 3.22 → 3.23 with it because Alpine 3.22 carries no 1.27 image (build stages only; git-storaged's shipped alpine:3.22.2 runtime is untouched); the touchpoints are enumerated per repo (ADR-0027 keeps them three commits) and the 1.27 idiom sweep is SPEC-0036's follow-up, not this ADR | Accepted |
 
 ## Open follow-ups
 
@@ -120,7 +121,7 @@ the deciding ADR is the record.
 | The CSRF mechanism for browser-initiated writes. `SameSite=Lax` mitigates but does not close it, and the MR write surface must carry a defence | 0049 |
 | Whether distributed artifacts need a `NOTICE` or an SBOM of third-party licences | 0040 |
 | **No gate asserts an ADR's status matches what merging it meant.** Proposed on `main` is legitimate — an agent drafts a Proposed ADR and stops, and that ADR merges while it waits. The narrow defect: an ADR whose PR review *was* the approval should merge `Accepted`, and nothing distinguishes that from propose-and-stop. It is a question about intent, so it belongs in `.github/pull_request_template.md`, not in `check-docs.sh`. Has caught out ADR-0038, ADR-0039 and ADR-0040 | 0001 |
-| The *toolchain* half of the version-floor gate — assert installed `go`/`node`/`tsc` meet their floors in CI. The *image* half closed as ADR-0034 | 0023 |
+| The *toolchain* half of the version-floor gate — assert installed `go`/`node`/`tsc` meet their floors in CI. The *image* half closed as ADR-0034 | 0089 |
 | Per-OS Minikube driver docs, and CI that exercises the dev-cluster flow itself | 0024 |
 | Event catalog and naming — names exist as the protobuf full names of `contracts/events`, but nothing documents them | 0022 |
 | Super-repo CI: fail on submodule pointers referencing unmerged commits | 0027 |
