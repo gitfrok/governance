@@ -1,6 +1,9 @@
 # T-0068: Repository settings on the registry record, and an audited write path
 
-- **Status:** Not started
+- **Status:** Done (2026-08-19) — backend@6fe014c; SPEC-0057 AC1–AC9 proven there.
+  **Record advanced 2026-08-23:** the work landed on 2026-08-19 and this line was never
+  moved. SPEC-0057 carried the evidence and the epic table recorded the close; only this
+  file said otherwise.
 - **Phase / Epic:** 4 / EP-27 (Tier C)
 - **Repo(s):** backend
 - **Spec:** ../specs/SPEC-0057-repository-settings.md (AC1–AC9)
@@ -13,7 +16,7 @@ One repository's share of SPEC-0057, split along the ADR-0027 boundary. The spec
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0057 AC1–AC9 — as written in the spec.
+- [x] SPEC-0057 AC1–AC9 — as written in the spec.
 
 ## Tests to write first
 
@@ -30,3 +33,8 @@ See ../process/definition-of-done.md. `full` ceremony.
   cause from a two-member vocabulary and `readonly-cause` is a phase-wide pin.
 - **The audit port is declared here, filled in `cmd/`.** Repository is a leaf at fan-out zero and
   stays one; importing the Audit context would invert the module graph for one call.
+
+**Why this record was wrong.** It read `Not started` until 2026-08-23 while the code was on
+`main` and SPEC-0057 was Implemented. Anyone picking this up from the task file alone would
+have redone finished work. The lesson is the one the tree keeps relearning: a state that advances
+in one place and not the other is worse than no record, because it reads as authoritative.

@@ -1,6 +1,12 @@
 # T-0077: One type scale, one page shell, and the gate that keeps geometry in the token layer
 
-- **Status:** Not started
+- **Status:** Done (2026-08-19) — webfrontend@45ffd61 (the type scale, the shell and the gate)
+  then webfrontend@5628286, the follow-up fix for the defect the shell adoption introduced —
+  page chrome belonging outside the content column. SPEC-0060 AC1–AC10 proven across both;
+  the spec's Status line cites the feature commit and the task index cites the fix.
+  **Record advanced 2026-08-23:** the work landed on 2026-08-19 and this line was never
+  moved. SPEC-0060 carried the evidence and the epic table recorded the close; only this
+  file said otherwise.
 - **Phase / Epic:** 4 / EP-28 (the design layer, after Tier C)
 - **Repo(s):** webfrontend
 - **Spec:** ../specs/SPEC-0060-dimensional-tokens-and-page-shell.md (AC1–AC10)
@@ -13,7 +19,7 @@ SPEC-0060 in one task, in one repository. The spec is the authority.
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0060 AC1–AC10 — as written in the spec.
+- [x] SPEC-0060 AC1–AC10 — as written in the spec.
 
 ## Tests to write first
 
@@ -32,3 +38,8 @@ SPEC-0060 in one task, in one repository. The spec is the authority.
 ## Definition of Done
 
 See ../process/definition-of-done.md. `full` ceremony.
+
+**Why this record was wrong.** It read `Not started` until 2026-08-23 while the code was on
+`main` and SPEC-0060 was Implemented. Anyone picking this up from the task file alone would
+have redone finished work. The lesson is the one the tree keeps relearning: a state that advances
+in one place and not the other is worse than no record, because it reads as authoritative.

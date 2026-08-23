@@ -1,6 +1,9 @@
 # T-0075: The link and unlink routes
 
-- **Status:** Not started
+- **Status:** Done (2026-08-19) — bff@a196d03; SPEC-0059 AC11–AC13 proven there.
+  **Record advanced 2026-08-23:** the work landed on 2026-08-19 and this line was never
+  moved. SPEC-0059 carried the evidence and the epic table recorded the close; only this
+  file said otherwise.
 - **Phase / Epic:** 4 / EP-27 (Tier C)
 - **Repo(s):** bff
 - **Spec:** ../specs/SPEC-0059-external-issue-references.md (AC11–AC13)
@@ -13,7 +16,7 @@ The BFF half of SPEC-0059. The spec is the authority.
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0059 AC11–AC13 — as written in the spec.
+- [x] SPEC-0059 AC11–AC13 — as written in the spec.
 
 ## Tests to write first
 
@@ -27,3 +30,8 @@ The BFF half of SPEC-0059. The spec is the authority.
 ## Definition of Done
 
 See ../process/definition-of-done.md. `full` ceremony.
+
+**Why this record was wrong.** It read `Not started` until 2026-08-23 while the code was on
+`main` and SPEC-0059 was Implemented. Anyone picking this up from the task file alone would
+have redone finished work. The lesson is the one the tree keeps relearning: a state that advances
+in one place and not the other is worse than no record, because it reads as authoritative.

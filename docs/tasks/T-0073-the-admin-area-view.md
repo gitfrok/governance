@@ -1,6 +1,9 @@
 # T-0073: The admin area view — a dated report, and a door instead of a trail
 
-- **Status:** Not started
+- **Status:** Done (2026-08-19) — webfrontend@1d1d815; SPEC-0058 AC12–AC19 proven there.
+  **Record advanced 2026-08-23:** the work landed on 2026-08-19 and this line was never
+  moved. SPEC-0058 carried the evidence and the epic table recorded the close; only this
+  file said otherwise.
 - **Phase / Epic:** 4 / EP-27 (Tier C)
 - **Repo(s):** webfrontend
 - **Spec:** ../specs/SPEC-0058-admin-area.md (AC12–AC19)
@@ -13,7 +16,7 @@ The browser half of SPEC-0058. The spec is the authority.
 
 ## Acceptance criteria (test-first)
 
-- [ ] SPEC-0058 AC12–AC19 — as written in the spec.
+- [x] SPEC-0058 AC12–AC19 — as written in the spec.
 
 ## Tests to write first
 
@@ -29,3 +32,8 @@ The browser half of SPEC-0058. The spec is the authority.
 ## Definition of Done
 
 See ../process/definition-of-done.md. `full` ceremony.
+
+**Why this record was wrong.** It read `Not started` until 2026-08-23 while the code was on
+`main` and SPEC-0058 was Implemented. Anyone picking this up from the task file alone would
+have redone finished work. The lesson is the one the tree keeps relearning: a state that advances
+in one place and not the other is worse than no record, because it reads as authoritative.
