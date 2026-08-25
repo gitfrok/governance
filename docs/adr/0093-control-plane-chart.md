@@ -1,6 +1,6 @@
 # ADR-0093: The control plane installs from its own chart, and the chart stops at the workload
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-25
 - **Deciders:** platform (requested by the deciding owner)
 - **Related:** ADR-0009 (control-plane / data-plane split), ADR-0011 (outbound-only agent),
