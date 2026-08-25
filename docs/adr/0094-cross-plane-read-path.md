@@ -1,6 +1,6 @@
 # ADR-0094: The repository surface is served data-plane-side, behind a door the customer exposes
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-25
 - **Deciders:** platform (requested by the deciding owner)
 - **Amends:** ADR-0093 decision 2 in part — the component partition moves the repository surface
