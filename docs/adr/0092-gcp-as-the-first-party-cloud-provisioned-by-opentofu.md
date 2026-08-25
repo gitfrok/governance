@@ -1,6 +1,6 @@
 # ADR-0092: GCP is the first-party cloud, and OpenTofu + Terragrunt provisions it
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-25
 - **Deciders:** platform (requested by the deciding owner)
 - **Related:** ADR-0009 (control-plane / data-plane split), ADR-0010 (GKE/EKS/AKS via a

@@ -111,7 +111,7 @@ see [`0000-template.md`](0000-template.md). Statuses run
 | [ADR-0089](0089-technology-stack-rev4.md) | Technology stack rev.4 — the Go floor moves 1.26 → 1.27; one floor changes, every other ADR-0023 floor and stack choice carries forward; the Go builder base moves 3.22 → 3.23 with it because Alpine 3.22 carries no 1.27 image (build stages only; git-storaged's shipped alpine:3.22.2 runtime is untouched); the touchpoints are enumerated per repo (ADR-0027 keeps them three commits) and the 1.27 idiom sweep is SPEC-0036's follow-up, not this ADR | Accepted |
 | [ADR-0090](0090-git-storaged-runtime-base-for-replay.md) | git-storaged's runtime base moves to Alpine 3.24.1 so the rebase landing works — the shipped base carries git 2.49, which rejects the --ref/--ref-action pair AC4's replay depends on, so every rebase and trunk-fallback landing refuses on the image we publish; also implements ADR-0048's decision 4 (the base pin has never had a floor or a gate) and adds the capability to what its build proves | Accepted |
 | [ADR-0091](0091-ui-kit-as-the-token-source.md) | The ./UI kit becomes the design system's source of truth, reversing ADR-0069 decision 6 — it moves into webfrontend (invariants 21–25), the source is an authored tokens.json rather than the 179 KB comp, and tokens.css becomes generated output behind a freshness gate; records the measured cost: the kit declares 17 custom properties against the governed layer's 87, overlapping in 9 names, so this is an authoring task and a naming reconciliation, not a promotion | Accepted |
-| [ADR-0092](0092-gcp-as-the-first-party-cloud-provisioned-by-opentofu.md) | GCP is the first-party cloud, provisioned by OpenTofu + Terragrunt | Proposed |
+| [ADR-0092](0092-gcp-as-the-first-party-cloud-provisioned-by-opentofu.md) | GCP is the first-party cloud, provisioned by OpenTofu + Terragrunt | Accepted |
 
 ## Open follow-ups
 
@@ -148,3 +148,9 @@ the deciding ADR is the record.
 | Teach `check-ceremony-tier.sh` to read the tier from a pushed commit, so SPEC-0012's declaration is checked rather than only written | 0053 |
 | Whether a red `main` should notify anything beyond whoever pushed it | 0053 |
 | First-party images are pinned by tag, not digest, in `deploy/dev` | 0035 |
+| **The control plane has no chart.** `deploy/dev/*.yaml` is Minikube-only by ADR-0024 and ADR-0013's chart is the *data-plane* installer, so nothing can deploy the control plane into the cluster ADR-0092 provisions. **Blocks a first real deployment** | 0092, 0013, 0024 |
+| Whether `.tool-versions` should carry the OpenTofu and Terragrunt floors, so `check-version-floors.sh` gates them rather than leaving the constraint inside `root.hcl` where no gate reads it | 0092 |
+| Ingress, DNS records and certificate issuance for the public control-plane surface — `deploy/dev` uses nginx + an mkcert wildcard, and the production answer (Gateway API vs nginx, cert-manager issuer, `external-dns`) is unmade; ADR-0010 §3 names Gateway API as the portable candidate | 0092, 0010 |
+| Backup and restore for the in-cluster stateful set ADR-0092 decision 5 keeps ours — the decision accepts the obligation and nothing yet discharges it | 0092 |
+| A staging environment. The `live/` hierarchy is shaped for one and only `prod-cp` and `prod-dp` exist | 0092 |
+| Whether Artifact Registry becomes the publish target for first-party images, which ADR-0047 leaves to whatever registry can be verified offline | 0092, 0047 |
