@@ -98,6 +98,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0081 | Draft merge requests | EP-30 | Done — gov@39a2f1e+594aa40, backend@bed1194, bff@0d16824, webfrontend@71675e1; SPEC-0064 AC1–AC7 |
 | T-0082 | Merge strategies, and trunk-based landing | EP-30 | Done — gov@this-commit + backend@its pin; SPEC-0065 AC1–AC7; rebase refused rather than unsafe below git 2.44 |
 | T-0083 | tokens.json becomes the source, tokens.css becomes output | Done (2026-08-23) | SPEC-0066 |
+| T-0084 | The control-plane Kustomize installer | first control-plane deployment | Todo — blocked-by ADR-0095 + ADR-0096 acceptance (both Proposed); SPEC-0067 is Draft. Not a lane block: the whole spec is provable by rendering |
 
 ## Retired numbers (never reused)
 
