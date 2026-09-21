@@ -85,4 +85,5 @@ one, which is worse than a status that is merely behind.
 | SPEC-0064 | Draft merge requests | Implemented (2026-08-21) | T-0081 |
 | SPEC-0065 | Merge strategies, and trunk-based landing as a mode | Implemented (2026-08-21) | T-0082 |
 | SPEC-0066 | tokens.json as the design system's source, and the derivation that proves it | Implemented (2026-08-23) | T-0083 |
-| SPEC-0067 | The control-plane Kustomize installer | Draft | T-0084 |
+| SPEC-0067 | The control-plane Kustomize installer | Approved | T-0084 |
+| SPEC-0068 | The BYO data-plane installer becomes Kustomize | Draft | T-0085 |

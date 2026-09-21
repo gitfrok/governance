@@ -1,6 +1,6 @@
 # ADR-0096: Kustomize is the only installer technology, and Helm leaves the tree
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
 - **Deciders:** platform (directed by the deciding owner, restated when this ADR was scoped to one plane)
 - **Amends:**

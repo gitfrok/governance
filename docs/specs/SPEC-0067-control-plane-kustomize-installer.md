@@ -1,12 +1,12 @@
 # SPEC-0067: The control-plane Kustomize installer
 
-- **Status:** Draft
+- **Status:** Approved (2026-09-22)
 - **Owner:** unassigned
 - **Context(s):** deployment / operability (no bounded product context — this describes an artifact,
   not a behaviour of the product; ADR-0022 does not apply)
-- **ADRs:** 0096 (the installer is Kustomize — **Proposed; this spec may not be Approved until it is
-  Accepted**), 0093 (the boundary decisions carried over), 0095 (the public surface this overlay
-  renders — also Proposed), 0092 (the environment it installs into), 0024 (the dev environment it is
+- **ADRs:** 0096 (the installer is Kustomize — **Accepted 2026-09-22**), 0093 (the boundary
+  decisions carried over), 0095 (the public surface this overlay renders — **Accepted
+  2026-09-22**), 0092 (the environment it installs into), 0024 (the dev environment it is
   not), 0034/0035 (image pins), 0066 (sealed-until-unsealed), 0094 (the repository surface is not here)
 - **Task(s):** T-0084
 
@@ -17,10 +17,10 @@ installer and it was never built: `deploy/helm/` holds only `gitfrok-dataplane`,
 ever referenced ADR-0093. ADR-0096 replaces its engine with Kustomize before anything exists to
 migrate. This spec says what "built" means for that installer in testable terms.
 
-Two ADRs this spec depends on are **Proposed**. It is therefore `Draft` and **must not go RED**: the
-lifecycle requires Approved before tests (`../process/spec-driven-development.md`), and approving a
-spec whose constraining decisions are unmade would invert ADR-0001. What the deciding owner accepts or
-changes in ADR-0095 and ADR-0096 lands here first.
+Both ADRs this spec depends on were **Accepted on 2026-09-22 as written**, so the condition that held
+this spec at `Draft` is discharged and **RED may begin**. Neither acceptance changed a decision this
+spec restates, so no acceptance criterion needed amending — recorded because the reverse would have
+obliged an edit here before approval.
 
 ## In scope
 
@@ -113,9 +113,8 @@ create (AC4).
 
 ## Open questions / assumptions
 
-1. **ADR-0095 and ADR-0096 are both Proposed.** AC6–AC8 restate ADR-0095's decisions and AC1–AC5 rest
-   on ADR-0096's. If either is amended on acceptance, this spec is amended before it is Approved. This
-   is the assumption that keeps the spec `Draft`.
+1. ~~ADR-0095 and ADR-0096 are both Proposed.~~ **Closed 2026-09-22:** both Accepted as written, with
+   no change to any decision AC1–AC8 restate. The spec is Approved and RED may begin.
 2. **Whether the readiness shape of AC9 is a probe or a dedicated gate** is unsettled. ADR-0093
    decision 4 says the workloads "report unready and converge"; whether `controlplane-app` already
    has a probe that distinguishes "OpenBao sealed" from "OpenBao unreachable" needs reading before AC9

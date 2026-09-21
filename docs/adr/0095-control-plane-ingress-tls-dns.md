@@ -1,8 +1,8 @@
 # ADR-0095: The public control-plane surface — three flat names in the Cloudflare `7.solutions` zone, a Gateway for the browser, and a CA-pinned passthrough door for the agent
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (awaiting the deciding owner)
+- **Deciders:** platform (the deciding owner ruled)
 - **Amends:** **ADR-0092 decision 4 in part** — Cloud DNS stops being one of the four cloud APIs this
   system depends on, and Cloudflare becomes an infrastructure dependency outside OpenTofu (ADR-0092
   is Accepted and is not edited; ADR-0001)

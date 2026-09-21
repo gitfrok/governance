@@ -1,15 +1,16 @@
 # T-0084: The control-plane Kustomize installer
 
-- **Status:** Todo — **blocked-by ADR-0095 and ADR-0096 acceptance** (both Proposed 2026-09-22;
-  SPEC-0067 is `Draft` and may not go RED until they are Accepted and the spec is Approved)
+- **Status:** Todo — **RED may begin.** ADR-0095 and ADR-0096 were Accepted 2026-09-22 as written
+  and SPEC-0067 is Approved; the two *prerequisites* in Notes are not blocks on writing this task's
+  tests, only on applying its output to a cluster
 - **Phase / Epic:** first control-plane deployment (ADR-0092 → 0093 → 0095/0096). **No epic yet** —
   the backlog has no epic for the vendor-run control plane; filing one is part of accepting ADR-0096.
 - **Repo(s):** **super-repo** only (`deploy/k8s/controlplane/`, `scripts/check-controlplane-kustomize.sh`).
   Governance carries this task and its spec; no `backend`, `bff` or `webfrontend` change is in scope —
   if AC9's readiness probe turns out not to exist, that is backend work and a separate task, not a
   quiet addition here (invariant 23: one commit never spans two submodules).
-- **Spec:** docs/specs/SPEC-0067-control-plane-kustomize-installer.md (**Draft** — not yet Approved)
-- **ADRs:** 0096 (Proposed — Kustomize is the installer), 0095 (Proposed — the public surface this
+- **Spec:** docs/specs/SPEC-0067-control-plane-kustomize-installer.md (Approved 2026-09-22 — RED may begin)
+- **ADRs:** 0096 (Accepted — Kustomize is the installer), 0095 (Accepted — the public surface this
   overlay renders), 0093 (the boundary decisions carried over), 0092, 0024, 0034/0035, 0066, 0094
 - **Owner:** unassigned
 
@@ -76,11 +77,9 @@ T-0085's (see Notes). `check-docs.sh` green in governance for the spec's status 
 
 ## Notes / open questions
 
-**Blocked, and on a decision rather than a lane.** Unlike T-0042, nothing here needs a cluster: the
-whole of SPEC-0067 is provable by rendering. What it needs is for ADR-0095 and ADR-0096 to stop being
-Proposed. Starting before that means building against decisions that may change shape on acceptance —
-particularly ADR-0095's hostnames and ADR-0096's decision 6, whose distribution answer the owner may
-want differently.
+**Unblocked 2026-09-22, and never lane-blocked.** Unlike T-0042, nothing here needs a cluster: the
+whole of SPEC-0067 is provable by rendering, which is why this task could be written before any
+cluster exists. Both ADRs were Accepted as written, so nothing this task's criteria restate moved.
 
 **Two prerequisites this task cannot satisfy itself:**
 
