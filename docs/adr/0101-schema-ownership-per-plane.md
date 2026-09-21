@@ -1,8 +1,8 @@
 # ADR-0101: A schema belongs to the plane whose modules use it, and three belong to both
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (requested by the deciding owner after T-0088 stopped)
+- **Deciders:** platform (the deciding owner ruled, after T-0088 stopped)
 - **Related:** ADR-0100 (the door partition this completes — its module finding stands, its "only
   registration is missing" claim did not), ADR-0094 (the surface partition), ADR-0093 (the component
   partition and the runbook's migration seam), ADR-0092/0099 (two clusters, two Postgres instances),

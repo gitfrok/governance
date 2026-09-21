@@ -1,6 +1,12 @@
 # T-0088: Register the control plane's four service doors
 
-- **Status:** Todo — **BLOCKED, and this task's own premise was wrong.** Attempted 2026-09-22 and
+- **Status:** Done (2026-09-22) at backend@92c8acf — **three of four registered; OIDCLogin deliberately absent.** Unblocked by ADR-0101 (Accepted) and reshaped by it.
+  ADR-0101 decision 3 settles that **no data migrates**: the three stores this task needs all live in
+  `policy`, `audit` and `identity`, which decision 2 makes bi-planar, so the control plane builds its
+  own instances against its own database. The task is three store constructions, an OIDC
+  configuration, and one new BFF-facing door — not four `Register` calls, and not a migration.
+
+  *Previously:* **BLOCKED, and this task's own premise was wrong.** Attempted 2026-09-22 and
   stopped: ADR-0100 decision 1 says "each module is already wired and in-process there; only the
   registration is missing", and reading `cmd/controlplane-app` shows that is **false for all four
   services**. Each needs a store or a configuration the control plane does not construct, and one of
@@ -58,13 +64,15 @@ ADR-0100 already accepted.
 module partition already matches ADR-0094 decision 4 — remains true and useful. Its conclusion that
 only registration is missing does not survive contact with the composition root.
 
-## What this task needs before it can start
+## What ADR-0101 settled
 
-A decision, not more reading: for each of the four, either its store moves to the control plane
-(durable state crossing a plane boundary, with a schema and a migration), or the control plane gets
-its own instance (a second store, with the same "nothing joins them" cost ADR-0100 accepted for
-audit), or the surface stays data-plane-side and ADR-0094 decision 4 is amended again. That is an
-ADR, and it is the one ADR-0100 would have written had this been measured first.
+Its own instance, for all three — the middle option of the three above. The measurement that decided
+it: `policy`, `audit` and `identity` are used by **both** composition roots, so they are bi-planar
+schemas (ADR-0101 decision 2), and the control plane is already entitled to them. Decision records,
+evidence and auditor grants therefore need no migration; they need constructors.
+
+The cost travels with it and is not this task's to relitigate: a control-plane grant, trail entry or
+decision record is invisible on the data plane, and nothing joins them.
 
 ## Acceptance criteria (test-first)
 
@@ -104,6 +112,53 @@ ADR, and it is the one ADR-0100 would have written had this been measured first.
 ## Definition of Done
 
 See `../process/definition-of-done.md`. Backend suite with `-race`; `internal/arch` green.
+
+## Exit record (2026-09-22) — backend@92c8acf
+
+**Registered on a new BFF door** (`GITFROK_BFF_GRPC_ADDR`, optional like `usage` and `fleet`):
+`PolicyDecisionPoint`, `EvidenceService`, `AuditorGrantService`. The control-plane door set goes from
+five services to eight, asserted as a **set** so a ninth cannot arrive unnoticed.
+
+**No data migrated**, per ADR-0101 decision 3. The three stores are this plane's own instances of
+bi-planar schemas: auditor grants from `identity`, evidence from `audit`, decision records from
+`policy`.
+
+**A defect fixed on the way, which the task did not ask for and should have.** This plane was calling
+`policy.NewOPADecisionPoint` — the **memory** store — with a Postgres pool already constructed above
+it, so its decisions could not be evidence of anything across a restart.
+`NewOPADecisionPointWithPostgres` existed for precisely this case and says so in its own doc comment.
+`EvidenceService` on the new door serves from those records, which is what made it visible: the gap
+had been there since the control plane gained a pool.
+
+**`attested` is nil on `EvidenceService`**, and the module blesses it rather than tolerating it:
+*"composed only on planes that have the import surface — a plane without it has no imported history,
+and an empty appendix is then the truthful answer."* ADR-0029 §4 and T-0018 AC19 already require
+control sections to carry zero attested records, so this is the requirement met rather than a
+shortcut.
+
+**OIDCLogin is not registered, and a test asserts its absence.** ADR-0100 decision 1 assigned it
+here; this plane has never had an OIDC verifier configuration. ADR-0101's register row holds it as
+the weakest of the four assignments, and the test sends anyone who wires it back to that row.
+
+**AC5 as originally written was wrong and is corrected above.** This plane runs a listener per
+caller-class on purpose; ADR-0100 decision 1 applied ADR-0041's one-door model, which belongs to the
+data plane. The three new services share one caller and are required together — unlike `usage` and
+`fleet`, which are optional surfaces — so one door, not three, and not a fourth service on the usage
+door.
+
+**The AC7 assertion caught an error in ADR-0100's own context table.** It claims the data plane
+registers **fourteen** services; it registers **thirteen**. `RegisterGitStorageServer` appears in
+`cmd/dataplane-app` only inside `gitfront_test.go` — the git tier ships as its own image — and the
+original measurement grepped test files. Recorded in the test itself, because that ADR's entire
+argument was that measuring beats reasoning, and this is the third correction to a claim I made
+confidently in this chain.
+
+**Gates:** builds and vets clean; `cmd/...`, `internal/arch` and the `policy`, `audit` and `identity`
+module suites green with `-race`. No new import edge toward a data-plane module.
+
+**What it does not do.** A control-plane BFF still cannot serve, for two reasons outside this task:
+SPEC-0070's `main.go` route partition is unwritten, and a data-plane BFF has no session store
+(ADR-0101's register row). This removes one of three obstacles.
 
 ## Notes / open questions
 
