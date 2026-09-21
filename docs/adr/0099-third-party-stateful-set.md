@@ -1,8 +1,8 @@
 # ADR-0099: The third-party stateful set installs from Kustomize, with one operator where the failure is unrecoverable
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (requested by the deciding owner)
+- **Deciders:** platform (the deciding owner ruled)
 - **Amends:** **ADR-0092 decision 5 in one narrow respect** — a GCS bucket is provisioned for
   **Postgres backups**. That decision refused "no GCS bucket **for blobs**", and a backup bucket is
   not a blob bucket; it is also the only way to discharge the obligation the same decision's own

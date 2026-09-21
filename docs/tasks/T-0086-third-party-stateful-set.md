@@ -1,7 +1,10 @@
 # T-0086: Install the third-party stateful set
 
-- **Status:** Todo — **blocked-by ADR-0099 acceptance** (Proposed 2026-09-22; SPEC-0069 is `Draft`).
-  Not lane-blocked: every criterion is provable by rendering.
+- **Status:** In progress (2026-09-22) — **11 of 12 criteria met.** ADR-0099 Accepted, SPEC-0069
+  Approved. Both overlays render, the gate is wired into `make verify` and proven failable by seven
+  fixtures, and the two backup buckets are applied. **AC6 is NOT MET and is reported NOT RUN**: the
+  third-party images are pinned by tag, which is ADR-0035's own open follow-up, and the first-party
+  publish path exists but has not run.
 - **Phase / Epic:** first control-plane deployment. **No epic yet** — filing one is part of
   scheduling this, as it was for T-0084.
 - **Repo(s):** **super-repo** (`deploy/k8s/platform/`, `deploy/gcp/**` for the backups unit,
@@ -55,6 +58,53 @@ See `../process/definition-of-done.md`. `full` ceremony.
 Gate matrix (super-repo): `make verify` including the new gate and its fixtures;
 `check-custody-service.sh` green against **both** paths; `check-shell-portability.sh`;
 `check-controlplane-kustomize.sh` unaffected. Governance: `check-docs.sh` for the status transition.
+
+## Exit record (2026-09-22)
+
+**Built.** `deploy/k8s/platform/base/{postgres,valkey,redpanda,openbao,zitadel,seaweedfs}` and
+overlays `prod-cp` (16 resources) and `prod-dp` (7). `operators/cloudnative-pg/` vendors CNPG 1.27.0
+with its SHA-256 recorded and gate-asserted. `deploy/gcp/modules/backups` plus both live units —
+**applied**, buckets `gitfrok-prod-cp-postgres-backups` and `gitfrok-prod-dp-postgres-backups`, with
+object-admin granted to a keyless Workload Identity service account.
+`scripts/check-platform-kustomize.sh` and `scripts/test-platform-kustomize.sh`, both in `make verify`.
+
+**Met:** AC1, AC2, AC3, AC4, AC5, AC7, AC8, AC9, AC10, AC11, AC12.
+
+**AC6 — NOT MET, reported NOT RUN with the cause named.** Every third-party image is pinned by tag
+(`valkey:9.1.1`, `redpanda:v26.2.1`, `openbao:2.6.1`, `zitadel:v4.16.2`, `seaweedfs:4.40`), which is
+ADR-0035's own standing follow-up — `deploy/dev` has pinned by tag since T-0021 and nothing has
+closed it. The first-party images have a publish path (ADR-0098) that has not run. The gate prints
+each undigested image rather than passing, in `check-byo-chart.sh`'s idiom.
+
+**Two false positives in this gate's first version, both caught by writing the fixtures**, and both
+the same defect as `check-controlplane-kustomize.sh`'s: an assertion a **comment** can satisfy or
+break. The `secretGenerator` check was already parsed, having learned that lesson; the AC8 check was
+not, and `grep`ping `deploy/k8s` for `GITFROK_CUSTODY_ALLOW_LOOPBACK_HTTP` was tripped by the
+manifests' own comments explaining that the flag must not appear. It now inspects the **render**,
+where comments do not exist. Worth recording twice because it recurred within one session.
+
+**The dev shape is fixed rather than scaled.** Five of six components were `Deployment` + ReadWriteOnce
+PVC in `deploy/dev`; all are `StatefulSet` + `volumeClaimTemplates` here. Zitadel is the one exemption
+and it is a list in the gate rather than a judgement, because it is stateless given Postgres.
+
+**OpenBao's production TLS makes an earlier claim true.** `deploy/k8s/controlplane/base` already named
+`https://openbao:8200` and omitted dev's busybox loopback proxy, against a posture that did not exist
+until this task. The listener now carries `tls_cert_file`/`tls_key_file` and every `retry_join` is
+`https`, and the readiness probe treats a sealed node as **unready rather than unhealthy** — ADR-0066
+decision 4 keeps a human quorum in the path, so restarting a sealed pod achieves nothing.
+
+**A gap this task did not close.** `check-custody-service.sh` still hardcodes `deploy/dev/openbao.yaml`.
+AC7's properties are asserted here by the new gate, but the *old* gate still proves them about a
+Minikube file. The register row stands and the trap it names — a path list that silently matches
+nothing — is the reason it was not done hastily.
+
+**Seven credentials are now named inputs and none exists:** `postgres-superuser`, `postgres-app`,
+`zitadel-masterkey`, `zitadel-postgres`, `openbao-tls`, plus the control-plane installer's
+`gitfrok-database` and `gitfrok-pat-verifier`. Each is a manual seam, which is the honest price of
+authoring no Secret.
+
+**Nothing is applied to a cluster.** The buckets and the identities are; the manifests are not. And
+meeting this spec still does not produce a login, for the reasons SPEC-0069 open question 4 records.
 
 ## Notes / open questions
 

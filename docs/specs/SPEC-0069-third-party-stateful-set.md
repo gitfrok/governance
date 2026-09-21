@@ -1,9 +1,9 @@
 # SPEC-0069: The third-party stateful set, installed
 
-- **Status:** Draft
+- **Status:** Approved (2026-09-22)
 - **Owner:** unassigned
 - **Context(s):** deployment / operability (an artifact, not a product behaviour — ADR-0022 does not apply)
-- **ADRs:** 0099 (**Proposed**; this spec may not be Approved until it is Accepted), 0093 decision 2
+- **ADRs:** 0099 (**Accepted 2026-09-22**), 0093 decision 2
   (these are inputs), 0096 (Kustomize only), 0066 (OpenBao's gated shape), 0092 (in-cluster, and the
   backup bucket this narrows), 0033/0050 (storage tiers), 0052 (the session store's startup
   contract), 0095/0097 (nothing here is publicly reachable), 0034 (image pins)
@@ -13,8 +13,8 @@
 
 ADR-0093 decision 2 made six third-party components required inputs to the control-plane installer
 and left their production install unowned; ADR-0099 decides how they install. This spec says what
-"installed" means in testable terms, and it is `Draft` because ADR-0099 is Proposed — approving it
-first would invert ADR-0001.
+"installed" means in testable terms, ADR-0099 was Accepted as written on
+2026-09-22, so RED may begin and no criterion needed amending.
 
 The trap this spec exists to avoid is promoting `deploy/dev`. Five of the six are single-replica
 `Deployment`s with a ReadWriteOnce PVC there, which cannot roll: the incoming pod cannot attach the
@@ -102,8 +102,8 @@ None by the installer. It creates the *homes* for other software's data and owns
 
 ## Open questions / assumptions
 
-1. **ADR-0099 is Proposed.** Every criterion here restates one of its decisions; if any is amended on
-   acceptance this spec is amended before it is Approved. This is what holds the spec at `Draft`.
+1. ~~ADR-0099 is Proposed.~~ **Closed 2026-09-22:** Accepted as written, with no change to any
+   decision these criteria restate.
 2. **The CNPG version and its vendoring path are unchosen.** A pinned operator manifest is a
    substantial vendored artifact and its upgrade cadence is a real obligation — the cost ADR-0099
    accepts for one component and refuses for four.
