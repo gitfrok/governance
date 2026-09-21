@@ -98,7 +98,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0081 | Draft merge requests | EP-30 | Done — gov@39a2f1e+594aa40, backend@bed1194, bff@0d16824, webfrontend@71675e1; SPEC-0064 AC1–AC7 |
 | T-0082 | Merge strategies, and trunk-based landing | EP-30 | Done — gov@this-commit + backend@its pin; SPEC-0065 AC1–AC7; rebase refused rather than unsafe below git 2.44 |
 | T-0083 | tokens.json becomes the source, tokens.css becomes output | Done (2026-08-23) | SPEC-0066 |
-| T-0084 | The control-plane Kustomize installer | first control-plane deployment | Todo — RED may begin; ADR-0095 + ADR-0096 Accepted 2026-09-22, SPEC-0067 Approved. Never lane-blocked: the whole spec is provable by rendering |
+| T-0084 | The control-plane Kustomize installer | first control-plane deployment | In progress — 10/12 met, gate proven failable by 7 fixtures and wired into `make verify`. **AC5 has no inputs** (no published digest for the three first-party images) and **AC9 stopped** (no custody-aware readiness endpoint in the binary — backend follow-up). Nothing applied: no cluster exists yet |
 | T-0085 | The BYO data-plane installer becomes Kustomize | 3.1 carry / EP-22 adjacency | Todo — blocked-by SPEC-0068 approval (Draft), which waits on two owner decisions: whether ADR-0096 decision 6 needs a newly signed rendered-manifest payload, and the CRD's upgrade semantics. Two repos: super-repo + governance |
 
 ## Retired numbers (never reused)

@@ -70,7 +70,12 @@ create (AC4).
       — reaches a container through `secretKeyRef` or `envFrom.secretRef` naming a pre-existing
       Secret. No credential appears as a literal env value or in any overlay file.
 - [ ] **AC5** Every first-party image in the render is pinned by **digest** (`@sha256:`), not by tag,
-      through the `images:` transformer (ADR-0034/0035, ADR-0096 decision 9).
+      through the `images:` transformer (ADR-0034/0035, ADR-0096 decision 9). **Unmet 2026-09-22 for
+      want of inputs, not effort:** no published digest exists for `controlplane-app`, `bff` or
+      `webfrontend` — `versions.env` pins them by tag and records that they are never published to an
+      external registry, and `deploy/releases/` covers only `dataplane-app` and `operator-app`. The
+      gate reports this as NOT RUN with the cause named rather than passing. Closes when the three
+      images are first published to `prod-cp`'s Artifact Registry.
 - [ ] **AC6** The agent door renders as a `Service` of `type: LoadBalancer` with TCP passthrough, and
       carries **no** L7 route, no `HTTPRoute` reference and no L7 annotation (ADR-0095 decisions 3
       and 5). The gate is mutation-tested: attaching an `HTTPRoute` to it fails.
@@ -115,10 +120,13 @@ create (AC4).
 
 1. ~~ADR-0095 and ADR-0096 are both Proposed.~~ **Closed 2026-09-22:** both Accepted as written, with
    no change to any decision AC1–AC8 restate. The spec is Approved and RED may begin.
-2. **Whether the readiness shape of AC9 is a probe or a dedicated gate** is unsettled. ADR-0093
-   decision 4 says the workloads "report unready and converge"; whether `controlplane-app` already
-   has a probe that distinguishes "OpenBao sealed" from "OpenBao unreachable" needs reading before AC9
-   is written as a test, and if it does not, the probe is backend work this spec does not own.
+2. ~~Whether the readiness shape of AC9 is a probe or a dedicated gate.~~ **Answered 2026-09-22, and
+   the answer stops AC9.** `controlplane-app` serves one `/healthz` endpoint used for both liveness
+   and readiness (`deploy/dev/controlplane.yaml`); nothing distinguishes "OpenBao sealed" from
+   "OpenBao unreachable". T-0084 therefore stopped rather than adding a probe path the binary does
+   not honour, and **AC9 is unmet pending a backend task for a custody-aware readiness endpoint**.
+   Until it exists the Deployment reports Ready while custody is sealed and the agent door refuses —
+   which is ADR-0093 decision 4's behaviour observed, not modelled.
 3. **AC8's mechanism depends on an unfiled follow-up.** ADR-0095 decision 6 requires reserved
    addresses and does not place them; until that unit exists, AC8 can assert only that the overlay
    references an address by name and never requests an ephemeral one.
