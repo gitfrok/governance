@@ -101,6 +101,7 @@ One file per unit of work, `T-####-<slug>.md`, executed via the Agentic SDLC
 | T-0084 | The control-plane Kustomize installer | first control-plane deployment | In progress — 10/12 met, gate proven failable by 7 fixtures and wired into `make verify`. **AC5 has no inputs** (no published digest for the three first-party images) and **AC9 stopped** (no custody-aware readiness endpoint in the binary — backend follow-up). Nothing applied: no cluster exists yet |
 | T-0085 | The BYO data-plane installer becomes Kustomize | 3.1 carry / EP-22 adjacency | Todo — blocked-by SPEC-0068 approval (Draft), which waits on two owner decisions: whether ADR-0096 decision 6 needs a newly signed rendered-manifest payload, and the CRD's upgrade semantics. Two repos: super-repo + governance |
 | T-0086 | Install the third-party stateful set | first control-plane deployment | In progress — 11/12 met; ADR-0099 Accepted, SPEC-0069 Approved. Gate proven failable by 7 fixtures and in `make verify`; both backup buckets applied. **AC6 NOT RUN** — third-party images pinned by tag (ADR-0035's standing follow-up). Manifests not applied to a cluster |
+| T-0087 | The BFF's plane partition | ADR-0094 carry | Todo — blocked-by SPEC-0070 approval, itself blocked on one owner decision: **the control plane exposes no PDP door**, so fixing the reader alone moves the failure one line down. Four repos |
 
 ## Retired numbers (never reused)
 

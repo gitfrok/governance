@@ -7,6 +7,13 @@
 - **Task(s):** T-0015
 - **PRD:** PR-8
 
+> **Deployment premise amended 2026-09-22 — no request or response shape changes.** ADR-0094
+> decision 3 moved the repository surface data-plane-side, so the tree, file and diff views this
+> contract defines are served by a `bff`+`webfrontend` pair on the **data plane**, not the control
+> plane as ADR-0093's partition had it. Every criterion below stands unaltered; what changed is which
+> deployment serves them. **SPEC-0070** carries the partition contract and the two boot refusals that
+> enforce it, and it is the amendment ADR-0094's register row asked for.
+
 ## Problem / context
 
 RepositoryReader supplies tenant-scoped tree, file, and diff data to the BFF, but neither

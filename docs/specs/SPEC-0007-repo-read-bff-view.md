@@ -6,6 +6,12 @@
 - **ADRs:** 0022, 0015
 - **Task(s):** T-0014
 
+> **Deployment premise amended 2026-09-22 — no request or response shape changes.** ADR-0094
+> decision 3 moved the repository surface data-plane-side, so the routes this spec defines are served
+> by a `bff`+`webfrontend` pair on the **data plane**, not the control plane as ADR-0093's partition
+> had it. Every criterion below stands unaltered; what changed is which deployment serves them.
+> **SPEC-0070** carries the partition contract and the two boot refusals that enforce it.
+
 ## Problem / context
 Expose repo/tree/file/diff reads from backend and aggregate them for the UI in the BFF.
 
