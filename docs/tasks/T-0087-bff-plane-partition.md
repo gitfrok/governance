@@ -1,8 +1,10 @@
 # T-0087: The BFF's plane partition
 
-- **Status:** Todo — **blocked-by SPEC-0070 approval**, which is itself blocked on one owner
-  decision: the control plane exposes no PDP door, so a control-plane BFF cannot satisfy both its
-  startup contract and ADR-0094 decision 7. Not lane-blocked.
+- **Status:** Done (2026-09-22) at bff@ec3d6c9 — **8 of 10 criteria met.** The PDP gap that blocked
+  it is closed by T-0088. **AC7 remains blocked** on ADR-0094's enrolment-record row (there is no
+  field to read), and **AC8 is not done**: extending `CheckNoDataPlaneDial`'s walk over `bff/` is a
+  backend change and is now less urgent, because ADR-0100 decision 6 made the property structural —
+  a control-plane deployment has no data-plane address to dial, and the gate refuses one.
 - **Phase / Epic:** ADR-0094 carry. **No epic** — filing one is part of scheduling this.
 - **Repo(s):** **bff** (the plane input and both refusals), **backend** (`CheckNoDataPlaneDial`'s
   walk, AC8), **super-repo** (`deploy/k8s/controlplane` and its gate, AC10), **governance** (this
@@ -52,6 +54,43 @@ SPEC-0070's ten, carried. Build order:
 See `../process/definition-of-done.md`. `full` ceremony. Gate matrix: `bff` and `backend` suites with
 `-race`; super-repo `make verify` including `check-controlplane-kustomize.sh` with its new
 assertions; governance `check-docs.sh`.
+
+## Exit record (2026-09-22) — bff@ec3d6c9
+
+**Met:** AC1 (`GITFROK_PLANE`, no default), AC2 (control + reader → refuse — the refusal that did
+not exist), AC3 (control without a reader starts, where it used to exit), AC4 (data without a reader
+refuses), AC5/AC6 (the route partition: 11 control-plane registrations, 26 data-plane), AC9 (both
+refusals tested by exit and message), AC10 (the manifests assert the binary's contract, with a
+failable fixture).
+
+**The shape that made AC5/AC6 tractable.** Three connections replace one address: `dataConn`, nil on
+a control-plane deployment; `ctrlConn`, the door T-0088 registered; and `metaConn`, whichever of the
+two serves the four services ADR-0100 decision 1 moved control-plane-side. That last one is why the
+evidence, grants, policy-visibility and login handlers are *identical* in both deployments —
+ADR-0101 decision 2 makes those schemas bi-planar precisely so each plane reads its own instance.
+
+**The login catch-all is control-only, and that is load-bearing.** It is what makes an unmatched
+repository path on the control plane a coarse 404 rather than a redirect into a login flow, which
+AC5 requires so that a control-plane response cannot disclose that a data-plane door exists.
+
+**AC7 — blocked, not by this spec.** ADR-0094's own register row asks where the data plane's door
+URL lives on the enrolment record. There is no field to read, so there is nothing to render.
+
+**AC8 — not done, and less urgent than when it was written.** Extending `CheckNoDataPlaneDial` over
+`bff/` is a backend change. ADR-0100 decision 6 has since made the property structural: a
+control-plane deployment is given no data-plane address, the binary refuses one, and
+`check-controlplane-kustomize.sh` refuses a manifest that sets one. The gate would now assert
+something three other mechanisms already enforce.
+
+**Two of my own mistakes, both caught by tests rather than review.** The route-partition test's first
+version anchored on `if cfg.IsControl()` and reported "no control-plane routes found" — true of the
+wrong block, since that condition appears three times in `main.go` and the first match selects
+`metaConn`. And a mid-edit scaffold referenced a `registerDataPlaneRoutes` helper that did not exist;
+reverted rather than built around.
+
+**What still stops a data-plane deployment serving anyone:** it has no session store. That is
+ADR-0101's register row, unchanged by this work — the routing is correct and the authentication is
+absent.
 
 ## Notes / open questions
 

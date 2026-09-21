@@ -1,6 +1,6 @@
 # SPEC-0070: The BFF's plane partition, and the two refusals that enforce it
 
-- **Status:** Approved (2026-09-22) — see the criterion notes; AC7 is blocked and AC6's deployment is not yet servable
+- **Status:** Implemented (2026-09-22) — AC1–AC6, AC9 and AC10 met at bff@ec3d6c9 and super-repo; **AC7 blocked** on ADR-0094's enrolment-record row, **AC8 not done** (the arch gate's walk over `bff/`)
 - **Owner:** unassigned
 - **Context(s):** BFF, webfrontend
 - **ADRs:** 0094 (decisions 3–7 — this is their contract), 0093 (the partition ADR-0094 amends),
