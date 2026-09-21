@@ -3,7 +3,8 @@
 - **Status:** Draft
 - **Owner:** unassigned
 - **Context(s):** deployment / operability (an artifact, not a product behaviour — ADR-0022 does not apply)
-- **ADRs:** 0096 (Accepted 2026-09-22 — Kustomize only; decision 3 requires this conversion and
+- **ADRs:** 0103 (Proposed — answers open questions 1 and 4; this spec stays Draft until it is
+  Accepted), 0096 (Accepted 2026-09-22 — Kustomize only; decision 3 requires this conversion and
   decision 6 sets the distribution answer), 0013 (the Operator, which survives; its packaging half is
   amended), 0044 (signed releases, verify-before-apply), 0047 (registry trust), 0011 (outbound-only —
   the no-inbound property this conversion must not weaken), 0017/0060 (the agent's transport and
@@ -139,6 +140,16 @@ None. The installer holds no state and authors no Secret (AC3).
   is therefore stated rather than discovered.
 
 ## Open questions / assumptions
+
+**Open questions 1 and 4 are answered by [ADR-0103](../adr/0103-byo-installer-crd-lifecycle-and-bundle-payload.md),
+which is `Proposed`.** This spec stays `Draft` until that ADR is Accepted — the closing note below is still the rule.
+In summary, and subject to that acceptance: **OQ4** — the CRD leaves the applied set and gets its own directory,
+apply order and gate assertion, because deleting a CRD garbage-collects every custom resource of that kind and would
+make uninstall destroy tenant data (SPEC-0039 AC8); in-place update stays permitted while `v1alpha1` is the single
+stored version. **OQ1** — reading (a) is what ADR-0096 decision 6 already says, but it needs a `backend` change the
+Operator does not have (`CanonicalIdentity()` converges one `oci_ref@digest`), so T-0085 does not build it and AC6's
+per-image digest chain remains the whole obligation. ADR-0103 decision 8 requires T-0085's exit record to say that
+decision 6 is still open afterwards.
 
 1. **Does ADR-0096 decision 6 require a new signed payload, and is that this task's?** The tree signs
    `oci_ref@digest` per component; the chart was never signed. Signing a rendered manifest set means a
