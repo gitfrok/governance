@@ -1,8 +1,8 @@
 # ADR-0098: Artifact Registry is the publish target for first-party images, and it is made publicly pullable on purpose
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (directed by the deciding owner)
+- **Deciders:** platform (the deciding owner ruled)
 - **Amends:** **ADR-0047's registry choice.** That ADR says "we will publish first-party **release**
   images in `ghcr.io/gitfrok` as publicly pullable OCI artifacts"; this replaces `ghcr.io/gitfrok`
   with Artifact Registry. **Everything else in ADR-0047 survives unchanged** — the digest
