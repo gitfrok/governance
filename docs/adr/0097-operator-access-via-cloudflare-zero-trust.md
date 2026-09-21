@@ -1,8 +1,8 @@
 # ADR-0097: Operator access to the Kubernetes API goes through Cloudflare Zero Trust, and both clusters' endpoints go private
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (directed by the deciding owner, reversing the open-endpoint choice made earlier the same day)
+- **Deciders:** platform (the deciding owner ruled, reversing the open-endpoint choice made earlier the same day)
 - **Amends:**
   - **ADR-0092 decision 2 in part** — the control plane's cluster endpoint becomes **private**, so the
     table's "public endpoint, authorized-networks restricted" row no longer describes `prod-cp`. The
