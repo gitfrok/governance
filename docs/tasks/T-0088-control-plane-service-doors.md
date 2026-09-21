@@ -1,8 +1,12 @@
 # T-0088: Register the control plane's four service doors
 
-- **Status:** Todo — **RED may begin.** ADR-0100 Accepted 2026-09-22; no spec of its own is required
-  because nothing about the services' behaviour changes, only where they are served. Acceptance
-  criteria are below.
+- **Status:** Todo — **BLOCKED, and this task's own premise was wrong.** Attempted 2026-09-22 and
+  stopped: ADR-0100 decision 1 says "each module is already wired and in-process there; only the
+  registration is missing", and reading `cmd/controlplane-app` shows that is **false for all four
+  services**. Each needs a store or a configuration the control plane does not construct, and one of
+  them needs data that lives in the data plane's Postgres. See "What stopped this" below. Two of this
+  task's own criteria — AC5's listener claim and the four-Register-calls framing — were written on
+  the same mistake and are corrected below rather than left to mislead.
 - **Phase / Epic:** ADR-0094/0100 carry. No epic.
 - **Repo(s):** **backend** only (`cmd/controlplane-app`). One commit.
 - **Spec:** chore — acceptance criteria below (the four services' contracts are unchanged; ADR-0100
@@ -13,13 +17,54 @@
 
 ## Goal
 
-Register four services on `controlplane-app`'s existing listener set so a control-plane BFF has
-something to call: `PolicyDecisionPoint`, `EvidenceService`, `AuditorGrantService`, `OIDCLogin`.
+Give a control-plane BFF four services to call: `PolicyDecisionPoint`, `EvidenceService`,
+`AuditorGrantService`, `OIDCLogin`.
 
-Each module is already wired into that binary and already constructed in-process — the decision
-point at `main.go:121`, the audit trail at 176–180, the identity authenticator at 365–369 — so this
-is registration, not new capability. That is why ADR-0100 could shrink what looked like a migration
-of nine contexts to four calls.
+## What stopped this (2026-09-22)
+
+**Two factual errors, both mine, both found by reading the composition root instead of trusting the
+layer above it. The third time in one thread that the prose promised more than the code holds.**
+
+**1. The control plane does not have one listener; it has five, and the design is deliberate.**
+`usage`, `fleet`, `residency`, `enrolment` and the mTLS agent gateway each get their own, and the
+fleet door's comment states the principle: *"Its own listener rather than a second service on the
+usage door, so a deployment can serve one without the other"* and *"registered here rather than on
+the enrolment door because the callers differ."* So ADR-0100 decision 1's "they share the existing
+listener set … on ADR-0041's own reasoning applied to this side" applies the **data plane's**
+one-door model to a plane that deliberately rejects it. AC5 below is corrected.
+
+**2. The four modules are wired for the control plane's OWN uses, not with these services'
+dependencies.** `main.go:121` builds an OPA decision point, 176–180 an audit trail, 365–369 a PAT
+authenticator — each for the control plane to authorize its own doors, write its own trail and check
+its own callers. None of the four *services* can be constructed from them:
+
+| Service | Constructor the data plane uses | What the control plane has |
+|---|---|---|
+| `PolicyDecisionPoint` | `policy.NewGRPCServer(pdp, records)` | `pdp` ✓, **no decision-records store** |
+| `EvidenceService` | `audit.NewEvidenceGRPCServer(evidence)` | a trail ✓, **no evidence service** |
+| `AuditorGrantService` | `identity.NewAuditorGrantGRPCServer(grants)` | **no grants store** |
+| `OIDCLogin` | `identitygrpc.NewOIDCServer(...)` with a verifier config | **no OIDC configuration at all** |
+
+The three words `records`, `evidence` and `grants` do appear in `cmd/controlplane-app/main.go` — all
+three are **comments**.
+
+**3. The consequence, which is the part that matters.** The data plane builds the grants store as
+`identity.NewAuditorGrantsPostgres(dbPool, dp.policy, dp.bus, witness)` — its data is in the data
+plane's Postgres. ADR-0100 put `AuditorGrantService` control-plane-side. So either that data moves,
+or the control plane gets a **second** grants store, which is worse than the two audit trails
+ADR-0100 already accepted.
+
+**ADR-0100 dissolved the migration for the DOORS and not for the STORES.** Its central finding — the
+module partition already matches ADR-0094 decision 4 — remains true and useful. Its conclusion that
+only registration is missing does not survive contact with the composition root.
+
+## What this task needs before it can start
+
+A decision, not more reading: for each of the four, either its store moves to the control plane
+(durable state crossing a plane boundary, with a schema and a migration), or the control plane gets
+its own instance (a second store, with the same "nothing joins them" cost ADR-0100 accepted for
+audit), or the surface stays data-plane-side and ADR-0094 decision 4 is amended again. That is an
+ADR, and it is the one ADR-0100 would have written had this been measured first.
 
 ## Acceptance criteria (test-first)
 
@@ -30,8 +75,13 @@ of nine contexts to four calls.
 - [ ] **AC3** It registers `AuditorGrantService`, backed by the identity authenticator it already
       constructs.
 - [ ] **AC4** It registers `OIDCLogin`.
-- [ ] **AC5** **No new listener.** ADR-0041's reasoning applied to this plane: one door per plane,
-      not one per capability. The four join an existing port.
+- [ ] **AC5** **CORRECTED.** The original criterion said "no new listener, ADR-0041's reasoning
+      applied to this plane", which is wrong: this plane runs five listeners on purpose, one per
+      caller-class, and the fleet door's comment argues for exactly that. The real criterion is that
+      the four are grouped by **caller and required-ness**: all four are called by the control-plane
+      BFF and all four are required together for it to function at all, unlike `usage` and `fleet`
+      which are optional surfaces a deployment may serve without the other. So one new door for the
+      four, not four doors and not a fifth service bolted onto `usage`.
 - [ ] **AC6** Each new door authorizes through the PDP exactly as the data plane's equivalents do. A
       door that skips the decision point would widen the control plane's surface without widening its
       checks — and this plane's application door is what agents reach.
