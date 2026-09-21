@@ -78,11 +78,14 @@ None.
 - [ ] **AC3** `GITFROK_PLANE=control` starts **without** a reader address, where today it exits.
 - [ ] **AC4** `GITFROK_PLANE=data` refuses to start **without** a reader address, preserving today's
       behaviour for the plane that genuinely needs it.
-- [ ] **AC5** A control-plane deployment serves none of the repository routes — tree, file, diff,
+- [ ] **AC5** **BLOCKED by open question 2** — a route set cannot be partitioned before its
+      backends are. A control-plane deployment serves none of the repository routes — tree, file, diff,
       history, blame, code search, and the merge-request views that render diffs — and returns a
       coarse, non-enumerating 404 for each, never a 500 and never a redirect that leaks the
       data-plane door.
-- [ ] **AC6** A data-plane deployment serves those routes and **none** of the metadata routes of
+- [ ] **AC6** **BLOCKED by open question 2**, and it is the half that exposes the problem: nine of
+      ADR-0094 decision 4's metadata surfaces have their backend on the data plane's door today. A
+      data-plane deployment serves those routes and **none** of the metadata routes of
       ADR-0094 decision 4 — identity, billing, usage, fleet, policy authoring, audit, evidence packs,
       grants, notifications, admin.
 - [ ] **AC7** A control-plane page linking to repository content renders an absolute URL built from
@@ -115,21 +118,44 @@ None.
 
 ## Open questions / assumptions
 
-1. **BLOCKING — the control plane has no PDP door.** `main.go` requires `GITFROK_PDP_ADDR` and the
-   only PDP is `dataplane:9090`; the control-plane manifest opens 9091–9094 and nothing else. A
-   control-plane BFF therefore cannot satisfy both its own startup contract and ADR-0094 decision 7.
-   Three shapes, and the choice is not this spec's: **(a)** `controlplane-app` opens a PDP door on its
-   own policy bundle, which it already mounts — probably the smallest change and it keeps one PEP
-   model; **(b)** the control-plane BFF evaluates policy in-process, which SPEC-0021's out-of-scope
-   line ("a second BFF authorization decision") argues against; **(c)** the metadata routes are
-   authorized by something else entirely, which needs its own ADR. **This spec cannot be Approved
-   until it is settled**, because AC1–AC4 describe a deployment that still would not start.
-2. **Whether `GITFROK_PLANE` is the right input name and shape** — an enum env var versus two
+1. ~~The control plane has no PDP door.~~ **Owner chose shape (a) on 2026-09-22:**
+   `controlplane-app` opens a PDP door on the policy bundle it already mounts, keeping one PEP model
+   and avoiding the second BFF authorization decision SPEC-0021's out-of-scope line rules out. That
+   is a backend task of its own and **is not** this spec's.
+
+2. **BLOCKING, AND LARGER THAN QUESTION 1 WAS — `GITFROK_PDP_ADDR` is not the PDP's address, it is
+   the data plane's entire gRPC door, and nearly every ADR-0094 decision 4 surface rides it.**
+   Measured in `bff/cmd/bff/main.go` on 2026-09-22: **fourteen** service clients are constructed on
+   `pdpConn` and **one** on a control-plane connection.
+
+   ADR-0041 put PDP, code review, CI and OIDC on one data-plane listener, and the BFF has since
+   added more. On `pdpConn` today: `OIDCLogin`, `AuditorGrantService`, `EvidenceService`,
+   `NotificationService`, `PolicyDecisionPoint`, `CIJobService`, `FindingsService`, `SearchService`,
+   `RepositoryRegistry`, `RepositorySettings`, `ReleaseService`, `MergeRequestService`,
+   `ImportService`. On a control-plane connection: `UsageService`, and nothing else.
+
+   ADR-0094 decision 4 assigns identity and login, billing and usage, policy authoring, audit and
+   evidence packs, auditor grants, notifications and admin to the **control plane**. Nine of those
+   have their backend on the data plane's door. So shape (a) gives a control-plane BFF a policy
+   decision point and still leaves it unable to serve almost any route decision 4 promises it — a
+   control-plane deployment could serve the usage view and `/healthz`.
+
+   **This is a plane migration of bounded contexts, not a configuration change**, and it interacts
+   with where each context's durable store already lives (T-0053's registry, T-0078's code review,
+   T-0064's releases, T-0068's settings are all backend Postgres schemas). It needs its own ADR
+   deciding which plane owns each context, and it should not be inferred from decision 4's prose.
+
+   **Consequence for this spec:** AC1–AC4 and AC9 remain correct and implementable — they are
+   ADR-0094 decision 5 verbatim and the refusals are worth having regardless. **AC5 and AC6 cannot
+   be met** until the contexts' plane ownership is decided, because a route set cannot be partitioned
+   before its backends are. Approving this spec whole would hand T-0087 an instruction to improvise
+   across fourteen services.
+3. **Whether `GITFROK_PLANE` is the right input name and shape** — an enum env var versus two
    separate binaries versus a build tag. ADR-0094 decision 5 says one codebase deployed twice, which
    rules out the binaries; the rest is naming.
-3. **`webfrontend`'s half is stated here and specified nowhere.** AC5/AC6 describe route sets, and
+4. **`webfrontend`'s half is stated here and specified nowhere.** AC5/AC6 describe route sets, and
    the Astro app has its own routing. Whether that needs its own task depends on how much of the
    partition lives in the BFF's responses.
-4. **Nothing here makes a repository browsable.** The data-plane `bff`+`webfrontend` pair still needs
+5. **Nothing here makes a repository browsable.** The data-plane `bff`+`webfrontend` pair still needs
    somewhere to run — ADR-0094 decision 1's customer-exposed door, whose route and TLS requirements
    are that ADR's own open row and block a supported install.
