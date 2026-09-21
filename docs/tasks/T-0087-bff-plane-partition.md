@@ -1,10 +1,10 @@
 # T-0087: The BFF's plane partition
 
 - **Status:** Done (2026-09-22) at bff@ec3d6c9 — **8 of 10 criteria met.** The PDP gap that blocked
-  it is closed by T-0088. **AC7 remains blocked** on ADR-0094's enrolment-record row (there is no
-  field to read), and **AC8 is not done**: extending `CheckNoDataPlaneDial`'s walk over `bff/` is a
-  backend change and is now less urgent, because ADR-0100 decision 6 made the property structural —
-  a control-plane deployment has no data-plane address to dial, and the gate refuses one.
+  it is closed by T-0088. **9 of 10 now: AC8 met** at bff@3c02149 — not by extending backend's walk,
+  which invariant 22 forbids from reaching this repo, but by a rule in `bff/internal/arch` that
+  refuses a data-plane connection inside the control-plane branch. **AC7 remains blocked** on
+  ADR-0094's enrolment-record row: there is no field to read.
 - **Phase / Epic:** ADR-0094 carry. **No epic** — filing one is part of scheduling this.
 - **Repo(s):** **bff** (the plane input and both refusals), **backend** (`CheckNoDataPlaneDial`'s
   walk, AC8), **super-repo** (`deploy/k8s/controlplane` and its gate, AC10), **governance** (this
