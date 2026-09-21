@@ -1,8 +1,8 @@
 # ADR-0100: Which plane serves which context — the control plane registers doors for modules it already wires
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (requested by the deciding owner)
+- **Deciders:** platform (the deciding owner ruled)
 - **Amends:** **ADR-0094 decision 4 in one respect** — notifications stay **data-plane-side**. That
   decision listed them among the control plane's surfaces; their events originate in code review and
   CI, which are data-plane contexts, and relaying them would need a cross-plane path that does not

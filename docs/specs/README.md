@@ -88,4 +88,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0067 | The control-plane Kustomize installer | Approved | T-0084 |
 | SPEC-0068 | The BYO data-plane installer becomes Kustomize | Draft | T-0085 |
 | SPEC-0069 | The third-party stateful set, installed | Approved | T-0086 |
-| SPEC-0070 | The BFF's plane partition, and the two refusals that enforce it | Draft | T-0087 |
+| SPEC-0070 | The BFF's plane partition, and the two refusals that enforce it | Approved | T-0087 |
