@@ -1,8 +1,8 @@
 # ADR-0107: The vendor's own data plane publishes the Git door
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-23
-- **Deciders:** platform
+- **Deciders:** platform; **accepted by the deciding owner on 2026-09-23** ("approve ADR-0107")
 - **Answers:** ADR-0095 decision 11, which left this open in as many words
 - **Relates to:** ADR-0011 (outbound-only — the property this must not weaken), ADR-0041 (the front
   doors terminate in the data plane), ADR-0092 (prod-dp is the vendor as its own first customer),
@@ -69,11 +69,18 @@ this decision does not touch them.
 certificate map.** Not cert-manager, and not a self-signed origin behind a Cloudflare edge
 certificate. The reasons are ordered: a DNS-only record means there is no edge certificate to hide
 behind, so the origin must be browser-trusted and `git`-trusted on its own; a managed certificate
-renews with nothing in the cluster holding a private key or an ACME account; and the ACME HTTP-01
-solver path on GKE Gateway is, as of this ADR, **still unresolved on the control plane** — adopting it
-here would make the Git door depend on a known-broken mechanism. ADR-0095 decision 7's intent — real
+renews with nothing in the cluster holding a private key or an ACME account; and `prod-dp` runs **no
+cluster-wide operator today** — adopting cert-manager here would install one, with an admission
+webhook and cluster-scoped RBAC, to serve a single hostname. ADR-0095 decision 7's intent — real
 certificates at the origin, no third party in the TLS path — is met; its named mechanism is not, and
 this ADR is the place that says so out loud rather than letting the tree drift.
+
+**Corrected before acceptance, same day.** The Proposed text gave a third reason: that cert-manager's
+ACME HTTP-01 Gateway solver was "still unresolved on the control plane". It was fixed hours later —
+`--enable-gateway-api` is a second controller flag the feature gate does not imply, and the static
+release manifest ships no Gateway API RBAC — and it now issues Let's Encrypt certificates for
+`app-gitfrok` and `auth-gitfrok`. That reason is withdrawn rather than left to mislead; the two that
+remain carry the decision on their own.
 
 **4. A `HealthCheckPolicy` is part of the installer, not an operator fix-up.** It targets the
 `dataplane` Service, probes `/healthz` on port **8080** with `USE_FIXED_PORT` while traffic is served
@@ -135,9 +142,10 @@ second decision with its own host-key custody question (a rotating host key is a
 - **Proxy `git-gitfrok` through Cloudflare like `app-` and `auth-`.** Gains WAF. Breaks `git push`
   above the proxy's body cap, intermittently and by size. Rejected — see decision 2.
 - **cert-manager ACME at the origin, per ADR-0095 decision 7's named mechanism.** Preferred on
-  principle. Its HTTP-01 Gateway solver is unresolved on this platform today; adopting it would block
-  the Git door on an open bug. Revisit when that is fixed, and this decision's TLS half is the part
-  to revisit.
+  principle, and proven working on the control plane since 2026-09-23. Not adopted here because it
+  would bring a second cluster-wide operator, admission webhook included, onto a plane that runs none,
+  for one hostname. Revisit if the data plane publishes a second hostname; this decision's TLS half is
+  the part to revisit.
 
 ## Follow-ups
 

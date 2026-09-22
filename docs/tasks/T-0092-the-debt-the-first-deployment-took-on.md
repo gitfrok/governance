@@ -5,7 +5,7 @@
   want their own task; the point of one file is that none of them is discovered twice.
 - **Phase / Epic:** first production deployment (ADR-0106 / ADR-0107 carry)
 - **Repo(s):** **several, and never in one commit** (invariant 23). Each item names its own.
-- **ADRs:** 0107 (Proposed — items 1 and 2 are its own follow-ups), 0047, 0044, 0035, 0034, 0098,
+- **ADRs:** 0107 (Accepted 2026-09-23 — items 1 and 2 are its own follow-ups), 0047, 0044, 0035, 0034, 0098,
   0095, 0099, 0066, 0101
 - **Owner:** unassigned
 
