@@ -47,8 +47,10 @@ grants  = identity.NewAuditorGrantsPostgres(dbPool, ...)   // line 401, with an 
 members = identity.NewDirectory(dbPool)                     // line 415, with an in-memory fallback
 ```
 
-So this is not a missing environment variable and `GITFROK_DATABASE_URL` being set does not help:
-there is no Postgres-backed authenticator to select. **The Postgres-backed authenticator already exists and nothing calls it.**
+So this is not a missing environment variable, and setting `GITFROK_DATABASE_URL` does not help —
+this composition never consults the pool at all.
+
+**The Postgres-backed authenticator already exists and nothing calls it.**
 `backend/modules/identity/module.go:42` exports
 
 ```go
