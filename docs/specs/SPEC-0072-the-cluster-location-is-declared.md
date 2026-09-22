@@ -1,6 +1,6 @@
 # SPEC-0072: A cluster's location is declared, never inherited
 
-- **Status:** Draft
+- **Status:** Implemented (2026-09-22)
 - **Owner:** unassigned
 - **Context(s):** deploy / infrastructure (`deploy/gcp`) — no application code, no Kubernetes object
 - **ADRs:** 0106 (**Accepted 2026-09-22** — the consequence "no gate enforces it" is this spec's
@@ -52,26 +52,26 @@ and does not care which one.
 
 ## Acceptance criteria
 
-- [ ] **AC1** The gate fails when a `live/*/gke/terragrunt.hcl` has no `location` in its `inputs`.
+- [x] **AC1** The gate fails when a `live/*/gke/terragrunt.hcl` has no `location` in its `inputs`.
       Asserted per unit, naming the unit — a gate reporting only "something is wrong" restates the
       bill rather than locating it.
-- [ ] **AC2** The gate passes for a unit declaring a **zone** (`asia-southeast1-a`) and equally for
+- [x] **AC2** The gate passes for a unit declaring a **zone** (`asia-southeast1-a`) and equally for
       one declaring a **region** (`asia-southeast1`). Both are explicit; the gate has no opinion
       between them. **This is the criterion that keeps AC1 honest** — without it the obvious
       implementation is a grep for the current zone, which would pass today and refuse ADR-0106
       decision 2's own reversal path.
-- [ ] **AC3** A `location` present but commented out is a failure, not a pass. This is the exact
+- [x] **AC3** A `location` present but commented out is a failure, not a pass. This is the exact
       shape the consequence describes: the line is visibly *there*, so a human diff reads as
       unchanged, while the parsed input is absent.
-- [ ] **AC4** The gate is proven failable: each negative fixture refused, **for its own stated
+- [x] **AC4** The gate is proven failable: each negative fixture refused, **for its own stated
       reason**, read from the violation text and not from the exit status. A fixture whose refusal
       cannot be attributed to the rule under test is not evidence (T-0090's exit record, and the
       nine fixtures it found decorative).
-- [ ] **AC5** The two shipped units are **accepted** — a positive assertion in the same run, so the
+- [x] **AC5** The two shipped units are **accepted** — a positive assertion in the same run, so the
       suite cannot pass by refusing everything.
-- [ ] **AC6** Wired into `make verify` in the super-repo; runs offline, no GCP credentials, no
+- [x] **AC6** Wired into `make verify` in the super-repo; runs offline, no GCP credentials, no
       network.
-- [ ] **AC7** `deploy/gcp/README.md` states that the gate exists and what it does not assert, so the
+- [x] **AC7** `deploy/gcp/README.md` states that the gate exists and what it does not assert, so the
       next person restoring regional knows the gate will not fight them.
 
 ## Assumptions to assert rather than trust
