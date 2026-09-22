@@ -1,6 +1,6 @@
 # SPEC-0071: The control plane can verify the custody certificate
 
-- **Status:** Approved (2026-09-22)
+- **Status:** Implemented (2026-09-22)
 - **Owner:** unassigned
 - **Context(s):** agent / custody (the composition and its installer — the signing behaviour itself is
   unchanged)
@@ -58,45 +58,45 @@ None. A CA certificate is a public verification input; no schema, no row, no con
 
 **Backend — T-0089**
 
-- [ ] AC1 `custody.Config` carries a `CAFile` field. With it set to a PEM bundle, `NewOpenBao` returns
+- [x] AC1 `custody.Config` carries a `CAFile` field. With it set to a PEM bundle, `NewOpenBao` returns
       a signer whose HTTP client verifies a server presenting a certificate chaining to that bundle.
       Proven against a real `httptest` TLS server with a throwaway private CA: the dial **succeeds**
       with `CAFile` set and **fails** with it unset. Both directions asserted, in one test.
-- [ ] AC2 The bundle is **appended to** the system pool, never substituted for it. Proven by a
+- [x] AC2 The bundle is **appended to** the system pool, never substituted for it. Proven by a
       resulting `RootCAs` subject count equal to the system pool's plus the test CA's, and by a
       second assertion that a certificate chaining to a *public* root still verifies while `CAFile`
       is set. A test proving only AC1 passes on an implementation that replaces the pool.
-- [ ] AC3 `NewOpenBao` contacts nothing, with `CAFile` set exactly as without (SPEC-0044 AC1's
+- [x] AC3 `NewOpenBao` contacts nothing, with `CAFile` set exactly as without (SPEC-0044 AC1's
       construction-from-configuration property). Proven by constructing against an address with no
       listener and asserting a nil error.
-- [ ] AC4 A `CAFile` that does not exist, cannot be read, or contains no parseable certificate is a
+- [x] AC4 A `CAFile` that does not exist, cannot be read, or contains no parseable certificate is a
       **construction error naming the path**. It must not fall back to the system pool, and must not
       defer the failure to first call. Three separate negative cases: absent, unreadable, malformed.
-- [ ] AC5 An empty `CAFile` leaves behaviour byte-identical to today: system pool only, dev's
+- [x] AC5 An empty `CAFile` leaves behaviour byte-identical to today: system pool only, dev's
       loopback-HTTP composition unchanged, and every existing custody test green unmodified.
-- [ ] AC6 Setting both `CAFile` and `Client` is refused at construction. They are two ways to specify
+- [x] AC6 Setting both `CAFile` and `Client` is refused at construction. They are two ways to specify
       one transport, and silently preferring either is a configuration whose effect cannot be read
       off the composition.
-- [ ] AC7 The composition root reads `GITFROK_CUSTODY_CA_FILE` and passes it to `Config.CAFile`;
+- [x] AC7 The composition root reads `GITFROK_CUSTODY_CA_FILE` and passes it to `Config.CAFile`;
       unset means empty means AC5. Asserted in `cmd/controlplane-app`'s custody-config test beside the
       six variables already covered.
 
 **Super-repo — T-0090**
 
-- [ ] AC8 `deploy/k8s/controlplane/overlays/prod-cp` mounts the `openbao-ca` Secret's `ca.crt`
+- [x] AC8 `deploy/k8s/controlplane/overlays/prod-cp` mounts the `openbao-ca` Secret's `ca.crt`
       read-only into the control-plane pod and sets `GITFROK_CUSTODY_CA_FILE` to that path. Asserted
       over the **rendered** output, not the source text.
-- [ ] AC9 No installer authors `openbao-ca`: it is referenced, never generated. No `secretGenerator`,
+- [x] AC9 No installer authors `openbao-ca`: it is referenced, never generated. No `secretGenerator`,
       no literal, no `stringData` — the assertion SPEC-0069 already makes for the other eight,
       extended to the ninth.
-- [ ] AC10 The installer mounts `openbao-ca` and **not** `openbao-tls`. Mounting the Secret that holds
+- [x] AC10 The installer mounts `openbao-ca` and **not** `openbao-tls`. Mounting the Secret that holds
       the custody server's private key into the control plane is the obvious shortcut and is refused
       by name, because it would work.
-- [ ] AC11 `check-controlplane-kustomize.sh` fails a rendered overlay whose custody address scheme is
+- [x] AC11 `check-controlplane-kustomize.sh` fails a rendered overlay whose custody address scheme is
       `https` while no CA is mounted or `GITFROK_CUSTODY_CA_FILE` is unset — the pairing whose absence
       allowed ADR-0104's gap. Proven failable by negative fixtures for each half separately, and a
       positive case asserting a loopback-`http` composition does **not** trip it.
-- [ ] AC12 `deploy/k8s/README.md` lists `openbao-ca` among the credentials an operator creates out of
+- [x] AC12 `deploy/k8s/README.md` lists `openbao-ca` among the credentials an operator creates out of
       band, stating that it is the only public one — so it is neither handled as a secret nor used to
       infer the other eight are not.
 
@@ -128,3 +128,20 @@ None. A CA certificate is a public verification input; no schema, no row, no con
   moment it is automated.
 - **Ordering:** T-0090 sets an environment variable that T-0089 teaches the binary to read. Applying
   the installer first is harmless but proves nothing, so T-0089 lands first.
+
+## Implementation note (2026-09-22)
+
+Implemented by T-0089 (`backend@7a8dccd`) and T-0090 (`super-repo@a3d59c3`).
+
+**Two limits of this spec's own criteria, recorded because the tasks found them rather than the spec
+anticipating them.**
+
+1. **The ACs were written from the adapter's `Config` and missed a second dial in the same package.**
+   `custody.KubernetesAuth` performs its own login call to the same https address with its own
+   client, so a CA reaching only the transit signer would have failed one call earlier — same
+   outage, less obvious cause. T-0089 put `CAFile` on both; no AC required it.
+2. **AC2 as written was not provable the way it was written.** It asked for a `RootCAs` subject
+   count, and `x509.SystemCertPool().Subjects()` is empty on any platform using lazy verification,
+   so "system + 1" and "nothing + 1" are the same number — a mutant that substituted the pool passed
+   it. The open question above said to report this rather than adjust around it; the assertion moved
+   to `CertPool.Equal`, which compares provenance as well as contents.

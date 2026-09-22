@@ -89,4 +89,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0068 | The BYO data-plane installer becomes Kustomize | Draft | T-0085 |
 | SPEC-0069 | The third-party stateful set, installed | Approved | T-0086 |
 | SPEC-0070 | The BFF's plane partition, and the two refusals that enforce it | Implemented (2026-09-22) | T-0087 |
-| SPEC-0071 | The control plane can verify the custody certificate | Approved (2026-09-22) | T-0089, T-0090 |
+| SPEC-0071 | The control plane can verify the custody certificate | Implemented (2026-09-22) | T-0089, T-0090 |
