@@ -162,6 +162,13 @@ Recorded here because either one alone is enough, and fixing only one changes no
   `login failed` from `/callback` no matter what Zitadel is doing. ADR-0094 decision 3 already moved
   the repository surface data-plane-side; the browser surface has not followed.
 
+**Reproduced on the dev cluster, 2026-09-23 — so it is the code, not production's setup.**
+`dev-provision.sh` now gets through the Zitadel client, the project, the owner grant and a login
+token carrying `{owner}`, and then fails its BFF roundtrip: with `GITFROK_PLANE=data` the BFF answers
+`404` on `/login` (the route partition serves login only on the control plane); with `control` it
+would route `/login` to a control-plane door that has no OIDCLogin. No plane value logs anyone in.
+ADR-0102 (Proposed) is the decision that closes this.
+
 ## 9. TLS is now three different mechanisms — ADR-0095 wants amending
 
 | host | origin certificate | edge |
