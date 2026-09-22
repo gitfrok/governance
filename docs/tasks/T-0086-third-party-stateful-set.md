@@ -172,3 +172,28 @@ shipped tree passes, so the dead assertion was not masking a real violation.
 **The open follow-up this leaves:** `test-platform-kustomize.sh`'s `expect_refusal` still reads only
 the exit status, so the remaining seven fixtures carry the same blind spot. T-0091's harness shows
 the fix — assert the violation **text** — and it is not applied here.
+
+## Correction 2 (2026-09-22, super-repo@47fd292) — AC11 was not met at all
+
+The follow-up above understated it. Closing it revealed that **none of the seven fixtures had ever
+rendered**, so AC11 ("the gate, with a negative fixture per assertion") was not met by any of them.
+
+Every fixture carried `resources: [../../../deploy/k8s/platform/overlays/prod-cp]`, which from
+`scripts/testdata/platform/<name>/` resolves to `scripts/deploy` — one `../` short of the repo root,
+and nonexistent. Each was refused for `<name> does not render` plus two unrelated AC7 violations
+about OpenBao's quorum. Seven non-zero exits, seven green ticks, and not one assertion in AC2, AC3,
+AC4, AC5, AC8 or AC9 was ever exercised by a fixture.
+
+Fixed: the paths gain their fourth `../`, and each fixture now trips exactly its own violation.
+`expect_refusal` takes the required substring **and** the AC it may fire, and tolerates no violation
+outside it. Controlled by reverting the paths — the new harness fails all seven by name; the old one
+passed them.
+
+**Why this is the same finding as Correction 1, not a second one.** A dead assertion and a
+never-rendered fixture are both invisible to a suite that reads exit status. Correction 1's dead
+`secretGenerator` check and these seven fixtures coexisted in one file, and each concealed the
+other: the fixture could not reach the assertion, and the assertion could not have run anyway.
+
+AC11 is now met. AC1–AC5 and AC7–AC12 were always true of the shipped tree — the gate asserts them
+correctly against the real overlays, which is why nothing broken shipped. What was missing was the
+evidence that the gate would *notice*.
