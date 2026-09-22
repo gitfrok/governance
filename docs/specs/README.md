@@ -91,3 +91,4 @@ one, which is worse than a status that is merely behind.
 | SPEC-0070 | The BFF's plane partition, and the two refusals that enforce it | Implemented (2026-09-22) | T-0087 |
 | SPEC-0071 | The control plane can verify the custody certificate | Implemented (2026-09-22) | T-0089, T-0090 |
 | SPEC-0072 | A cluster's location is declared, never inherited | Implemented (2026-09-22) | T-0091 |
+| SPEC-0073 | A data-plane BFF logs people in, through its own plane | Implemented (2026-09-23) | T-0093 |

@@ -97,6 +97,12 @@ them.
 The failure mode is quiet: `policy.Decide` **fails closed** without `policy.decision_records`, so a
 plane on an unmigrated database denies every protected action rather than reporting a missing table.
 
+**And the twelve were not all of them.** On 2026-09-23 the dev cluster showed that seven more module
+migrations — repository ×3, codereview, release, notifications, ci — had never been in
+`dev-provision.sh`'s list, and that list is what was applied to production too. Every repository,
+settings, release and notification read there would have failed as a coarse "unavailable". Fixed in
+the list; production is purged, so nothing to repair.
+
 ## 5. `scripts/openbao-operator.sh` is unproven against a real barrier — super-repo
 
 **Update 2026-09-23: its first real run failed, and the failure is now designed out.** On the dev
