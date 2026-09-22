@@ -1,6 +1,6 @@
 # SPEC-0071: The control plane can verify the custody certificate
 
-- **Status:** Draft
+- **Status:** Approved (2026-09-22)
 - **Owner:** unassigned
 - **Context(s):** agent / custody (the composition and its installer — the signing behaviour itself is
   unchanged)
