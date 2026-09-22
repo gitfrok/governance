@@ -161,3 +161,22 @@ amend, and it has a customer on the other end of it.
 **Nothing under `deploy/dev` changes** (ADR-0096 decision 10). It is already plain manifests and
 contains no Helm, so "Helm leaves the tree" costs it nothing. Whether it should share this base is
 explicitly undecided.
+
+
+## Correction (2026-09-22, super-repo@e8f1b75) — AC3's authoring half had never run
+
+AC3 remains **met**, but for one reason rather than the two claimed.
+
+The `secretGenerator` file-parse assertion used `find ... | xargs -0 python3 - <<'KGEN'`, where the
+heredoc redirects **xargs's** stdin rather than python's: xargs read the Python source as its item
+list and ran `python3 -` against `/dev/null`. The check never executed. The same defect in
+`check-platform-kustomize.sh` is written up in T-0086's correction.
+
+**This task was saved by redundancy, not by its fixtures.** AC3 also asserts over the *render* that
+no `Secret` appears, and that half ran correctly the whole time — so `secret-generator/prod-cp` was
+genuinely refused, and AC3's property held. Both halves fire now.
+
+The line also carried a leading `find ... | sort -zu | tr -d '\0' >/dev/null 2>&1;` that discarded
+both its output and its status. It did nothing and is gone.
+
+Fixed in super-repo@e8f1b75, with a zero-files-read tripwire added.

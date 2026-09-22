@@ -139,3 +139,36 @@ settle it, and whoever first upgrades production will discover it if it is still
 **After this, the remaining path to a login is short and entirely non-structural:** publish the
 first-party images (ADR-0098's workflow, which needs its GitHub environment), create seven
 credentials, unseal OpenBao with a human quorum, then apply the control-plane overlay.
+
+
+## Correction (2026-09-22, super-repo@e8f1b75) — AC4 was HALF met, not met
+
+Recorded against this task's own exit record rather than quietly fixed elsewhere, because the
+record above overstates what was proven.
+
+**AC4's `secretGenerator` assertion had never executed.** The gate ran
+
+    find ... -print0 | xargs -0 python3 - <<'KGEN'
+
+in which the heredoc redirects **xargs's** stdin, not python's — so xargs read the Python source as
+its item list instead of the file list and invoked `python3 -` with stdin on `/dev/null`: an empty
+program, exit 0, every run. AC4's other half (no authored `Secret` in the render) was genuinely
+asserted throughout; the `secretGenerator` half was dead from the day it was written.
+
+**The `secret-generator` fixture did not catch it, and could not have.** It contains a real
+`secretGenerator` and was refused — for `does not render` plus two unrelated AC7 violations. Its
+exit status was non-zero, `expect_refusal` reads only the exit status, and so it reported proof for
+an assertion that never ran. This is exactly the decorative-fixture mode T-0090's exit record
+described in T-0084's nine, now demonstrated to have hidden a **live** dead assertion rather than a
+merely weak one.
+
+Found by `shellcheck` (SC2259, an error), which `make lint-shell` had been failing on — and
+`make verify` does not run `lint-shell`, so nothing in the default gate path surfaced it.
+
+Fixed in super-repo@e8f1b75: no pipe, Python walks the roots, and reading **zero files is now a
+violation** — the tripwire that would have caught this immediately. AC4 is now met in full; the
+shipped tree passes, so the dead assertion was not masking a real violation.
+
+**The open follow-up this leaves:** `test-platform-kustomize.sh`'s `expect_refusal` still reads only
+the exit status, so the remaining seven fixtures carry the same blind spot. T-0091's harness shows
+the fix — assert the violation **text** — and it is not applied here.
