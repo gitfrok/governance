@@ -445,7 +445,9 @@ Decided by **ADR-0092** (GCP + OpenTofu) through **ADR-0108**. This epic was nev
 work happened — T-0084…T-0092 carry "first control-plane deployment" as their phase and nothing
 grouped them — so it is opened now, to put the state where this file says state lives.
 
-**State on 2026-09-23: Git hosting is live and public; the product is not complete.**
+**State on 2026-09-23: Git hosting went live and public — then production was purged to $0 the same
+day on the owner's instruction.** Nothing runs; the proofs stand as properties of the tree, and data
+backups are local to the operator. Before the purge:
 `https://gitfrok.7.solutions/git/<tenant>/<repo>.git` serves clone and push with a trusted
 certificate (ADR-0107, ADR-0108), and tenant `7solutions` exists. The control plane is down on the
 sealed OpenBao barrier, nobody can log in, credentials do not survive a data-plane restart, and
