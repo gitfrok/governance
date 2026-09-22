@@ -99,6 +99,19 @@ plane on an unmigrated database denies every protected action rather than report
 
 ## 5. `scripts/openbao-operator.sh` is unproven against a real barrier — super-repo
 
+**Update 2026-09-23: its first real run failed, and the failure is now designed out.** On the dev
+cluster the third share did not unseal a joining standby synchronously; the script called that a
+failure, stopped, and its exit trap revoked the root credential — before wiring. OpenBao 2.x defaults
+`disable_unauthed_generate_root_endpoints` to true, so no new root credential could be minted from the
+shares, and the barrier was unsealed but permanently unwireable (dev was reset; it held nothing).
+Fixed: it now waits for the node to report unsealed; **wires immediately after the active node
+unseals, then revokes, and only then unseals the standbys**, so a standby can no longer strand the
+root credential; `all` is re-runnable; and the root credential is no longer written into the shares
+file, which the first version did while its header said it never touched disk. Proven on a scratch
+three-node barrier: fresh `all`, a re-run after two standbys resealed, and `unseal` after a full
+restart. The original text follows.
+
+
 Its `wire` and `unseal` paths have **never run**, because the barrier is still uninitialised and
 initialising it is the share-holder's act. What *was* proven, against the live sealed barrier: that
 `bao status` exits **2** when sealed and that its JSON keys are lowercase — two bugs that would each
