@@ -106,6 +106,20 @@ authoring no Secret.
 **Nothing is applied to a cluster.** The buckets and the identities are; the manifests are not. And
 meeting this spec still does not produce a login, for the reasons SPEC-0069 open question 4 records.
 
+## Addendum (2026-09-22, later the same day): the cloud resources this record names are gone
+
+The exit record above stands as written — it is what was true when the task completed — but every
+GCP resource it names has since been destroyed to stop billing. Specifically, the two backup buckets
+it records as **applied** (`gitfrok-prod-cp-postgres-backups`, `gitfrok-prod-dp-postgres-backups`)
+no longer exist, and neither does the `prod-cp` cluster the 12-pod result was measured on.
+
+Nothing about the task's outcome changes: the manifests, the gate and its fixtures are committed, and
+the three base-manifest defects found by running it are fixed in the tree. AC6 remains NOT MET for
+the same reason as before — no published digest to pin to.
+
+What a reader should NOT conclude from this file is that the buckets exist and CNPG is backing up to
+them. Procedure and current state live in `deploy/TEARDOWN-RUNBOOK.md` and `deploy/k8s/README.md`.
+
 ## Notes / open questions
 
 **Blocked on a decision, not a lane.** ADR-0099 adopts an operator, amends ADR-0092 decision 5 to
