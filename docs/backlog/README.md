@@ -439,6 +439,22 @@ durable row per recipient.
 |---|---|---|---|---|
 | **EP-31** Notifications | — (no PRD row yet: a requirement this implies is §12.1's to record) | T-0080 | SPEC-0063 | Done — T-0080 landed 2026-08-21, bell + list + mark-read end to end; email/webhooks remain named follow-ups needing their own decisions |
 
+## EP-32 — the first production deployment · *(opened retroactively 2026-09-23)*
+
+Decided by **ADR-0092** (GCP + OpenTofu) through **ADR-0108**. This epic was never filed while the
+work happened — T-0084…T-0092 carry "first control-plane deployment" as their phase and nothing
+grouped them — so it is opened now, to put the state where this file says state lives.
+
+**State on 2026-09-23: Git hosting is live and public; the product is not complete.**
+`https://gitfrok.7.solutions/git/<tenant>/<repo>.git` serves clone and push with a trusted
+certificate (ADR-0107, ADR-0108), and tenant `7solutions` exists. The control plane is down on the
+sealed OpenBao barrier, nobody can log in, credentials do not survive a data-plane restart, and
+repositories and PATs are operator-created. T-0092 is the ledger of what the bring-up owes.
+
+| Epic | Requirement | Tasks | Specs | State |
+|---|---|---|---|---|
+| **EP-32** First production deployment | PR-5 in production — **HTTPS only**: SSH is not published (ADR-0107 decision 7). PR-6 is **not** met in production: one `git-storaged` node, so no synchronous replica acknowledges a push | T-0084, T-0086, T-0087, T-0088, T-0089, T-0090, T-0091, T-0092 | SPEC-0067, SPEC-0069, SPEC-0070, SPEC-0071, SPEC-0072 | **In progress** — T-0087…T-0091 Done; T-0084 10/12 and T-0086 11/12; **T-0092 Todo**. Live: both clusters, the third-party stateful set, the data-plane installer (`deploy/k8s/dataplane/`, which no task specified — it landed under ADR-0107 directly), Git over HTTPS on two names, Let's Encrypt at the control-plane origin. **Blocked on a human:** OpenBao init + unseal (ADR-0066 decision 4). **Open, each wanting its own task:** login (no Login V2 service; control plane never registers `OIDCLogin`), PAT durability (`identity.NewPostgres` uncalled), OpenBao re-seal on every restart, the git volume violating ADR-0106 decision 4, the Git door's infrastructure living outside OpenTofu, and no gate reading `deploy/k8s/dataplane/` |
+
 ## Parked — needs a human decision first
 
 Force-promote tenant self-service (ADR-0018) · SPIFFE/SPIRE + proxy fallback (ADR-0017) ·

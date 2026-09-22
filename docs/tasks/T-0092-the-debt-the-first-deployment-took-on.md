@@ -154,7 +154,7 @@ Recorded here because either one alone is enough, and fixing only one changes no
 | host | origin certificate | edge |
 |---|---|---|
 | `app-gitfrok`, `auth-gitfrok` | **Let's Encrypt via cert-manager** (ADR-0095 decision 7's own mechanism) | Cloudflare proxied |
-| `git-gitfrok` | **Google-managed**, Certificate Manager (ADR-0107 decision 3) | DNS-only |
+| `git-gitfrok`, `gitfrok` | **Google-managed**, Certificate Manager (ADR-0107 decision 3, ADR-0108) | DNS-only |
 | `agents-gitfrok` | custody-minted, CA-pinned | DNS-only, never proxied |
 
 The first row was self-signed-behind-Cloudflare until 2026-09-23 and is now what decision 7 asked
@@ -165,14 +165,42 @@ Also: the Cloudflare zone is on **Full**, not **Full (strict)**. Both proxied or
 real certificates, so strict is available — but the setting is zone-wide and this zone serves hosts
 outside this project, so it is the zone owner's call and not a tidy-up.
 
-## 10. `_acme-challenge.git-gitfrok` is load-bearing and ungated — super-repo / operations
+## 10. The `_acme-challenge` CNAMEs are load-bearing and ungated — super-repo / operations
 
-The Certificate Manager DNS authorization CNAME is what lets `git-gitfrok`'s certificate renew.
+The Certificate Manager DNS authorization CNAMEs — `_acme-challenge.git-gitfrok` and, since
+ADR-0108, `_acme-challenge.gitfrok` — are what let the Git door's two certificates renew.
 Deleting it breaks renewal **months later and silently**. Nothing in this tree records that the
 record exists, and the Cloudflare console will not say what it is for.
+
+## 11. The Git door's infrastructure is not in OpenTofu — super-repo (`deploy/gcp`)
+
+ADR-0092 makes OpenTofu the provisioner of this tree's infrastructure. Everything that publishes the
+Git door was created by hand with gcloud on 2026-09-23: the global address `prod-dp-git-gateway`, the
+Certificate Manager DNS authorizations (`git-gitfrok-dnsauth`, `gitfrok-apex-dnsauth`), certificates
+(`git-gitfrok-cert`, `gitfrok-apex-cert`) and map (`gitfrok-dp-certmap`). So `terragrunt destroy`
+leaves the address billing, a rebuild does not recreate any of it, and
+`deploy/gcp/modules/addresses` is still instantiated for `prod-cp` only. `deploy/TEARDOWN-RUNBOOK.md`
+step 4a now lists the manual deletions, which is a stopgap, not the fix. The fix is a `prod-dp`
+addresses unit (or the existing module with `gateway = true`) plus Certificate Manager resources,
+imported rather than recreated so the certificates do not re-issue.
+
+## 12. The repository volume violates ADR-0106 decision 4 — super-repo
+
+ADR-0106 decision 4 (Accepted): *"When the git tier lands it must declare its own `premium-rwo`
+claim."* It landed on 2026-09-23 as `standard-rwo`, and the manifest comment at the time presented
+that as correct. It is not.
+
+`storageClassName` is **immutable** on a PVC, so this is a migration rather than an edit: scale
+`git-storaged` to zero, copy the bare repositories out (`tenant/`-rooted, currently `dev/hello.git`
+and `7solutions/welcome.git`), delete the claim, re-apply with `premium-rwo`, copy back, scale up.
+Git is down for the duration and **the copy must be verified before the old claim is deleted** — it
+holds a tenant's only copy. Changing the manifest line alone makes the next `kubectl apply` fail.
+
+Related and also unmet in production: **PR-6** (a push is acknowledged only after the primary and one
+synchronous replica hold it). There is one `git-storaged` node and one volume.
 
 ## Definition of Done
 
 There isn't one, and that is deliberate: this file is closed by being emptied into real tasks, not by
-being worked. **Items 2 and 6 are the two that make the product wrong rather than incomplete**, and
+being worked. **Items 2, 6 and 12 are the ones that make the product wrong rather than incomplete**, and
 they are the ones to schedule first.
