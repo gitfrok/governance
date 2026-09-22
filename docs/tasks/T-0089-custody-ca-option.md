@@ -1,6 +1,6 @@
 # T-0089: The custody client can be given a CA, and refuses to guess
 
-- **Status:** Todo
+- **Status:** Done (2026-09-22) — backend@7a8dccd; AC1–AC7 met
 - **Phase / Epic:** first control-plane deployment (ADR-0104 carry)
 - **Repo(s):** backend
 - **Spec:** `../specs/SPEC-0071-custody-tls-trust.md` (AC1–AC7)
@@ -17,16 +17,16 @@ outside loopback stays mandatory, and the loopback-HTTP relaxation keeps its exa
 
 ## Acceptance criteria (test-first)
 
-- [ ] AC1 `Config.CAFile` set → the client verifies a server chaining to that bundle; unset → it does
+- [x] AC1 `Config.CAFile` set → the client verifies a server chaining to that bundle; unset → it does
       not. Both directions, against a real TLS `httptest` server with a throwaway CA.
-- [ ] AC2 The bundle is **appended** to the system pool, not substituted. A public-root certificate
+- [x] AC2 The bundle is **appended** to the system pool, not substituted. A public-root certificate
       still verifies while `CAFile` is set.
-- [ ] AC3 `NewOpenBao` still contacts nothing when `CAFile` is set (SPEC-0044 AC1).
-- [ ] AC4 Absent, unreadable, and malformed `CAFile` are each a construction error naming the path —
+- [x] AC3 `NewOpenBao` still contacts nothing when `CAFile` is set (SPEC-0044 AC1).
+- [x] AC4 Absent, unreadable, and malformed `CAFile` are each a construction error naming the path —
       three cases, no fallback, no deferral to first call.
-- [ ] AC5 Empty `CAFile` is byte-identical to today; every existing custody test passes unmodified.
-- [ ] AC6 `CAFile` and `Client` both set is refused at construction.
-- [ ] AC7 `cmd/controlplane-app` reads `GITFROK_CUSTODY_CA_FILE` into `Config.CAFile`; unset → empty.
+- [x] AC5 Empty `CAFile` is byte-identical to today; every existing custody test passes unmodified.
+- [x] AC6 `CAFile` and `Client` both set is refused at construction.
+- [x] AC7 `cmd/controlplane-app` reads `GITFROK_CUSTODY_CA_FILE` into `Config.CAFile`; unset → empty.
 
 ## Tests to write first
 
@@ -62,3 +62,35 @@ so in the exit record instead of adjusting the assertion until it passes.
 **`Config.Client` stays.** It is the composition-root injection point the in-process wire tests use;
 AC6 refuses only the *combination*, because two ways to specify one transport is a configuration
 nobody can read off the composition.
+
+## Exit record (2026-09-22, backend@7a8dccd)
+
+All seven criteria met. `go test ./... -race` green across `backend` with **zero skips**;
+`go vet`, `gofmt`, `check-dep-direction.sh` and `check-custody-service.sh` clean.
+
+**AC2's first test was unsound, and the spec's recorded assumption is why it was caught.**
+SPEC-0071 said to report rather than design around the question of whether
+`x509.SystemCertPool()` is non-empty. It fired immediately: on darwin — and any platform using
+lazy platform verification — `Subjects()` returns nothing, so the subject-count assertion read
+"system + 1" and "nothing + 1" as the same number, and a mutant that **substituted** the system
+pool **passed**. The assertion is now `CertPool.Equal` against a system pool with the same CA
+appended, which compares system-pool provenance as well as contents and holds on every platform,
+asserted in both directions so a pool that never received the CA fails too.
+
+**Both critical assertions are mutation-proven**, not merely green:
+
+| Mutation | Models | Result |
+|---|---|---|
+| `caPool` returns a fresh pool | `SSL_CERT_FILE`'s substitution (ADR-0104 decision 3) | `FAIL TestCAPoolAppendsToTheSystemPool` |
+| `caPool` falls back to the system pool on a read error | ADR-0104's original bug wearing a CA option | `FAIL TestCAPoolRefusesUnusableFiles`, `FAIL …FailuresAreConstructionErrors/absent` |
+
+**One thing the ACs did not name.** `KubernetesAuth` performs its own login call to the same
+https address with its own client, so a CA reaching only the transit signer would have failed one
+call earlier — same outage, less obvious cause. `CAFile` is on `KubernetesAuth` too and
+`CustodyCAConfig` feeds both. Covered by `TestKubernetesAuthCAFileVerifiesTheServer`. Worth noting
+for SPEC-0071's own record: the ACs were written from the adapter's `Config` and missed a second
+dial in the same package.
+
+**Nothing was relaxed.** `validateAddress` still demands https outside loopback, the loopback
+relaxation keeps its exact scope, no `InsecureSkipVerify` exists on any path, and no existing test
+was modified to pass.
