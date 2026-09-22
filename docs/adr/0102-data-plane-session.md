@@ -1,8 +1,9 @@
 # ADR-0102: A data-plane deployment authenticates for itself, against the same issuer
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (requested by the deciding owner)
+- **Deciders:** platform (requested by the deciding owner); **accepted by the deciding owner on 2026-09-23**
+  ("accept ADR-0102"), with one correction made before acceptance and marked below
 - **Amends:** **ADR-0093's component partition in one respect** — Valkey becomes bi-planar. That
   table placed it control-plane-side only, on the premise that the BFF was control-plane-side only,
   which ADR-0094 decision 3 has since changed. ADR-0093 is Accepted and is not edited (ADR-0001).
@@ -42,8 +43,10 @@ that a *control* plane never reaches *into* a customer's cluster.
 **1. A data-plane deployment runs its own OIDC login, against the same issuer.** It redirects the
 browser to `auth-gitfrok.7.solutions` exactly as the control-plane deployment does, and validates the
 resulting ID token against that issuer's published JWKS. This is ordinary OIDC against a public
-issuer, not a cross-plane call into control-plane services: no `identityv1.OIDCLogin`, no shared
-database, nothing that ADR-0011 forbids.
+issuer, not a cross-plane call into control-plane services: no call to the **control plane's**
+`identityv1.OIDCLogin`, no shared database, nothing that ADR-0011 forbids. The code exchange and the
+ID-token verification run in the data plane's **own** backend — `cmd/dataplane-app` already
+registers `OIDCLogin` on its door — so the BFF stays free of verification logic, as it must.
 
 **2. Sessions are per plane, in a Valkey each plane owns.** Valkey becomes bi-planar, joining
 `audit`, `identity` and `policy` in ADR-0101 decision 2's category: two instances of one shape
@@ -56,9 +59,21 @@ existing SSO session and mints its own cookie. The user is not prompted twice. T
 decision 2's cost acceptable, and it is a property of the shared issuer rather than of any shared
 state between planes.
 
-**4. `OIDCLogin` stays where ADR-0100 decision 1 put it, and the data plane does not need it.** That
-service is the backend's OIDC helper for the control plane's own flow. Decision 1's assignment stands
-unamended; decision 1 above simply does not route through it. ADR-0101's register row asking whether
+**4. ADR-0100 decision 1's control-side assignment of `OIDCLogin` is unamended, and the data plane
+does not depend on it.** The data plane uses the `OIDCLogin` its own backend serves; nothing crosses
+the boundary. Decision 1's assignment stands unamended.
+
+**Corrected before acceptance, 2026-09-23.** The Proposed text read decision 1 as "no
+`identityv1.OIDCLogin`" at all and decision 4 as "the data plane does not need it", on the premise
+that `OIDCLogin` lives control-side. The code is the other way round: `cmd/dataplane-app` registers
+`OIDCLogin` (`main.go`, `identity.RegisterOIDCLogin`), and `cmd/controlplane-app` deliberately does
+not — its BFF door says "OIDCLogin … is NOT registered". Read literally, the Proposed wording would
+have forbidden the data plane's own login service and pushed ID-token verification into the BFF,
+contradicting both the BFF's no-business-logic rule and this ADR's own rejected alternative, which
+refuses a call into the control plane's `OIDCLogin` and not the data plane's. The intent — no
+cross-plane call — is unchanged; the wording now says it. Measured on the dev cluster the same day: a
+data-plane BFF serves no `/login` at all today (the route partition gives login to the control plane
+only), which is the gap this ADR closes. ADR-0101's register row asking whether
 `OIDCLogin` belongs control-plane-side at all remains open and is not answered here.
 
 **5. The data plane's Valkey is not optional, and its absence is fatal at startup.** ADR-0052

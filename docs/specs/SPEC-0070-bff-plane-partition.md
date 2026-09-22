@@ -112,6 +112,11 @@ None.
 
 ## A gap AC6 inherits, recorded rather than discovered
 
+> **2026-09-23: ADR-0102 is Accepted.** A data-plane deployment runs its own OIDC login against the
+> shared issuer, through its own backend's `OIDCLogin`, with a per-plane Valkey. That is the decision
+> this section was waiting on; AC6's remaining half now needs ADR-0102's implementing spec and task,
+> not another decision. Measured on dev the same day: the data-plane BFF answers `404` on `/login`.
+
 **A data-plane BFF has no way to verify a session.** ADR-0093's partition puts Valkey — the session
 store ADR-0052 requires, and whose unreachability is fatal at BFF startup by decision 4 of that ADR —
 **control-plane-side only**. ADR-0100 decision 1 moves `OIDCLogin` there too. And ADR-0011 forbids a

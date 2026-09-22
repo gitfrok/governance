@@ -167,7 +167,7 @@ Recorded here because either one alone is enough, and fixing only one changes no
 token carrying `{owner}`, and then fails its BFF roundtrip: with `GITFROK_PLANE=data` the BFF answers
 `404` on `/login` (the route partition serves login only on the control plane); with `control` it
 would route `/login` to a control-plane door that has no OIDCLogin. No plane value logs anyone in.
-ADR-0102 (Proposed) is the decision that closes this.
+ADR-0102 is the decision that closes this — **Accepted 2026-09-23**; its implementing spec and task are the next step.
 
 ## 9. TLS is now three different mechanisms — ADR-0095 wants amending
 
