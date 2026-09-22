@@ -1,6 +1,6 @@
 # ADR-0106: Cost is the binding constraint on the production shape, and availability is what it buys
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
 - **Deciders:** platform (written after the owner asked, twice in one session, to bring both
   environments up "in minimum cost")
@@ -132,10 +132,9 @@ the saving is not worth an availability failure that looks like data loss.
 
 ## Open questions
 
-- **Should a fitness function assert that every live `gke` unit sets `location` explicitly?** It is
-  mechanically checkable — unlike most of this ADR — and it is the one consequence above with a real
-  failure mode and no guard. The check would assert explicitness, not a particular value, so
-  restoring regional stays a one-line deliberate act rather than an omission.
+- ~~**Should a fitness function assert that every live `gke` unit sets `location` explicitly?**~~
+  **Answered on acceptance:** yes — SPEC-0072 (Draft) and T-0091. It asserts explicitness and never a
+  value, so restoring regional stays a one-line deliberate act rather than a gate fight.
 - **What does the first stated availability requirement look like?** Decision 2 makes an SLO the
   trigger for reverting, and none exists. Naming it before it is needed is cheaper than deciding it
   during an outage.
