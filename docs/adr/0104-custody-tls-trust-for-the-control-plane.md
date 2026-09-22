@@ -1,9 +1,10 @@
 # ADR-0104: The control plane cannot verify the custody service's certificate, and nothing in the tree can give it the CA
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (written after the first production apply of `deploy/k8s/platform` put a
-  TLS-serving OpenBao on a real cluster, which is where this became measurable)
+- **Deciders:** platform (the deciding owner ruled 2026-09-22; written after the first production
+  apply of `deploy/k8s/platform` put a TLS-serving OpenBao on a real cluster, which is where this
+  became measurable)
 - **Related:** ADR-0066 (custody is OpenBao transit, control-plane-side — this ADR supplies the one
   thing its transport posture never named), ADR-0035 (first-party images are `FROM scratch`, which is
   why the trust store is exactly one file), ADR-0099 decision 7 + SPEC-0069 (no installer authors a
@@ -98,6 +99,8 @@ that they agreed.
   is blocked regardless of those two, which is the fact `deploy/k8s/README.md` now records.
 - **A `backend` change and a super-repo change, in that order, and never in one commit** (invariant
   23). Decisions 1–2 are `backend`; decisions 4 and 6 are the super-repo installer and its gate.
+  Now that this is Accepted, both want a SPEC and a task before any code is written (AGDD is
+  spec-first); accepting a decision is not the same as having an approved acceptance criterion.
 - The operator's out-of-band credential list grows from eight to nine. Its newest member is the only
   public one, which is worth saying in the runbook so nobody handles it as a secret and nobody treats
   the other eight as public by association.
