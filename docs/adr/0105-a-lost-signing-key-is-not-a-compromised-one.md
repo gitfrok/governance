@@ -1,9 +1,9 @@
 # ADR-0105: A lost signing key is not a compromised one, and treating it as one strands the artifacts it signed
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-22
-- **Deciders:** platform (written after the `image-publish` cosign private key was found to be gone,
-  with its public half committed since August)
+- **Deciders:** platform (the deciding owner ruled 2026-09-22; written after the `image-publish`
+  cosign private key was found to be gone, with its public half committed since August)
 - **Amends:** **ADR-0044's rotation and compromise handling.** ADR-0044 is Accepted and is not edited
   (ADR-0001); everything in it stands. This adds the third event class it does not name, and
   corrects one instruction that is actively wrong when applied to that class.
