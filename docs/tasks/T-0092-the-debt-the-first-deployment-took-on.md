@@ -184,17 +184,26 @@ step 4a now lists the manual deletions, which is a stopgap, not the fix. The fix
 addresses unit (or the existing module with `gateway = true`) plus Certificate Manager resources,
 imported rather than recreated so the certificates do not re-issue.
 
-## 12. The repository volume violates ADR-0106 decision 4 — super-repo
+## 12. ~~The repository volume violates ADR-0106 decision 4~~ — **FIXED 2026-09-23**
 
 ADR-0106 decision 4 (Accepted): *"When the git tier lands it must declare its own `premium-rwo`
-claim."* It landed on 2026-09-23 as `standard-rwo`, and the manifest comment at the time presented
-that as correct. It is not.
+claim."* It landed as `standard-rwo`, and the manifest comment at the time presented that as correct.
 
-`storageClassName` is **immutable** on a PVC, so this is a migration rather than an edit: scale
-`git-storaged` to zero, copy the bare repositories out (`tenant/`-rooted, currently `dev/hello.git`
-and `7solutions/welcome.git`), delete the claim, re-apply with `premium-rwo`, copy back, scale up.
-Git is down for the duration and **the copy must be verified before the old claim is deleted** — it
-holds a tenant's only copy. Changing the manifest line alone makes the next `kubectl apply` fail.
+**Resolved the same day, by migration rather than edit** (`storageClassName` is immutable on a PVC).
+The replacement claim got a **new name**, `git-storaged-data`, so the old volume stayed untouched until
+the copy was proven: refs recorded first, git-storaged scaled to zero, a pod mounting old (read-only)
+and new copied the tenant trees, and the copy was checked — **every ref identical, `git fsck --full`
+clean** on `7solutions/welcome.git` and `dev/hello.git`. Then git-storaged moved to the new claim,
+both repositories were cloned over `https://gitfrok.7.solutions` at their baseline commits, a push
+landed, the old disk was snapshotted (`git-storaged-standard-rwo-final-20260923`, `gitfrok-prod-dp`)
+and only then deleted.
+
+**Measured on the way:** git-storaged was down ~2 minutes, but clones kept failing with `Could not
+read from remote repository` until the data plane's gRPC client left reconnect backoff (its log line
+`ref watch connected`). Any git-storaged restart has that tail, and it is invisible from the storage
+pod's own status.
+
+**Left over:** the snapshot, to delete when nobody wants it.
 
 Related and also unmet in production: **PR-6** (a push is acknowledged only after the primary and one
 synchronous replica hold it). There is one `git-storaged` node and one volume.
@@ -202,5 +211,5 @@ synchronous replica hold it). There is one `git-storaged` node and one volume.
 ## Definition of Done
 
 There isn't one, and that is deliberate: this file is closed by being emptied into real tasks, not by
-being worked. **Items 2, 6 and 12 are the ones that make the product wrong rather than incomplete**, and
+being worked. **Items 2 and 6 are the ones that make the product wrong rather than incomplete** (item 12 was, and is fixed), and
 they are the ones to schedule first.
